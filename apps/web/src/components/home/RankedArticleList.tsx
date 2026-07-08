@@ -1,11 +1,19 @@
 import Link from "next/link";
 import type { Article } from "@/types/content";
 
-export function TrendingSidebar({ articles }: { articles: Article[] }) {
+export function RankedArticleList({
+  title,
+  articles,
+  showViewCount = false,
+}: {
+  title: string;
+  articles: Article[];
+  showViewCount?: boolean;
+}) {
   return (
-    <aside className="sticky top-[190px] rounded-lg border border-border bg-surface p-5">
+    <div>
       <h2 className="border-b-2 border-brand-navy pb-2 text-lg font-bold text-brand-navy">
-        Trending
+        {title}
       </h2>
       <ol className="mt-4 flex flex-col gap-4">
         {articles.map((article, index) => (
@@ -21,14 +29,16 @@ export function TrendingSidebar({ articles }: { articles: Article[] }) {
                 <h3 className="text-sm font-semibold leading-snug text-foreground transition-colors group-hover:text-brand-crimson">
                   {article.title}
                 </h3>
-                <p className="mt-1 font-ui text-xs text-foreground-muted">
-                  {article.viewCount?.toLocaleString("bn-BD")} বার পঠিত
-                </p>
+                {showViewCount && article.viewCount != null && (
+                  <p className="mt-1 font-ui text-xs text-foreground-muted">
+                    {article.viewCount.toLocaleString("bn-BD")} বার পঠিত
+                  </p>
+                )}
               </div>
             </Link>
           </li>
         ))}
       </ol>
-    </aside>
+    </div>
   );
 }

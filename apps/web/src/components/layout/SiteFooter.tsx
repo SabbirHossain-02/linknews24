@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { categories } from "@/lib/mock-data";
+import { navItems } from "@/lib/mock-data";
+import type { Category } from "@/types/content";
 import { FacebookIcon, XIcon, YoutubeIcon } from "@/components/icons/SocialIcons";
 
 const legalLinks = [
@@ -8,6 +9,12 @@ const legalLinks = [
   { label: "গোপনীয়তা নীতি", href: "/privacy" },
   { label: "ব্যবহারের শর্তাবলী", href: "/terms" },
 ];
+
+const footerCategories: Category[] = navItems.flatMap((item) =>
+  item.children
+    ? item.children
+    : [{ id: item.label, name: item.label, slug: item.href!.slice(1) }],
+);
 
 export function SiteFooter() {
   return (
@@ -38,7 +45,7 @@ export function SiteFooter() {
             ক্যাটাগরি
           </h3>
           <ul className="mt-3 grid grid-cols-2 gap-2 font-ui text-sm">
-            {categories.slice(0, 8).map((cat) => (
+            {footerCategories.map((cat) => (
               <li key={cat.id}>
                 <Link href={`/${cat.slug}`} className="hover:text-white">
                   {cat.name}

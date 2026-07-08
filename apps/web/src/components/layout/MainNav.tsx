@@ -3,14 +3,32 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Menu, Search, X } from "lucide-react";
-import { categories } from "@/lib/mock-data";
+import { ChevronDown, Menu, Search, X } from "lucide-react";
+import { navItems } from "@/lib/mock-data";
 
 export function MainNav() {
-  const [open, setOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [openDesktopDropdown, setOpenDesktopDropdown] = useState<
+    string | null
+  >(null);
+  const [openMobileDropdowns, setOpenMobileDropdowns] = useState<Set<string>>(
+    new Set(),
+  );
+
+  const toggleMobileDropdown = (label: string) => {
+    setOpenMobileDropdowns((prev) => {
+      const next = new Set(prev);
+      if (next.has(label)) next.delete(label);
+      else next.add(label);
+      return next;
+    });
+  };
 
   return (
-    <nav className="border-b border-border bg-background">
+    <nav
+      className="border-b border-border bg-background"
+      onMouseLeave={() => setOpenDesktopDropdown(null)}
+    >
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-6 px-6 py-3">
         <Link href="/" className="flex shrink-0 items-center">
           <Image
@@ -31,39 +49,113 @@ export function MainNav() {
         </button>
 
         <button
-          onClick={() => setOpen((v) => !v)}
+          onClick={() => setMobileOpen((v) => !v)}
           aria-label="মেনু খুলুন"
           className="shrink-0 text-brand-navy md:hidden"
         >
-          {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
         </button>
       </div>
 
-      <div className="hidden border-t border-border md:block">
+      <div className="relative hidden border-t border-border md:block">
         <ul className="mx-auto flex max-w-6xl items-center gap-x-6 overflow-x-auto px-6 py-2.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {categories.map((cat) => (
-            <li key={cat.id} className="shrink-0">
-              <Link
-                href={`/${cat.slug}`}
-                className="font-medium text-sm text-foreground/80 transition-colors hover:text-brand-crimson"
-              >
-                {cat.name}
-              </Link>
+          {navItems.map((item) => (
+            <li
+              key={item.label}
+              className="shrink-0"
+              onMouseEnter={() =>
+                item.children && setOpenDesktopDropdown(item.label)
+              }
+            >
+              {item.children ? (
+                <button
+                  className="flex items-center gap-1 font-medium text-sm text-foreground/80 transition-colors hover:text-brand-crimson"
+                  onClick={() =>
+                    setOpenDesktopDropdown((current) =>
+                      current === item.label ? null : item.label,
+                    )
+                  }
+                  aria-expanded={openDesktopDropdown === item.label}
+                >
+                  {item.label}
+                  <ChevronDown className="h-3.5 w-3.5" />
+                </button>
+              ) : (
+                <Link
+                  href={item.href!}
+                  className="font-medium text-sm text-foreground/80 transition-colors hover:text-brand-crimson"
+                >
+                  {item.label}
+                </Link>
+              )}
+
+              {item.children && openDesktopDropdown === item.label && (
+                <div className="absolute left-0 right-0 top-full border-t border-border bg-background shadow-md">
+                  <ul className="mx-auto flex max-w-6xl flex-wrap gap-x-8 gap-y-2 px-6 py-4">
+                    {item.children.map((child) => (
+                      <li key={child.id}>
+                        <Link
+                          href={`/${child.slug}`}
+                          onClick={() => setOpenDesktopDropdown(null)}
+                          className="font-medium text-sm text-foreground/80 transition-colors hover:text-brand-crimson"
+                        >
+                          {child.name}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </li>
           ))}
         </ul>
       </div>
 
-      <div className={`${open ? "block" : "hidden"} border-t border-border md:hidden`}>
+      <div
+        className={`${mobileOpen ? "block" : "hidden"} border-t border-border md:hidden`}
+      >
         <ul className="mx-auto flex max-w-6xl flex-col gap-1 px-6 py-3">
-          {categories.map((cat) => (
-            <li key={cat.id}>
-              <Link
-                href={`/${cat.slug}`}
-                className="block py-1.5 font-medium text-sm text-foreground/80 transition-colors hover:text-brand-crimson"
-              >
-                {cat.name}
-              </Link>
+          {navItems.map((item) => (
+            <li key={item.label}>
+              {item.children ? (
+                <>
+                  <button
+                    onClick={() => toggleMobileDropdown(item.label)}
+                    className="flex w-full items-center justify-between py-1.5 font-medium text-sm text-foreground/80"
+                    aria-expanded={openMobileDropdowns.has(item.label)}
+                  >
+                    {item.label}
+                    <ChevronDown
+                      className={`h-4 w-4 transition-transform ${
+                        openMobileDropdowns.has(item.label) ? "rotate-180" : ""
+                      }`}
+                    />
+                  </button>
+                  {openMobileDropdowns.has(item.label) && (
+                    <ul className="flex flex-col gap-1 border-l border-border pb-1 pl-4">
+                      {item.children.map((child) => (
+                        <li key={child.id}>
+                          <Link
+                            href={`/${child.slug}`}
+                            onClick={() => setMobileOpen(false)}
+                            className="block py-1.5 font-medium text-sm text-foreground/70 transition-colors hover:text-brand-crimson"
+                          >
+                            {child.name}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </>
+              ) : (
+                <Link
+                  href={item.href!}
+                  onClick={() => setMobileOpen(false)}
+                  className="block py-1.5 font-medium text-sm text-foreground/80 transition-colors hover:text-brand-crimson"
+                >
+                  {item.label}
+                </Link>
+              )}
             </li>
           ))}
         </ul>

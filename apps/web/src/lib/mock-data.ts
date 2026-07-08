@@ -3,23 +3,60 @@ import type { Article, Category } from "@/types/content";
 export const categories: Category[] = [
   { id: "national", name: "জাতীয়", slug: "national" },
   { id: "politics", name: "রাজনীতি", slug: "politics" },
-  { id: "world", name: "আন্তর্জাতিক", slug: "world" },
+  { id: "special-report", name: "বিশেষ প্রতিবেদন", slug: "special-report" },
+  { id: "secretariat", name: "সচিবালয়", slug: "secretariat" },
+  { id: "nationwide", name: "দেশজুড়ে", slug: "nationwide" },
   { id: "business", name: "অর্থনীতি", slug: "business" },
-  { id: "sports", name: "খেলা", slug: "sports" },
+  { id: "world", name: "আন্তর্জাতিক", slug: "world" },
+  { id: "sports", name: "খেলাধুলা", slug: "sports" },
+  { id: "jobs", name: "চাকরি", slug: "jobs" },
+  { id: "top-ten", name: "টপ টেন", slug: "top-ten" },
   { id: "entertainment", name: "বিনোদন", slug: "entertainment" },
-  { id: "technology", name: "প্রযুক্তি", slug: "technology" },
-  { id: "health", name: "স্বাস্থ্য", slug: "health" },
+  { id: "features", name: "ফিচার", slug: "features" },
   { id: "education", name: "শিক্ষা", slug: "education" },
-  { id: "opinion", name: "মতামত", slug: "opinion" },
-  { id: "religion", name: "ধর্ম", slug: "religion" },
-  { id: "crime", name: "আইন-আদালত", slug: "crime" },
-  { id: "environment", name: "পরিবেশ", slug: "environment" },
+  { id: "health", name: "স্বাস্থ্য", slug: "health" },
+  { id: "diaspora", name: "প্রবাস", slug: "diaspora" },
   { id: "lifestyle", name: "লাইফস্টাইল", slug: "lifestyle" },
   { id: "video", name: "ভিডিও", slug: "video" },
 ];
 
 const findCategory = (slug: string): Category =>
   categories.find((c) => c.slug === slug)!;
+
+export interface NavItem {
+  label: string;
+  href?: string;
+  children?: Category[];
+}
+
+export const navItems: NavItem[] = [
+  {
+    label: "বাংলাদেশ",
+    children: [
+      findCategory("national"),
+      findCategory("politics"),
+      findCategory("special-report"),
+      findCategory("secretariat"),
+    ],
+  },
+  { label: "দেশজুড়ে", href: "/nationwide" },
+  { label: "অর্থনীতি", href: "/business" },
+  { label: "আন্তর্জাতিক", href: "/world" },
+  { label: "খেলাধুলা", href: "/sports" },
+  { label: "চাকরি", href: "/jobs" },
+  { label: "টপ টেন", href: "/top-ten" },
+  { label: "বিনোদন", href: "/entertainment" },
+  { label: "ফিচার", href: "/features" },
+  {
+    label: "অন্যান্য",
+    children: [
+      findCategory("education"),
+      findCategory("health"),
+      findCategory("diaspora"),
+      findCategory("lifestyle"),
+    ],
+  },
+];
 
 export const breakingNewsItems: string[] = [
   "ঢাকায় মেট্রোরেলের নতুন লাইন উদ্বোধন করলেন সংশ্লিষ্ট কর্তৃপক্ষ",
@@ -342,6 +379,313 @@ export const entertainmentArticles: Article[] = [
   },
 ];
 
+export const specialReportArticles: Article[] = [
+  {
+    id: "sr-1",
+    title: "অনুসন্ধান: সরকারি প্রকল্পে ব্যয় বৃদ্ধির নেপথ্যে যা ঘটছে",
+    slug: "investigation-project-cost-overrun",
+    excerpt: "একাধিক প্রকল্প নথি পর্যালোচনা করে উঠে এসেছে ব্যয় বৃদ্ধির কারণ।",
+    category: findCategory("special-report"),
+    author: "অনুসন্ধানী প্রতিবেদক",
+    publishedAt: "৬ ঘণ্টা আগে",
+    imageTone: "slate",
+  },
+  {
+    id: "sr-2",
+    title: "বিশেষ প্রতিবেদন: নদীভাঙনে বদলে যাচ্ছে উপকূলের মানচিত্র",
+    slug: "special-report-river-erosion",
+    excerpt: "গত এক দশকে কয়েকটি চর সম্পূর্ণ বিলীন হয়ে গেছে বলে জানা গেছে।",
+    category: findCategory("special-report"),
+    author: "বিশেষ প্রতিবেদক",
+    publishedAt: "১০ ঘণ্টা আগে",
+    imageTone: "navy",
+  },
+  {
+    id: "sr-3",
+    title: "খাদ্যপণ্যের সরবরাহ চক্রে কোথায় দাম বাড়ছে, অনুসন্ধানে যা মিলল",
+    slug: "special-report-food-supply-chain",
+    excerpt: "পাইকারি থেকে খুচরা বাজার পর্যন্ত মূল্য পরিবর্তনের চিত্র তুলে ধরা হয়েছে।",
+    category: findCategory("special-report"),
+    author: "অর্থনৈতিক প্রতিবেদক",
+    publishedAt: "১৪ ঘণ্টা আগে",
+    imageTone: "amber",
+  },
+  {
+    id: "sr-4",
+    title: "প্রত্যন্ত অঞ্চলে শিক্ষার হার নিয়ে বিশেষ অনুসন্ধান প্রতিবেদন",
+    slug: "special-report-rural-education-rate",
+    excerpt: "শিক্ষক সংকট ও অবকাঠামোর অভাবকে দায়ী করছেন বিশেষজ্ঞরা।",
+    category: findCategory("special-report"),
+    author: "শিক্ষা প্রতিবেদক",
+    publishedAt: "১৮ ঘণ্টা আগে",
+    imageTone: "crimson",
+  },
+];
+
+export const secretariatArticles: Article[] = [
+  {
+    id: "sec-1",
+    title: "সচিবালয়ে নতুন প্রশাসনিক নির্দেশনা জারি",
+    slug: "secretariat-new-administrative-directive",
+    excerpt: "সব মন্ত্রণালয়কে দ্রুত বাস্তবায়নের নির্দেশ দেওয়া হয়েছে।",
+    category: findCategory("secretariat"),
+    author: "প্রশাসন প্রতিবেদক",
+    publishedAt: "৫ ঘণ্টা আগে",
+    imageTone: "navy",
+  },
+  {
+    id: "sec-2",
+    title: "আন্তঃমন্ত্রণালয় বৈঠকে সমন্বয় বাড়ানোর সিদ্ধান্ত",
+    slug: "secretariat-inter-ministry-meeting",
+    excerpt: "প্রকল্প বাস্তবায়নে দেরি কমাতে নতুন কাঠামো অনুমোদিত হয়েছে।",
+    category: findCategory("secretariat"),
+    author: "নিজস্ব প্রতিবেদক",
+    publishedAt: "৯ ঘণ্টা আগে",
+    imageTone: "slate",
+  },
+  {
+    id: "sec-3",
+    title: "সচিব পর্যায়ে রদবদল, দায়িত্ব বদলাচ্ছেন কয়েকজন কর্মকর্তা",
+    slug: "secretariat-officer-reshuffle",
+    excerpt: "প্রজ্ঞাপন জারি হয়েছে জনপ্রশাসন মন্ত্রণালয় থেকে।",
+    category: findCategory("secretariat"),
+    author: "প্রশাসন প্রতিবেদক",
+    publishedAt: "১৩ ঘণ্টা আগে",
+    imageTone: "amber",
+  },
+  {
+    id: "sec-4",
+    title: "ই-নথি ব্যবস্থাপনা সম্প্রসারণে সচিবালয়ের নতুন উদ্যোগ",
+    slug: "secretariat-e-file-initiative",
+    excerpt: "সব দপ্তরে ডিজিটাল ফাইল ব্যবস্থাপনা বাধ্যতামূলক করা হচ্ছে।",
+    category: findCategory("secretariat"),
+    author: "নিজস্ব প্রতিবেদক",
+    publishedAt: "১৭ ঘণ্টা আগে",
+    imageTone: "crimson",
+  },
+];
+
+export const nationwideArticles: Article[] = [
+  {
+    id: "nw-1",
+    title: "রাজশাহীতে আমের বাম্পার ফলন, দাম নিয়ে চাষিদের স্বস্তি",
+    slug: "rajshahi-mango-bumper-harvest",
+    excerpt: "গত বছরের তুলনায় এবার ফলন প্রায় ২০ শতাংশ বেশি হয়েছে।",
+    category: findCategory("nationwide"),
+    author: "জেলা প্রতিনিধি",
+    publishedAt: "৪ ঘণ্টা আগে",
+    imageTone: "amber",
+  },
+  {
+    id: "nw-2",
+    title: "সিলেটে পাথর কোয়ারি নিয়ে স্থানীয়দের মধ্যে উদ্বেগ",
+    slug: "sylhet-quarry-local-concerns",
+    excerpt: "পরিবেশ ছাড়পত্র নিয়ে প্রশ্ন তুলেছেন এলাকাবাসী।",
+    category: findCategory("nationwide"),
+    author: "জেলা প্রতিনিধি",
+    publishedAt: "৮ ঘণ্টা আগে",
+    imageTone: "slate",
+  },
+  {
+    id: "nw-3",
+    title: "খুলনায় নতুন শিল্প এলাকা স্থাপনের উদ্যোগ",
+    slug: "khulna-new-industrial-zone",
+    excerpt: "কয়েক হাজার কর্মসংস্থান তৈরি হবে বলে আশা করছে স্থানীয় প্রশাসন।",
+    category: findCategory("nationwide"),
+    author: "জেলা প্রতিনিধি",
+    publishedAt: "১২ ঘণ্টা আগে",
+    imageTone: "navy",
+  },
+];
+
+export const jobsArticles: Article[] = [
+  {
+    id: "job-1",
+    title: "সরকারি ব্যাংকে ৮০০ পদে নিয়োগ বিজ্ঞপ্তি প্রকাশ",
+    slug: "government-bank-recruitment-notice",
+    excerpt: "আবেদনের শেষ তারিখ আগামী মাসের ১৫ তারিখ।",
+    category: findCategory("jobs"),
+    author: "চাকরি ডেস্ক",
+    publishedAt: "৩ ঘণ্টা আগে",
+    imageTone: "navy",
+  },
+  {
+    id: "job-2",
+    title: "প্রাথমিক শিক্ষক নিয়োগ পরীক্ষার ফল প্রকাশ",
+    slug: "primary-teacher-exam-result",
+    excerpt: "ফল দেখা যাবে সংশ্লিষ্ট ওয়েবসাইটে রোল নম্বর দিয়ে।",
+    category: findCategory("jobs"),
+    author: "চাকরি ডেস্ক",
+    publishedAt: "৭ ঘণ্টা আগে",
+    imageTone: "crimson",
+  },
+  {
+    id: "job-3",
+    title: "বেসরকারি প্রতিষ্ঠানে ফ্রেশারদের জন্য বড় নিয়োগ উদ্যোগ",
+    slug: "private-sector-fresher-hiring-drive",
+    excerpt: "প্রযুক্তি ও ব্যাংকিং খাতে সবচেয়ে বেশি পদ খালি রয়েছে।",
+    category: findCategory("jobs"),
+    author: "চাকরি ডেস্ক",
+    publishedAt: "১১ ঘণ্টা আগে",
+    imageTone: "slate",
+  },
+];
+
+export const topTenArticles: Article[] = [
+  {
+    id: "top-1",
+    title: "টপ টেন: এই সপ্তাহের সবচেয়ে আলোচিত ১০ ঘটনা",
+    slug: "top-ten-most-discussed-this-week",
+    excerpt: "রাজনীতি থেকে খেলা — সপ্তাহজুড়ে যা নিয়ে সবচেয়ে বেশি আলোচনা হয়েছে।",
+    category: findCategory("top-ten"),
+    author: "নিউজরুম ডেস্ক",
+    publishedAt: "২ ঘণ্টা আগে",
+    imageTone: "crimson",
+  },
+  {
+    id: "top-2",
+    title: "টপ টেন: বছরের সেরা ১০ প্রযুক্তি পণ্য",
+    slug: "top-ten-tech-products-of-the-year",
+    excerpt: "দাম ও পারফরম্যান্সের ভিত্তিতে তৈরি তালিকা।",
+    category: findCategory("top-ten"),
+    author: "নিউজরুম ডেস্ক",
+    publishedAt: "৯ ঘণ্টা আগে",
+    imageTone: "navy",
+  },
+];
+
+export const featuresArticles: Article[] = [
+  {
+    id: "feat-1",
+    title: "ফিচার: শহরের ছাদকৃষি যেভাবে বদলে দিচ্ছে জীবনযাত্রা",
+    slug: "feature-rooftop-farming-lifestyle",
+    excerpt: "সীমিত জায়গাতেও সবজি চাষ করে স্বাবলম্বী হচ্ছেন অনেকে।",
+    category: findCategory("features"),
+    author: "ফিচার প্রতিবেদক",
+    publishedAt: "৫ ঘণ্টা আগে",
+    imageTone: "amber",
+  },
+  {
+    id: "feat-2",
+    title: "ফিচার: প্রবীণদের একাকীত্ব ঘোচাতে তরুণদের উদ্যোগ",
+    slug: "feature-youth-initiative-elderly-loneliness",
+    excerpt: "সপ্তাহান্তে নিয়মিত সময় কাটাতে যাচ্ছেন একদল স্বেচ্ছাসেবী।",
+    category: findCategory("features"),
+    author: "ফিচার প্রতিবেদক",
+    publishedAt: "১২ ঘণ্টা আগে",
+    imageTone: "slate",
+  },
+  {
+    id: "feat-3",
+    title: "ফিচার: হারিয়ে যাওয়া হস্তশিল্প ফিরিয়ে আনার গল্প",
+    slug: "feature-reviving-lost-handicrafts",
+    excerpt: "নতুন প্রজন্মের কারিগরদের হাত ধরে ফিরছে পুরনো ঐতিহ্য।",
+    category: findCategory("features"),
+    author: "ফিচার প্রতিবেদক",
+    publishedAt: "১৬ ঘণ্টা আগে",
+    imageTone: "navy",
+  },
+];
+
+export const educationArticles: Article[] = [
+  {
+    id: "edu-1",
+    title: "উচ্চ মাধ্যমিক পরীক্ষার ফলাফল প্রকাশ আগামী সপ্তাহে",
+    slug: "hsc-result-next-week",
+    excerpt: "শিক্ষা বোর্ড জানিয়েছে, ফল দেখা যাবে অনলাইনে ও এসএমএসে।",
+    category: findCategory("education"),
+    author: "শিক্ষা প্রতিবেদক",
+    publishedAt: "৪ ঘণ্টা আগে",
+    imageTone: "navy",
+  },
+  {
+    id: "edu-2",
+    title: "বিশ্ববিদ্যালয় ভর্তি পরীক্ষার সময়সূচি ঘোষণা",
+    slug: "university-admission-test-schedule",
+    excerpt: "গুচ্ছ পদ্ধতিতে এবার অংশ নিচ্ছে অতিরিক্ত দুটি বিশ্ববিদ্যালয়।",
+    category: findCategory("education"),
+    author: "শিক্ষা প্রতিবেদক",
+    publishedAt: "৯ ঘণ্টা আগে",
+    imageTone: "crimson",
+  },
+  {
+    id: "edu-3",
+    title: "শিক্ষাক্রমে পরিবর্তন আনছে মাধ্যমিক ও উচ্চশিক্ষা বোর্ড",
+    slug: "curriculum-changes-secondary-board",
+    excerpt: "আগামী শিক্ষাবর্ষ থেকে নতুন পাঠ্যক্রম কার্যকর হবে।",
+    category: findCategory("education"),
+    author: "নিজস্ব প্রতিবেদক",
+    publishedAt: "১৫ ঘণ্টা আগে",
+    imageTone: "slate",
+  },
+];
+
+export const healthArticles: Article[] = [
+  {
+    id: "health-1",
+    title: "ডেঙ্গু প্রতিরোধে বিশেষ কর্মসূচি নিল স্বাস্থ্য অধিদপ্তর",
+    slug: "dengue-prevention-special-program",
+    excerpt: "নগর এলাকায় বাড়তি নজরদারি চালানো হচ্ছে বলে জানানো হয়েছে।",
+    category: findCategory("health"),
+    author: "স্বাস্থ্য প্রতিবেদক",
+    publishedAt: "৩ ঘণ্টা আগে",
+    imageTone: "crimson",
+  },
+  {
+    id: "health-2",
+    title: "প্রাথমিক স্বাস্থ্যকেন্দ্রে বিনামূল্যে টিকাদান কর্মসূচি শুরু",
+    slug: "free-vaccination-program-launched",
+    excerpt: "শিশু ও গর্ভবতী মায়েদের অগ্রাধিকার দেওয়া হচ্ছে।",
+    category: findCategory("health"),
+    author: "স্বাস্থ্য প্রতিবেদক",
+    publishedAt: "১০ ঘণ্টা আগে",
+    imageTone: "navy",
+  },
+  {
+    id: "health-3",
+    title: "মানসিক স্বাস্থ্য সচেতনতায় নতুন হেল্পলাইন চালু",
+    slug: "mental-health-helpline-launched",
+    excerpt: "সপ্তাহে সাত দিন, ২৪ ঘণ্টা সেবা পাওয়া যাবে বলে জানানো হয়েছে।",
+    category: findCategory("health"),
+    author: "নিজস্ব প্রতিবেদক",
+    publishedAt: "১৪ ঘণ্টা আগে",
+    imageTone: "slate",
+  },
+];
+
+export const diasporaArticles: Article[] = [
+  {
+    id: "dia-1",
+    title: "প্রবাসী আয়ে রেকর্ড প্রবৃদ্ধি, স্বস্তিতে অর্থনীতি",
+    slug: "remittance-record-growth",
+    excerpt: "গত মাসের তুলনায় প্রবাসী আয় বেড়েছে উল্লেখযোগ্য হারে।",
+    category: findCategory("diaspora"),
+    author: "প্রবাস প্রতিবেদক",
+    publishedAt: "৬ ঘণ্টা আগে",
+    imageTone: "amber",
+  },
+  {
+    id: "dia-2",
+    title: "মধ্যপ্রাচ্যে শ্রমবাজার সম্প্রসারণে নতুন সমঝোতা",
+    slug: "middle-east-labor-market-agreement",
+    excerpt: "নতুন করে কয়েক হাজার কর্মী পাঠানোর সুযোগ তৈরি হয়েছে।",
+    category: findCategory("diaspora"),
+    author: "প্রবাস প্রতিবেদক",
+    publishedAt: "১১ ঘণ্টা আগে",
+    imageTone: "navy",
+  },
+  {
+    id: "dia-3",
+    title: "প্রবাসীদের জন্য ডিজিটাল সেবা চালু করল দূতাবাস",
+    slug: "embassy-digital-service-for-expats",
+    excerpt: "পাসপোর্ট ও সনদ সংক্রান্ত সেবা এখন থেকে অনলাইনেই মিলবে।",
+    category: findCategory("diaspora"),
+    author: "প্রবাস প্রতিবেদক",
+    publishedAt: "১৫ ঘণ্টা আগে",
+    imageTone: "slate",
+  },
+];
+
 export const videoArticles: Article[] = [
   {
     id: "vid-1",
@@ -372,7 +716,7 @@ export const videoArticles: Article[] = [
     title: "প্রতিবেদন: উপকূলীয় এলাকায় প্রস্তুতি পরিদর্শন",
     slug: "coastal-preparation-report",
     excerpt: "মাঠপর্যায়ের প্রস্তুতি নিয়ে বিস্তারিত প্রতিবেদন।",
-    category: findCategory("environment"),
+    category: findCategory("nationwide"),
     author: "ভিডিও ডেস্ক",
     publishedAt: "৪ ঘণ্টা আগে",
     imageTone: "slate",
@@ -444,12 +788,43 @@ export const trendingArticles: Article[] = [
   { ...nationalArticles[1], viewCount: 8100 },
 ];
 
+export const latestReadArticles: Article[] = [
+  jobsArticles[0],
+  nationalArticles[0],
+  specialReportArticles[0],
+  sportsArticles[0],
+  entertainmentArticles[0],
+  healthArticles[0],
+];
+
+export const trendingTags: string[] = [
+  "জাতীয় নির্বাচন",
+  "এশিয়া কাপ",
+  "বাজেট অধিবেশন",
+  "ডেঙ্গু পরিস্থিতি",
+  "প্রবাসী আয়",
+  "এইচএসসি ফলাফল",
+  "আবহাওয়া সতর্কতা",
+  "সরকারি নিয়োগ",
+  "জ্বালানি তেলের দাম",
+  "মেট্রোরেল",
+];
+
 export const allArticles: Article[] = [
   heroArticle,
   ...nationalArticles,
   ...politicsArticles,
+  ...specialReportArticles,
+  ...secretariatArticles,
+  ...nationwideArticles,
+  ...jobsArticles,
+  ...topTenArticles,
   ...sportsArticles,
   ...entertainmentArticles,
+  ...featuresArticles,
+  ...educationArticles,
+  ...healthArticles,
+  ...diasporaArticles,
   ...videoArticles,
   ...galleryArticles,
 ];

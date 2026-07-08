@@ -2,12 +2,13 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ArticleCard } from "@/components/home/ArticleCard";
 import { Pagination } from "@/components/home/Pagination";
-import { TrendingSidebar } from "@/components/home/TrendingSidebar";
+import { ReadingSidebar } from "@/components/home/ReadingSidebar";
 import {
   categories,
   getArticlesByCategory,
   paginate,
   trendingArticles,
+  latestReadArticles,
 } from "@/lib/mock-data";
 
 type PageParams = { category: string };
@@ -79,7 +80,7 @@ export default async function CategoryPage({
       </div>
 
       <div className="hidden lg:block">
-        <TrendingSidebar articles={trendingArticles} />
+        <ReadingSidebar mostRead={trendingArticles} latestRead={latestReadArticles} />
       </div>
     </main>
   );
