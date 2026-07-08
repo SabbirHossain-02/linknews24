@@ -1,6 +1,35 @@
-import { ArticleCard } from "@/components/home/ArticleCard";
+import Link from "next/link";
 import { Pagination } from "@/components/home/Pagination";
+import { toneGradientClass } from "@/lib/tone";
 import type { Article, Category } from "@/types/content";
+
+function ArticleRow({ article }: { article: Article }) {
+  return (
+    <Link href={`/${article.slug}`} className="group flex gap-4 py-4">
+      <div
+        className={`h-20 w-28 shrink-0 overflow-hidden rounded md:h-24 md:w-36 ${toneGradientClass(
+          article.imageTone,
+        )}`}
+      />
+      <div className="min-w-0">
+        <span className="font-ui text-[11px] font-semibold uppercase tracking-wide text-brand-crimson">
+          {article.category.name}
+        </span>
+        <h3 className="mt-1 line-clamp-2 text-[15px] font-semibold leading-snug text-foreground transition-colors group-hover:text-brand-crimson">
+          {article.title}
+        </h3>
+        {article.excerpt && (
+          <p className="mt-1 line-clamp-1 hidden text-sm text-foreground-muted sm:block">
+            {article.excerpt}
+          </p>
+        )}
+        <p className="mt-1 font-ui text-xs text-foreground-muted">
+          {article.author} · {article.publishedAt}
+        </p>
+      </div>
+    </Link>
+  );
+}
 
 export function CategoryListing({
   category,
@@ -13,8 +42,12 @@ export function CategoryListing({
   currentPage: number;
   totalPages: number;
 }) {
+  const showLead = currentPage === 1 && items.length > 0;
+  const lead = showLead ? items[0] : undefined;
+  const rest = showLead ? items.slice(1) : items;
+
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-2">
       <h1 className="border-b-2 border-brand-navy pb-2 text-2xl font-bold text-brand-navy">
         {category.name}
       </h1>
@@ -25,16 +58,45 @@ export function CategoryListing({
         </p>
       ) : (
         <>
-          <div className="grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-4">
-            {items.map((article) => (
-              <ArticleCard key={article.id} article={article} />
+          {lead && (
+            <Link href={`/${lead.slug}`} className="group block border-b border-border pb-5 pt-4">
+              <div
+                className={`relative aspect-[21/9] w-full overflow-hidden rounded-md ${toneGradientClass(
+                  lead.imageTone,
+                )}`}
+              />
+              <div className="mt-3">
+                <span className="font-ui text-xs font-semibold uppercase tracking-wide text-brand-crimson">
+                  {lead.category.name}
+                </span>
+                <h2 className="mt-1 text-xl font-bold leading-snug text-foreground transition-colors group-hover:text-brand-crimson">
+                  {lead.title}
+                </h2>
+                {lead.excerpt && (
+                  <p className="mt-1.5 line-clamp-2 text-sm text-foreground-muted">
+                    {lead.excerpt}
+                  </p>
+                )}
+                <p className="mt-1.5 font-ui text-xs text-foreground-muted">
+                  {lead.author} · {lead.publishedAt}
+                </p>
+              </div>
+            </Link>
+          )}
+
+          <div className="flex flex-col divide-y divide-border">
+            {rest.map((article) => (
+              <ArticleRow key={article.id} article={article} />
             ))}
           </div>
-          <Pagination
-            basePath={`/${category.slug}`}
-            currentPage={currentPage}
-            totalPages={totalPages}
-          />
+
+          <div className="pt-4">
+            <Pagination
+              basePath={`/${category.slug}`}
+              currentPage={currentPage}
+              totalPages={totalPages}
+            />
+          </div>
         </>
       )}
     </div>
