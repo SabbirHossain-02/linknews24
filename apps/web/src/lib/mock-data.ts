@@ -1048,6 +1048,35 @@ export function searchArticles(query: string): Article[] {
   );
 }
 
+const BENGALI_TO_ARABIC_DIGIT: Record<string, string> = {
+  "০": "0",
+  "১": "1",
+  "২": "2",
+  "৩": "3",
+  "৪": "4",
+  "৫": "5",
+  "৬": "6",
+  "৭": "7",
+  "৮": "8",
+  "৯": "9",
+};
+
+function parseHoursAgo(publishedAt: string): number {
+  const arabic = publishedAt.replace(
+    /[০-৯]/g,
+    (digit) => BENGALI_TO_ARABIC_DIGIT[digit],
+  );
+  const match = arabic.match(/(\d+)/);
+  return match ? Number(match[1]) : Infinity;
+}
+
+export function getLatestHeadlines(count = 10): Article[] {
+  return [...allArticles]
+    .filter((article) => !article.isGallery)
+    .sort((a, b) => parseHoursAgo(a.publishedAt) - parseHoursAgo(b.publishedAt))
+    .slice(0, count);
+}
+
 const GENERIC_BODY_PARAGRAPHS = [
   "ঘটনার সাথে সংশ্লিষ্ট কর্তৃপক্ষ বিষয়টি খতিয়ে দেখছে বলে জানা গেছে। প্রাথমিক পর্যায়ে সংগৃহীত তথ্য অনুযায়ী পরিস্থিতি পর্যবেক্ষণে রাখা হচ্ছে।",
   "সংশ্লিষ্টরা বলছেন, আগামী কয়েক দিনের মধ্যে এ বিষয়ে আরও বিস্তারিত তথ্য জানানো হতে পারে। প্রয়োজনীয় পদক্ষেপ নেওয়ার আশ্বাস দিয়েছেন দায়িত্বশীলরা।",

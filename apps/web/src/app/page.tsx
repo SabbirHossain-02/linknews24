@@ -1,5 +1,6 @@
 import { HeroStory } from "@/components/home/HeroStory";
 import { TopStoriesList } from "@/components/home/TopStoriesList";
+import { LatestHeadlines } from "@/components/home/LatestHeadlines";
 import { NewsSection } from "@/components/home/NewsSection";
 import { GalleryStrip } from "@/components/home/GalleryStrip";
 import { ReadingSidebar } from "@/components/home/ReadingSidebar";
@@ -22,6 +23,7 @@ import {
   galleryArticles,
   trendingArticles,
   latestReadArticles,
+  getLatestHeadlines,
 } from "@/lib/mock-data";
 
 const topStories = [
@@ -42,6 +44,8 @@ export default function Home() {
             <TopStoriesList articles={topStories} />
           </div>
         </div>
+
+        <LatestHeadlines articles={getLatestHeadlines()} />
 
         <NewsSection title="জাতীয়" href="/national" articles={nationalArticles} />
         <NewsSection title="রাজনীতি" href="/politics" articles={politicsArticles} />
