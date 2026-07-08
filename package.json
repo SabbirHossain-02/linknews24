@@ -1,0 +1,8 @@
+{
+  "name": "linknews24",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ]
+}
