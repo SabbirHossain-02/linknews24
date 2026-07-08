@@ -81,6 +81,46 @@ export const nationalArticles: Article[] = [
     publishedAt: "৮ ঘণ্টা আগে",
     imageTone: "slate",
   },
+  {
+    id: "nat-5",
+    title: "রাজধানীর তিনটি ওয়ার্ডে বিশুদ্ধ পানি সরবরাহ প্রকল্প উদ্বোধন",
+    slug: "clean-water-project-inaugurated",
+    excerpt: "প্রায় দুই লাখ বাসিন্দা সরাসরি উপকৃত হবেন বলে জানিয়েছে সিটি কর্পোরেশন।",
+    category: findCategory("national"),
+    author: "নগর প্রতিবেদক",
+    publishedAt: "১০ ঘণ্টা আগে",
+    imageTone: "navy",
+  },
+  {
+    id: "nat-6",
+    title: "দুর্যোগ মোকাবিলায় নতুন আগাম সতর্কীকরণ ব্যবস্থা চালু",
+    slug: "new-early-warning-system-launched",
+    excerpt: "উপকূলীয় ১২ জেলায় প্রথম পর্যায়ে বাস্তবায়ন হচ্ছে ব্যবস্থাটি।",
+    category: findCategory("national"),
+    author: "নিজস্ব প্রতিবেদক",
+    publishedAt: "১২ ঘণ্টা আগে",
+    imageTone: "slate",
+  },
+  {
+    id: "nat-7",
+    title: "সরকারি চাকরিতে নতুন নিয়োগবিধি জারি",
+    slug: "new-recruitment-rules-issued",
+    excerpt: "স্বচ্ছতা বাড়াতে ডিজিটাল যাচাই প্রক্রিয়া বাধ্যতামূলক করা হয়েছে।",
+    category: findCategory("national"),
+    author: "প্রশাসন প্রতিবেদক",
+    publishedAt: "১৪ ঘণ্টা আগে",
+    imageTone: "amber",
+  },
+  {
+    id: "nat-8",
+    title: "শীতকালীন স্বাস্থ্যসতর্কতা জারি করল স্বাস্থ্য অধিদপ্তর",
+    slug: "winter-health-advisory-issued",
+    excerpt: "শিশু ও প্রবীণদের বাড়তি সতর্কতা নেওয়ার পরামর্শ দেওয়া হয়েছে।",
+    category: findCategory("national"),
+    author: "স্বাস্থ্য প্রতিবেদক",
+    publishedAt: "১৬ ঘণ্টা আগে",
+    imageTone: "crimson",
+  },
 ];
 
 export const politicsArticles: Article[] = [
@@ -123,6 +163,36 @@ export const politicsArticles: Article[] = [
     author: "রাজনৈতিক প্রতিবেদক",
     publishedAt: "১০ ঘণ্টা আগে",
     imageTone: "crimson",
+  },
+  {
+    id: "pol-5",
+    title: "সংসদীয় কমিটির প্রতিবেদন জমা, সুপারিশ একাধিক সংস্কারের",
+    slug: "parliamentary-committee-report-submitted",
+    excerpt: "প্রশাসনিক জবাবদিহিতা বাড়াতে নতুন কাঠামোর প্রস্তাব দেওয়া হয়েছে।",
+    category: findCategory("politics"),
+    author: "সংসদ প্রতিবেদক",
+    publishedAt: "১৩ ঘণ্টা আগে",
+    imageTone: "navy",
+  },
+  {
+    id: "pol-6",
+    title: "উপনির্বাচনে প্রার্থী তালিকা চূড়ান্ত করল প্রধান দলগুলো",
+    slug: "by-election-candidate-list-finalized",
+    excerpt: "আগামী সপ্তাহে মনোনয়নপত্র জমা দেওয়ার শেষ দিন নির্ধারিত হয়েছে।",
+    category: findCategory("politics"),
+    author: "রাজনৈতিক প্রতিবেদক",
+    publishedAt: "১৫ ঘণ্টা আগে",
+    imageTone: "crimson",
+  },
+  {
+    id: "pol-7",
+    title: "স্থানীয় সরকার আইনে সংশোধনী প্রস্তাব মন্ত্রিসভায়",
+    slug: "local-government-act-amendment-proposal",
+    excerpt: "প্রস্তাবিত সংশোধনী জনপ্রতিনিধিদের ক্ষমতা পুনর্বিন্যাস করবে বলে জানা গেছে।",
+    category: findCategory("politics"),
+    author: "নিজস্ব প্রতিবেদক",
+    publishedAt: "১৭ ঘণ্টা আগে",
+    imageTone: "slate",
   },
 ];
 
@@ -167,6 +237,36 @@ export const sportsArticles: Article[] = [
     publishedAt: "১২ ঘণ্টা আগে",
     imageTone: "amber",
   },
+  {
+    id: "spo-5",
+    title: "জাতীয় দলের নতুন প্রধান কোচ নিয়োগ দিল ক্রিকেট বোর্ড",
+    slug: "new-head-coach-appointed",
+    excerpt: "আসন্ন সিরিজ থেকেই দায়িত্ব নেবেন নতুন কোচ।",
+    category: findCategory("sports"),
+    author: "ক্রীড়া প্রতিবেদক",
+    publishedAt: "১৪ ঘণ্টা আগে",
+    imageTone: "navy",
+  },
+  {
+    id: "spo-6",
+    title: "হকি টুর্নামেন্টে রানার্সআপ বাংলাদেশ",
+    slug: "hockey-tournament-runners-up",
+    excerpt: "ফাইনালে টাইব্রেকারে হেরে শিরোপা হাতছাড়া করে দল।",
+    category: findCategory("sports"),
+    author: "নিজস্ব প্রতিবেদক",
+    publishedAt: "১৬ ঘণ্টা আগে",
+    imageTone: "slate",
+  },
+  {
+    id: "spo-7",
+    title: "অ্যাথলেটিক্সে জাতীয় রেকর্ড গড়লেন তরুণ দৌড়বিদ",
+    slug: "national-record-in-athletics",
+    excerpt: "১০০ মিটার স্প্রিন্টে ১১ বছরের পুরনো রেকর্ড ভাঙলেন তিনি।",
+    category: findCategory("sports"),
+    author: "ক্রীড়া প্রতিবেদক",
+    publishedAt: "১৮ ঘণ্টা আগে",
+    imageTone: "crimson",
+  },
 ];
 
 export const entertainmentArticles: Article[] = [
@@ -209,6 +309,36 @@ export const entertainmentArticles: Article[] = [
     author: "বিনোদন প্রতিবেদক",
     publishedAt: "১১ ঘণ্টা আগে",
     imageTone: "slate",
+  },
+  {
+    id: "ent-5",
+    title: "কনসার্ট ট্যুর ঘোষণা করলেন জনপ্রিয় কণ্ঠশিল্পী",
+    slug: "popular-singer-announces-tour",
+    excerpt: "পাঁচটি শহরে টিকিট বিক্রি শুরু হবে আগামী সপ্তাহে।",
+    category: findCategory("entertainment"),
+    author: "বিনোদন প্রতিবেদক",
+    publishedAt: "১৩ ঘণ্টা আগে",
+    imageTone: "crimson",
+  },
+  {
+    id: "ent-6",
+    title: "টিভি নাটকে ফিরছেন জনপ্রিয় জুটি",
+    slug: "popular-duo-returns-to-tv-drama",
+    excerpt: "দীর্ঘ বিরতির পর একসঙ্গে কাজ করছেন তারা।",
+    category: findCategory("entertainment"),
+    author: "নিজস্ব প্রতিবেদক",
+    publishedAt: "১৫ ঘণ্টা আগে",
+    imageTone: "amber",
+  },
+  {
+    id: "ent-7",
+    title: "আন্তর্জাতিক চলচ্চিত্র উৎসবে জায়গা পেল দেশীয় সিনেমা",
+    slug: "local-film-selected-international-festival",
+    excerpt: "প্রধান বিভাগে প্রদর্শিত হবে ছবিটি, জানালেন পরিচালক।",
+    category: findCategory("entertainment"),
+    author: "বিনোদন প্রতিবেদক",
+    publishedAt: "১৭ ঘণ্টা আগে",
+    imageTone: "navy",
   },
 ];
 
@@ -313,3 +443,37 @@ export const trendingArticles: Article[] = [
   { ...entertainmentArticles[0], viewCount: 9600 },
   { ...nationalArticles[1], viewCount: 8100 },
 ];
+
+export const allArticles: Article[] = [
+  heroArticle,
+  ...nationalArticles,
+  ...politicsArticles,
+  ...sportsArticles,
+  ...entertainmentArticles,
+  ...videoArticles,
+  ...galleryArticles,
+];
+
+export function getArticlesByCategory(slug: string): Article[] {
+  if (slug === "video") {
+    return allArticles.filter((article) => article.isVideo);
+  }
+  return allArticles.filter((article) => article.category.slug === slug);
+}
+
+export const ARTICLES_PER_PAGE = 6;
+
+export function paginate<T>(
+  items: T[],
+  page: number,
+  pageSize: number = ARTICLES_PER_PAGE,
+): { items: T[]; totalPages: number; currentPage: number } {
+  const totalPages = Math.max(1, Math.ceil(items.length / pageSize));
+  const currentPage = Math.min(Math.max(1, page), totalPages);
+  const start = (currentPage - 1) * pageSize;
+  return {
+    items: items.slice(start, start + pageSize),
+    totalPages,
+    currentPage,
+  };
+}

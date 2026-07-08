@@ -3,7 +3,7 @@ import type { Article } from "@/types/content";
 
 export function TrendingSidebar({ articles }: { articles: Article[] }) {
   return (
-    <aside className="sticky top-[132px] rounded-lg border border-border bg-surface p-5">
+    <aside className="sticky top-[190px] rounded-lg border border-border bg-surface p-5">
       <h2 className="border-b-2 border-brand-navy pb-2 text-lg font-bold text-brand-navy">
         Trending
       </h2>

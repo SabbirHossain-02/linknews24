@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Menu, Search, X } from "lucide-react";
 import { categories } from "@/lib/mock-data";
 
@@ -11,25 +12,16 @@ export function MainNav() {
   return (
     <nav className="border-b border-border bg-background">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-6 px-6 py-3">
-        <Link
-          href="/"
-          className="shrink-0 text-xl font-bold tracking-tight text-brand-navy"
-        >
-          Link News<span className="text-brand-crimson">24</span>
+        <Link href="/" className="flex shrink-0 items-center">
+          <Image
+            src="/logo.png"
+            alt="LinkNews24"
+            width={169}
+            height={54}
+            priority
+            className="h-14 w-auto"
+          />
         </Link>
-
-        <ul className="hidden flex-1 flex-wrap items-center justify-end gap-x-6 gap-y-2 md:flex">
-          {categories.map((cat) => (
-            <li key={cat.id}>
-              <Link
-                href={`/${cat.slug}`}
-                className="font-medium text-sm text-foreground/80 transition-colors hover:text-brand-crimson"
-              >
-                {cat.name}
-              </Link>
-            </li>
-          ))}
-        </ul>
 
         <button
           className="hidden shrink-0 text-foreground/70 transition-colors hover:text-brand-crimson md:block"
@@ -45,6 +37,21 @@ export function MainNav() {
         >
           {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
         </button>
+      </div>
+
+      <div className="hidden border-t border-border md:block">
+        <ul className="mx-auto flex max-w-6xl items-center gap-x-6 overflow-x-auto px-6 py-2.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {categories.map((cat) => (
+            <li key={cat.id} className="shrink-0">
+              <Link
+                href={`/${cat.slug}`}
+                className="font-medium text-sm text-foreground/80 transition-colors hover:text-brand-crimson"
+              >
+                {cat.name}
+              </Link>
+            </li>
+          ))}
+        </ul>
       </div>
 
       <div className={`${open ? "block" : "hidden"} border-t border-border md:hidden`}>

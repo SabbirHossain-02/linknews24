@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import { Hind_Siliguri, Inter } from "next/font/google";
+import { AdBanner } from "@/components/layout/AdBanner";
+import { SiteHeader } from "@/components/layout/SiteHeader";
+import { SiteFooter } from "@/components/layout/SiteFooter";
 import "./globals.css";
 
 const hindSiliguri = Hind_Siliguri({
@@ -34,7 +37,12 @@ export default function RootLayout({
       <body
         className={`${hindSiliguri.variable} ${inter.variable} antialiased`}
       >
-        {children}
+        <div className="flex min-h-screen flex-col">
+          <AdBanner />
+          <SiteHeader />
+          {children}
+          <SiteFooter />
+        </div>
       </body>
     </html>
   );
