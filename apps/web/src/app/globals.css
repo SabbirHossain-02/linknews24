@@ -27,6 +27,17 @@
 
   --font-sans: var(--font-hind-siliguri);
   --font-ui: var(--font-inter);
+
+  --animate-ticker: ticker 28s linear infinite;
+
+  @keyframes ticker {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
 }
 
 body {

@@ -1,33 +1,46 @@
+import { SiteHeader } from "@/components/layout/SiteHeader";
+import { SiteFooter } from "@/components/layout/SiteFooter";
+import { HeroStory } from "@/components/home/HeroStory";
+import { ThematicRow } from "@/components/home/ThematicRow";
+import { GalleryStrip } from "@/components/home/GalleryStrip";
+import { TrendingSidebar } from "@/components/home/TrendingSidebar";
+import {
+  heroArticle,
+  nationalArticles,
+  politicsArticles,
+  sportsArticles,
+  entertainmentArticles,
+  videoArticles,
+  galleryArticles,
+  trendingArticles,
+} from "@/lib/mock-data";
+
 export default function Home() {
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="border-b border-border bg-brand-navy">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <span className="text-xl font-semibold tracking-tight text-white">
-            Link News<span className="text-brand-crimson">24</span>
-          </span>
-          <span className="font-ui text-xs uppercase tracking-[0.2em] text-white/50">
-            বাংলা নিউজ পোর্টাল
-          </span>
-        </div>
-      </header>
+      <SiteHeader />
 
-      <main className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
-        <p className="font-ui text-xs uppercase tracking-[0.3em] text-brand-crimson">
-          Coming Soon
-        </p>
-        <h1 className="text-3xl font-bold text-foreground sm:text-4xl">
-          LinkNews24 শীঘ্রই আসছে
-        </h1>
-        <p className="max-w-md text-foreground-muted">
-          জাতীয়, আন্তর্জাতিক, রাজনীতি, খেলা ও বিনোদনের সর্বশেষ খবর নিয়ে
-          তৈরি হচ্ছে একটি নতুন অভিজ্ঞতা।
-        </p>
+      <main className="mx-auto grid w-full max-w-6xl flex-1 gap-10 px-6 py-8 lg:grid-cols-[1fr_300px]">
+        <div className="flex flex-col gap-12">
+          <HeroStory article={heroArticle} />
+          <ThematicRow title="জাতীয়" href="/national" articles={nationalArticles} />
+          <ThematicRow title="রাজনীতি" href="/politics" articles={politicsArticles} />
+          <ThematicRow title="খেলা" href="/sports" articles={sportsArticles} />
+          <ThematicRow title="ভিডিও নিউজ" href="/video" articles={videoArticles} />
+          <ThematicRow
+            title="বিনোদন"
+            href="/entertainment"
+            articles={entertainmentArticles}
+          />
+          <GalleryStrip articles={galleryArticles} />
+        </div>
+
+        <div className="hidden lg:block">
+          <TrendingSidebar articles={trendingArticles} />
+        </div>
       </main>
 
-      <footer className="border-t border-border py-6 text-center font-ui text-xs text-foreground-muted">
-        © {new Date().getFullYear()} LinkNews24. সর্বস্বত্ব সংরক্ষিত।
-      </footer>
+      <SiteFooter />
     </div>
   );
 }
