@@ -16,14 +16,14 @@ export function ReadingSidebar({
         <div className="flex flex-col divide-y divide-border p-5">
           <div className="pb-6">
             <RankedArticleList
-              title="সবচেয়ে পঠিত"
+              title="Most Read"
               icon={Flame}
               articles={mostRead}
               showViewCount
             />
           </div>
           <div className="pt-6">
-            <RankedArticleList title="সর্বশেষ পঠিত" icon={Clock} articles={latestRead} />
+            <RankedArticleList title="Latest Read" icon={Clock} articles={latestRead} />
           </div>
         </div>
       </div>

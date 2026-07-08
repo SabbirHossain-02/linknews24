@@ -19,7 +19,7 @@ export function RankedArticleList({
         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-crimson/10 text-brand-crimson">
           <Icon className="h-4 w-4" />
         </span>
-        <h2 className="text-[15px] font-bold tracking-tight text-brand-navy">
+        <h2 className="font-ui text-sm font-bold uppercase tracking-wider text-brand-navy">
           {title}
         </h2>
       </div>
