@@ -3,7 +3,7 @@
 import Link from "next/link";
 import type { Article } from "@/types/content";
 import { toneGradientClass } from "@/lib/tone";
-import { localizedName } from "@/lib/i18n";
+import { localizedAuthor, localizedName, localizedPublishedAt } from "@/lib/i18n";
 import { useLocale } from "@/components/providers/LocaleProvider";
 
 export function HeroStory({ article }: { article: Article }) {
@@ -29,13 +29,14 @@ export function HeroStory({ article }: { article: Article }) {
             </span>
           </div>
           <h1 className="mt-3 max-w-2xl text-2xl font-bold leading-tight text-white transition-colors group-hover:text-white/90 sm:text-3xl md:text-4xl">
-            {article.title}
+            {locale === "en" ? article.titleEn : article.title}
           </h1>
           <p className="mt-3 max-w-xl font-ui text-sm text-white/70 sm:text-base">
-            {article.excerpt}
+            {locale === "en" ? article.excerptEn : article.excerpt}
           </p>
           <p className="mt-3 font-ui text-xs text-white/50">
-            {article.author} · {article.publishedAt}
+            {localizedAuthor(article.author, locale)} ·{" "}
+            {localizedPublishedAt(article.publishedAt, locale)}
           </p>
         </div>
       </div>

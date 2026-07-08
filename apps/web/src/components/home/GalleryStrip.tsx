@@ -6,7 +6,7 @@ import { toneGradientClass } from "@/lib/tone";
 import { useLocale } from "@/components/providers/LocaleProvider";
 
 export function GalleryStrip({ articles }: { articles: Article[] }) {
-  const { t } = useLocale();
+  const { locale, t } = useLocale();
 
   return (
     <section>
@@ -34,7 +34,7 @@ export function GalleryStrip({ articles }: { articles: Article[] }) {
               <div className="absolute inset-0 bg-black/0 transition-colors group-hover:bg-black/10" />
             </div>
             <h3 className="mt-2 text-sm font-medium leading-snug text-foreground transition-colors group-hover:text-brand-crimson">
-              {article.title}
+              {locale === "en" ? article.titleEn : article.title}
             </h3>
           </Link>
         ))}

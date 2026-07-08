@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Pagination } from "@/components/home/Pagination";
 import { toneGradientClass } from "@/lib/tone";
-import { localizedName } from "@/lib/i18n";
+import { localizedAuthor, localizedName, localizedPublishedAt } from "@/lib/i18n";
 import { useLocale } from "@/components/providers/LocaleProvider";
 import type { Article, Category } from "@/types/content";
 
@@ -43,10 +43,11 @@ export function GalleryListing({
                   <div className="absolute inset-0 bg-black/0 transition-colors group-hover:bg-black/10" />
                 </div>
                 <h3 className="mt-2 text-sm font-medium leading-snug text-foreground transition-colors group-hover:text-brand-crimson">
-                  {article.title}
+                  {locale === "en" ? article.titleEn : article.title}
                 </h3>
                 <p className="mt-1 font-ui text-xs text-foreground-muted">
-                  {article.author} · {article.publishedAt}
+                  {localizedAuthor(article.author, locale)} ·{" "}
+                  {localizedPublishedAt(article.publishedAt, locale)}
                 </p>
               </Link>
             ))}

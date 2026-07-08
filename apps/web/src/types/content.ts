@@ -8,8 +8,10 @@ export interface Category {
 export interface Article {
   id: string;
   title: string;
+  titleEn: string;
   slug: string;
   excerpt: string;
+  excerptEn: string;
   category: Category;
   author: string;
   publishedAt: string;

@@ -21,7 +21,7 @@ export function TopStoriesList({ articles }: { articles: Article[] }) {
                 {localizedName(article.category, locale)}
               </span>
               <h3 className="mt-1 text-[15px] font-semibold leading-snug text-foreground transition-colors group-hover:text-brand-crimson">
-                {article.title}
+                {locale === "en" ? article.titleEn : article.title}
               </h3>
             </Link>
           </li>

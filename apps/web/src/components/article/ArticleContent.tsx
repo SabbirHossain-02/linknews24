@@ -4,7 +4,7 @@ import Link from "next/link";
 import type { Article } from "@/types/content";
 import { toneGradientClass } from "@/lib/tone";
 import { getArticleBody, getRelatedArticles } from "@/lib/mock-data";
-import { localizedName } from "@/lib/i18n";
+import { localizedAuthor, localizedName, localizedPublishedAt } from "@/lib/i18n";
 import { useLocale } from "@/components/providers/LocaleProvider";
 import { ThematicRow } from "@/components/home/ThematicRow";
 import { ShareButtons } from "./ShareButtons";
@@ -13,10 +13,11 @@ import { RecordHistory } from "./RecordHistory";
 import { ArticleSchema } from "./ArticleSchema";
 
 export function ArticleContent({ article }: { article: Article }) {
-  const body = getArticleBody(article);
-  const related = getRelatedArticles(article);
   const { locale, t } = useLocale();
+  const body = getArticleBody(article, locale);
+  const related = getRelatedArticles(article);
   const categoryLabel = localizedName(article.category, locale);
+  const title = locale === "en" ? article.titleEn : article.title;
 
   return (
     <article className="flex flex-col gap-8">
@@ -52,18 +53,20 @@ export function ArticleContent({ article }: { article: Article }) {
         </div>
 
         <h1 className="text-2xl font-bold leading-tight text-heading sm:text-3xl md:text-4xl">
-          {article.title}
+          {title}
         </h1>
 
         <div className="flex flex-wrap items-center justify-between gap-4 border-y border-border py-3">
           <p className="font-ui text-sm text-foreground-muted">
-            <span className="font-semibold text-foreground">{article.author}</span>
+            <span className="font-semibold text-foreground">
+              {localizedAuthor(article.author, locale)}
+            </span>
             <span className="mx-1.5">·</span>
-            {article.publishedAt}
+            {localizedPublishedAt(article.publishedAt, locale)}
           </p>
           <div className="flex items-center gap-3">
             <BookmarkButton article={article} />
-            <ShareButtons title={article.title} />
+            <ShareButtons title={title} />
           </div>
         </div>
       </div>

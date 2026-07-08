@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import type { Article } from "@/types/content";
+import { localizedPublishedAt } from "@/lib/i18n";
 import { useLocale } from "@/components/providers/LocaleProvider";
 
 export function LatestHeadlines({ articles }: { articles: Article[] }) {
-  const { t } = useLocale();
+  const { locale, t } = useLocale();
 
   return (
     <section>
@@ -21,10 +22,10 @@ export function LatestHeadlines({ articles }: { articles: Article[] }) {
               className="group flex items-baseline justify-between gap-4 py-2.5"
             >
               <span className="line-clamp-1 text-[15px] font-medium leading-snug text-foreground transition-colors group-hover:text-brand-crimson">
-                {article.title}
+                {locale === "en" ? article.titleEn : article.title}
               </span>
               <span className="shrink-0 font-ui text-xs text-foreground-muted">
-                {article.publishedAt}
+                {localizedPublishedAt(article.publishedAt, locale)}
               </span>
             </Link>
           </li>

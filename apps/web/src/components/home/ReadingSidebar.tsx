@@ -1,3 +1,5 @@
+"use client";
+
 import { Clock, Flame } from "lucide-react";
 import type { Article } from "@/types/content";
 import { RankedArticleList } from "./RankedArticleList";

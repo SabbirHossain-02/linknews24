@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Pagination } from "@/components/home/Pagination";
 import { toneGradientClass } from "@/lib/tone";
-import { localizedName } from "@/lib/i18n";
+import { localizedAuthor, localizedName, localizedPublishedAt } from "@/lib/i18n";
 import { useLocale } from "@/components/providers/LocaleProvider";
 import type { Article, Category } from "@/types/content";
 
@@ -22,15 +22,16 @@ function ArticleRow({ article }: { article: Article }) {
           {localizedName(article.category, locale)}
         </span>
         <h3 className="mt-1 line-clamp-2 text-[15px] font-semibold leading-snug text-foreground transition-colors group-hover:text-brand-crimson">
-          {article.title}
+          {locale === "en" ? article.titleEn : article.title}
         </h3>
-        {article.excerpt && (
+        {(locale === "en" ? article.excerptEn : article.excerpt) && (
           <p className="mt-1 line-clamp-1 hidden text-sm text-foreground-muted sm:block">
-            {article.excerpt}
+            {locale === "en" ? article.excerptEn : article.excerpt}
           </p>
         )}
         <p className="mt-1 font-ui text-xs text-foreground-muted">
-          {article.author} · {article.publishedAt}
+          {localizedAuthor(article.author, locale)} ·{" "}
+          {localizedPublishedAt(article.publishedAt, locale)}
         </p>
       </div>
     </Link>
@@ -80,15 +81,16 @@ export function CategoryListing({
                   {localizedName(lead.category, locale)}
                 </span>
                 <h2 className="mt-1 text-xl font-bold leading-snug text-foreground transition-colors group-hover:text-brand-crimson">
-                  {lead.title}
+                  {locale === "en" ? lead.titleEn : lead.title}
                 </h2>
-                {lead.excerpt && (
+                {(locale === "en" ? lead.excerptEn : lead.excerpt) && (
                   <p className="mt-1.5 line-clamp-2 text-sm text-foreground-muted">
-                    {lead.excerpt}
+                    {locale === "en" ? lead.excerptEn : lead.excerpt}
                   </p>
                 )}
                 <p className="mt-1.5 font-ui text-xs text-foreground-muted">
-                  {lead.author} · {lead.publishedAt}
+                  {localizedAuthor(lead.author, locale)} ·{" "}
+                  {localizedPublishedAt(lead.publishedAt, locale)}
                 </p>
               </div>
             </Link>

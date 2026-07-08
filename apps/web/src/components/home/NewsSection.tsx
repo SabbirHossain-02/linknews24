@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Play } from "lucide-react";
 import type { Article } from "@/types/content";
 import { toneGradientClass } from "@/lib/tone";
+import { localizedAuthor, localizedName, localizedPublishedAt } from "@/lib/i18n";
 import { useLocale } from "@/components/providers/LocaleProvider";
 
 export function NewsSection({
@@ -15,7 +16,7 @@ export function NewsSection({
   href: string;
   articles: Article[];
 }) {
-  const { t } = useLocale();
+  const { locale, t } = useLocale();
   const [lead, ...rest] = articles;
   if (!lead) return null;
   const listItems = rest.slice(0, 5);
@@ -49,18 +50,19 @@ export function NewsSection({
           </div>
           <div className="mt-2.5">
             <span className="font-ui text-xs font-semibold uppercase tracking-wide text-brand-crimson">
-              {lead.category.name}
+              {localizedName(lead.category, locale)}
             </span>
             <h3 className="mt-1 text-lg font-bold leading-snug text-foreground transition-colors group-hover:text-brand-crimson">
-              {lead.title}
+              {locale === "en" ? lead.titleEn : lead.title}
             </h3>
-            {lead.excerpt && (
+            {(locale === "en" ? lead.excerptEn : lead.excerpt) && (
               <p className="mt-1.5 line-clamp-2 text-sm text-foreground-muted">
-                {lead.excerpt}
+                {locale === "en" ? lead.excerptEn : lead.excerpt}
               </p>
             )}
             <p className="mt-1.5 font-ui text-xs text-foreground-muted">
-              {lead.author} · {lead.publishedAt}
+              {localizedAuthor(lead.author, locale)} ·{" "}
+              {localizedPublishedAt(lead.publishedAt, locale)}
             </p>
           </div>
         </Link>
@@ -76,10 +78,10 @@ export function NewsSection({
                 />
                 <div className="min-w-0">
                   <h4 className="line-clamp-2 text-sm font-semibold leading-snug text-foreground transition-colors group-hover:text-brand-crimson">
-                    {article.title}
+                    {locale === "en" ? article.titleEn : article.title}
                   </h4>
                   <p className="mt-1 font-ui text-xs text-foreground-muted">
-                    {article.publishedAt}
+                    {localizedPublishedAt(article.publishedAt, locale)}
                   </p>
                 </div>
               </Link>

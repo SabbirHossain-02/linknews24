@@ -1,6 +1,9 @@
+"use client";
+
 import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
 import type { Article } from "@/types/content";
+import { useLocale } from "@/components/providers/LocaleProvider";
 
 export function RankedArticleList({
   title,
@@ -13,6 +16,8 @@ export function RankedArticleList({
   articles: Article[];
   showViewCount?: boolean;
 }) {
+  const { locale, t } = useLocale();
+
   return (
     <div>
       <div className="flex items-center gap-2.5">
@@ -42,11 +47,12 @@ export function RankedArticleList({
               </span>
               <div className="min-w-0">
                 <h3 className="text-[13.5px] font-semibold leading-snug text-foreground transition-colors group-hover:text-brand-crimson">
-                  {article.title}
+                  {locale === "en" ? article.titleEn : article.title}
                 </h3>
                 {showViewCount && article.viewCount != null && (
                   <p className="mt-1.5 font-ui text-[11px] text-foreground-muted">
-                    {article.viewCount.toLocaleString("bn-BD")} বার পঠিত
+                    {article.viewCount.toLocaleString(locale === "en" ? "en-US" : "bn-BD")}{" "}
+                    {t("viewsSuffix")}
                   </p>
                 )}
               </div>

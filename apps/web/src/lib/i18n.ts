@@ -103,6 +103,7 @@ export const translations = {
     en: "The full PDF viewer will be enabled here once daily editions start uploading from the CMS.",
   },
   downloadPdf: { bn: "ডাউনলোড PDF", en: "Download PDF" },
+  viewsSuffix: { bn: "বার পঠিত", en: "views" },
   noResultsFound: {
     bn: "কোনো সংবাদ পাওয়া যায়নি। ভিন্ন কীওয়ার্ড দিয়ে আবার চেষ্টা করুন।",
     en: "No news found. Try a different keyword.",
@@ -116,4 +117,83 @@ export function localizedName(
   locale: Locale,
 ): string {
   return locale === "en" ? item.nameEn : item.name;
+}
+
+export function localizedField<T extends Record<string, unknown>>(
+  item: T,
+  bnKey: keyof T,
+  enKey: keyof T,
+  locale: Locale,
+): string {
+  return String(locale === "en" ? item[enKey] : item[bnKey]);
+}
+
+const AUTHOR_TRANSLATIONS: Record<string, string> = {
+  "স্টাফ করেসপন্ডেন্ট": "Staff Correspondent",
+  "নিজস্ব প্রতিবেদক": "Staff Reporter",
+  "স্বাস্থ্য প্রতিবেদক": "Health Correspondent",
+  "অর্থনৈতিক প্রতিবেদক": "Economic Correspondent",
+  "পরিবেশ প্রতিবেদক": "Environment Correspondent",
+  "নগর প্রতিবেদক": "City Correspondent",
+  "প্রশাসন প্রতিবেদক": "Administration Correspondent",
+  "রাজনৈতিক প্রতিবেদক": "Political Correspondent",
+  "সংসদ প্রতিবেদক": "Parliamentary Correspondent",
+  "ক্রীড়া প্রতিবেদক": "Sports Correspondent",
+  "বিনোদন প্রতিবেদক": "Entertainment Correspondent",
+  "অনুসন্ধানী প্রতিবেদক": "Investigative Correspondent",
+  "বিশেষ প্রতিবেদক": "Special Correspondent",
+  "চাকরি ডেস্ক": "Jobs Desk",
+  "নিউজরুম ডেস্ক": "Newsroom Desk",
+  "ফিচার প্রতিবেদক": "Feature Correspondent",
+  "শিক্ষা প্রতিবেদক": "Education Correspondent",
+  "প্রযুক্তি প্রতিবেদক": "Technology Correspondent",
+  "ধর্ম প্রতিবেদক": "Religion Correspondent",
+  "আদালত প্রতিবেদক": "Court Correspondent",
+  "অপরাধ প্রতিবেদক": "Crime Correspondent",
+  "কৃষি প্রতিবেদক": "Agriculture Correspondent",
+  "জেলা প্রতিনিধি": "District Correspondent",
+  "প্রবাস প্রতিবেদক": "Expatriate Correspondent",
+  "ফটো ডেস্ক": "Photo Desk",
+  "ভিডিও ডেস্ক": "Video Desk",
+  "ড. রফিকুল আলম": "Dr. Rafiqul Alam",
+  "নাসরিন সুলতানা": "Nasrin Sultana",
+  "ইঞ্জি. তানভীর হাসান": "Eng. Tanvir Hasan",
+};
+
+export function localizedAuthor(author: string, locale: Locale): string {
+  if (locale === "bn") return author;
+  return AUTHOR_TRANSLATIONS[author] ?? author;
+}
+
+const BENGALI_DIGIT_TO_ARABIC: Record<string, string> = {
+  "০": "0",
+  "১": "1",
+  "২": "2",
+  "৩": "3",
+  "৪": "4",
+  "৫": "5",
+  "৬": "6",
+  "৭": "7",
+  "৮": "8",
+  "৯": "9",
+};
+
+export function localizedDuration(duration: string, locale: Locale): string {
+  if (locale === "bn") return duration;
+  return duration.replace(
+    /[০-৯]/g,
+    (digit) => BENGALI_DIGIT_TO_ARABIC[digit],
+  );
+}
+
+export function localizedPublishedAt(publishedAt: string, locale: Locale): string {
+  if (locale === "bn") return publishedAt;
+  const arabic = publishedAt.replace(
+    /[০-৯]/g,
+    (digit) => BENGALI_DIGIT_TO_ARABIC[digit],
+  );
+  const match = arabic.match(/(\d+)/);
+  const hours = match ? Number(match[1]) : null;
+  if (hours === null) return publishedAt;
+  return hours === 1 ? "1 hour ago" : `${hours} hours ago`;
 }

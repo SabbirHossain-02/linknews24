@@ -4,7 +4,12 @@ import Link from "next/link";
 import { Play } from "lucide-react";
 import type { Article } from "@/types/content";
 import { toneGradientClass } from "@/lib/tone";
-import { localizedName } from "@/lib/i18n";
+import {
+  localizedAuthor,
+  localizedDuration,
+  localizedName,
+  localizedPublishedAt,
+} from "@/lib/i18n";
 import { useLocale } from "@/components/providers/LocaleProvider";
 
 export function ArticleCard({ article }: { article: Article }) {
@@ -26,7 +31,7 @@ export function ArticleCard({ article }: { article: Article }) {
             </div>
             {article.videoDuration && (
               <span className="absolute bottom-2 right-2 rounded bg-black/70 px-1.5 py-0.5 font-ui text-[11px] text-white">
-                {article.videoDuration}
+                {localizedDuration(article.videoDuration, locale)}
               </span>
             )}
           </>
@@ -38,10 +43,11 @@ export function ArticleCard({ article }: { article: Article }) {
           {localizedName(article.category, locale)}
         </span>
         <h3 className="mt-1 text-[15px] font-semibold leading-snug text-foreground transition-colors group-hover:text-brand-crimson">
-          {article.title}
+          {locale === "en" ? article.titleEn : article.title}
         </h3>
         <p className="mt-1 font-ui text-xs text-foreground-muted">
-          {article.author} · {article.publishedAt}
+          {localizedAuthor(article.author, locale)} ·{" "}
+          {localizedPublishedAt(article.publishedAt, locale)}
         </p>
       </div>
     </Link>
