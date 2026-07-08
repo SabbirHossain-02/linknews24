@@ -17,6 +17,11 @@ export const categories: Category[] = [
   { id: "health", name: "স্বাস্থ্য", slug: "health" },
   { id: "diaspora", name: "প্রবাস", slug: "diaspora" },
   { id: "lifestyle", name: "লাইফস্টাইল", slug: "lifestyle" },
+  { id: "technology", name: "প্রযুক্তি", slug: "technology" },
+  { id: "opinion", name: "মতামত", slug: "opinion" },
+  { id: "religion", name: "ধর্ম", slug: "religion" },
+  { id: "crime", name: "আইন-আদালত", slug: "crime" },
+  { id: "environment", name: "পরিবেশ", slug: "environment" },
   { id: "video", name: "ভিডিও", slug: "video" },
 ];
 
@@ -46,6 +51,11 @@ export const navItems: NavItem[] = [
   { label: "চাকরি", href: "/jobs" },
   { label: "টপ টেন", href: "/top-ten" },
   { label: "বিনোদন", href: "/entertainment" },
+  { label: "প্রযুক্তি", href: "/technology" },
+  { label: "মতামত", href: "/opinion" },
+  { label: "ধর্ম", href: "/religion" },
+  { label: "আইন-আদালত", href: "/crime" },
+  { label: "পরিবেশ", href: "/environment" },
   { label: "ফিচার", href: "/features" },
   {
     label: "অন্যান্য",
@@ -554,6 +564,171 @@ export const topTenArticles: Article[] = [
   },
 ];
 
+export const technologyArticles: Article[] = [
+  {
+    id: "tech-1",
+    title: "দেশীয় স্টার্টআপের তৈরি অ্যাপ ছড়িয়ে পড়ছে দক্ষিণ এশিয়ায়",
+    slug: "local-startup-app-expands-south-asia",
+    excerpt: "ছয় মাসে ব্যবহারকারী বেড়েছে তিন গুণেরও বেশি।",
+    category: findCategory("technology"),
+    author: "প্রযুক্তি প্রতিবেদক",
+    publishedAt: "৪ ঘণ্টা আগে",
+    imageTone: "navy",
+  },
+  {
+    id: "tech-2",
+    title: "৫জি নেটওয়ার্ক সম্প্রসারণে নতুন উদ্যোগ নিল টেলিকম নিয়ন্ত্রক",
+    slug: "5g-network-expansion-initiative",
+    excerpt: "প্রথম পর্যায়ে বিভাগীয় শহরগুলোকে অন্তর্ভুক্ত করা হচ্ছে।",
+    category: findCategory("technology"),
+    author: "প্রযুক্তি প্রতিবেদক",
+    publishedAt: "৯ ঘণ্টা আগে",
+    imageTone: "slate",
+  },
+  {
+    id: "tech-3",
+    title: "কৃত্রিম বুদ্ধিমত্তা ব্যবহারে সতর্কতামূলক নীতিমালা প্রকাশ",
+    slug: "ai-usage-policy-guidelines",
+    excerpt: "সরকারি-বেসরকারি প্রতিষ্ঠানের জন্য নির্দেশিকা জারি করা হয়েছে।",
+    category: findCategory("technology"),
+    author: "নিজস্ব প্রতিবেদক",
+    publishedAt: "১৩ ঘণ্টা আগে",
+    imageTone: "crimson",
+  },
+];
+
+export const opinionArticles: Article[] = [
+  {
+    id: "op-1",
+    title: "মতামত: শহরের যানজট সমস্যার দীর্ঘমেয়াদি সমাধান কোন পথে",
+    slug: "opinion-traffic-congestion-solution",
+    excerpt: "অবকাঠামোর পাশাপাশি নীতিগত সংস্কারের প্রয়োজনীয়তা তুলে ধরেছেন লেখক।",
+    category: findCategory("opinion"),
+    author: "ড. রফিকুল আলম",
+    publishedAt: "৫ ঘণ্টা আগে",
+    imageTone: "slate",
+  },
+  {
+    id: "op-2",
+    title: "উপ-সম্পাদকীয়: শিক্ষাব্যবস্থায় প্রযুক্তির যথাযথ ব্যবহার",
+    slug: "opinion-technology-in-education",
+    excerpt: "শ্রেণিকক্ষে ডিজিটাল টুল ব্যবহারের সুফল ও ঝুঁকি নিয়ে আলোচনা।",
+    category: findCategory("opinion"),
+    author: "নাসরিন সুলতানা",
+    publishedAt: "১১ ঘণ্টা আগে",
+    imageTone: "navy",
+  },
+  {
+    id: "op-3",
+    title: "মতামত: জলবায়ু ঝুঁকি মোকাবিলায় স্থানীয় উদ্যোগের গুরুত্ব",
+    slug: "opinion-local-climate-resilience",
+    excerpt: "কেন্দ্রীয় পরিকল্পনার পাশাপাশি কমিউনিটি-ভিত্তিক পদক্ষেপের পক্ষে যুক্তি।",
+    category: findCategory("opinion"),
+    author: "ইঞ্জি. তানভীর হাসান",
+    publishedAt: "১৬ ঘণ্টা আগে",
+    imageTone: "amber",
+  },
+];
+
+export const religionArticles: Article[] = [
+  {
+    id: "rel-1",
+    title: "পবিত্র রমজান উপলক্ষে ইফতার বিতরণ কর্মসূচি শুরু",
+    slug: "ramadan-iftar-distribution-program",
+    excerpt: "বিভিন্ন এলাকায় সামাজিক সংগঠনগুলো এ কর্মসূচিতে অংশ নিচ্ছে।",
+    category: findCategory("religion"),
+    author: "ধর্ম প্রতিবেদক",
+    publishedAt: "৬ ঘণ্টা আগে",
+    imageTone: "navy",
+  },
+  {
+    id: "rel-2",
+    title: "হজ প্যাকেজের নিবন্ধন শুরু, সময়সীমা ঘোষণা",
+    slug: "hajj-package-registration-begins",
+    excerpt: "ধর্ম মন্ত্রণালয় জানিয়েছে এবার প্যাকেজ মূল্যে সামান্য পরিবর্তন হয়েছে।",
+    category: findCategory("religion"),
+    author: "ধর্ম প্রতিবেদক",
+    publishedAt: "১২ ঘণ্টা আগে",
+    imageTone: "crimson",
+  },
+  {
+    id: "rel-3",
+    title: "ধর্মীয় সম্প্রীতি বজায় রাখতে জেলা প্রশাসনের বিশেষ সভা",
+    slug: "interfaith-harmony-district-meeting",
+    excerpt: "স্থানীয় ধর্মীয় নেতাদের নিয়ে সচেতনতামূলক আলোচনা অনুষ্ঠিত হয়েছে।",
+    category: findCategory("religion"),
+    author: "নিজস্ব প্রতিবেদক",
+    publishedAt: "১৮ ঘণ্টা আগে",
+    imageTone: "slate",
+  },
+];
+
+export const crimeArticles: Article[] = [
+  {
+    id: "crime-1",
+    title: "মাদক চোরাচালান চক্রের পাঁচ সদস্য গ্রেপ্তার",
+    slug: "drug-trafficking-ring-arrests",
+    excerpt: "অভিযানে বিপুল পরিমাণ মাদকদ্রব্য জব্দ করা হয়েছে বলে জানিয়েছে পুলিশ।",
+    category: findCategory("crime"),
+    author: "অপরাধ প্রতিবেদক",
+    publishedAt: "৩ ঘণ্টা আগে",
+    imageTone: "crimson",
+  },
+  {
+    id: "crime-2",
+    title: "প্রতারণা মামলায় আদালতে রায় ঘোষণা আগামী সপ্তাহে",
+    slug: "fraud-case-verdict-next-week",
+    excerpt: "দীর্ঘ শুনানির পর মামলাটি রায়ের জন্য অপেক্ষমাণ ছিল।",
+    category: findCategory("crime"),
+    author: "আদালত প্রতিবেদক",
+    publishedAt: "৯ ঘণ্টা আগে",
+    imageTone: "navy",
+  },
+  {
+    id: "crime-3",
+    title: "সাইবার প্রতারণা রোধে বিশেষ সেল গঠন করল পুলিশ সদর দপ্তর",
+    slug: "cyber-fraud-prevention-cell-formed",
+    excerpt: "অভিযোগ জানানোর জন্য চালু হচ্ছে হটলাইন নম্বর।",
+    category: findCategory("crime"),
+    author: "নিজস্ব প্রতিবেদক",
+    publishedAt: "১৪ ঘণ্টা আগে",
+    imageTone: "slate",
+  },
+];
+
+export const environmentArticles: Article[] = [
+  {
+    id: "env-1",
+    title: "উপকূলীয় এলাকায় ম্যানগ্রোভ বনায়ন কর্মসূচি সম্প্রসারণ",
+    slug: "mangrove-afforestation-program-expansion",
+    excerpt: "লবণাক্ততা প্রতিরোধে নতুন করে যুক্ত হচ্ছে আরও কয়েকটি উপজেলা।",
+    category: findCategory("environment"),
+    author: "পরিবেশ প্রতিবেদক",
+    publishedAt: "৫ ঘণ্টা আগে",
+    imageTone: "slate",
+  },
+  {
+    id: "env-2",
+    title: "নদী দূষণ রোধে শিল্প কারখানার বর্জ্য ব্যবস্থাপনায় কড়াকড়ি",
+    slug: "river-pollution-industrial-waste-crackdown",
+    excerpt: "নির্ধারিত মান না মানলে জরিমানার মুখে পড়বে প্রতিষ্ঠান।",
+    category: findCategory("environment"),
+    author: "পরিবেশ প্রতিবেদক",
+    publishedAt: "১০ ঘণ্টা আগে",
+    imageTone: "navy",
+  },
+  {
+    id: "env-3",
+    title: "জলবায়ু পরিবর্তনের প্রভাবে ফসলের ধরন বদলাচ্ছেন কৃষকরা",
+    slug: "climate-change-crop-pattern-shift",
+    excerpt: "লবণসহিষ্ণু ও খরা-সহনশীল জাতের দিকে ঝুঁকছেন অনেকে।",
+    category: findCategory("environment"),
+    author: "কৃষি প্রতিবেদক",
+    publishedAt: "১৫ ঘণ্টা আগে",
+    imageTone: "amber",
+  },
+];
+
 export const featuresArticles: Article[] = [
   {
     id: "feat-1",
@@ -797,19 +972,6 @@ export const latestReadArticles: Article[] = [
   healthArticles[0],
 ];
 
-export const trendingTags: string[] = [
-  "জাতীয় নির্বাচন",
-  "এশিয়া কাপ",
-  "বাজেট অধিবেশন",
-  "ডেঙ্গু পরিস্থিতি",
-  "প্রবাসী আয়",
-  "এইচএসসি ফলাফল",
-  "আবহাওয়া সতর্কতা",
-  "সরকারি নিয়োগ",
-  "জ্বালানি তেলের দাম",
-  "মেট্রোরেল",
-];
-
 export const allArticles: Article[] = [
   heroArticle,
   ...nationalArticles,
@@ -821,6 +983,11 @@ export const allArticles: Article[] = [
   ...topTenArticles,
   ...sportsArticles,
   ...entertainmentArticles,
+  ...technologyArticles,
+  ...opinionArticles,
+  ...religionArticles,
+  ...crimeArticles,
+  ...environmentArticles,
   ...featuresArticles,
   ...educationArticles,
   ...healthArticles,

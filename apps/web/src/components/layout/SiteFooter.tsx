@@ -19,7 +19,7 @@ const footerCategories: Category[] = navItems.flatMap((item) =>
 export function SiteFooter() {
   return (
     <footer className="border-t border-border bg-brand-navy text-white/70">
-      <div className="mx-auto grid max-w-6xl gap-10 px-6 py-12 md:grid-cols-4">
+      <div className="mx-auto grid max-w-[1600px] gap-10 px-6 py-12 md:grid-cols-4">
         <div>
           <span className="text-xl font-bold tracking-tight text-white">
             Link News<span className="text-brand-crimson">24</span>

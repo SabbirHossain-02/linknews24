@@ -15,7 +15,7 @@ const bengaliDate = formatBengaliDate(now);
 export function TopUtilityBar() {
   return (
     <div className="border-b border-white/10 bg-brand-navy-soft">
-      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-4 gap-y-1 px-6 py-1.5 font-ui text-xs text-white/60">
+      <div className="mx-auto flex max-w-[1600px] flex-wrap items-center justify-between gap-x-4 gap-y-1 px-6 py-1.5 font-ui text-xs text-white/60">
         <span>
           {gregorianDate}
           <span className="text-white/30"> · </span>

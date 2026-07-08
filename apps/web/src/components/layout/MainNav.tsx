@@ -29,7 +29,7 @@ export function MainNav() {
       className="border-b border-border bg-background"
       onMouseLeave={() => setOpenDesktopDropdown(null)}
     >
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-6 px-6 py-3">
+      <div className="mx-auto flex max-w-[1600px] items-center justify-between gap-6 px-6 py-3">
         <Link href="/" className="flex shrink-0 items-center">
           <Image
             src="/logo.png"
@@ -58,7 +58,7 @@ export function MainNav() {
       </div>
 
       <div className="relative hidden border-t border-border md:block">
-        <ul className="mx-auto flex max-w-6xl items-center gap-x-6 overflow-x-auto px-6 py-2.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <ul className="mx-auto flex max-w-[1600px] items-center gap-x-6 overflow-x-auto px-6 py-2.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {navItems.map((item) => (
             <li
               key={item.label}
@@ -91,7 +91,7 @@ export function MainNav() {
 
               {item.children && openDesktopDropdown === item.label && (
                 <div className="absolute left-0 right-0 top-full border-t border-border bg-background shadow-md">
-                  <ul className="mx-auto flex max-w-6xl flex-wrap gap-x-8 gap-y-2 px-6 py-4">
+                  <ul className="mx-auto flex max-w-[1600px] flex-wrap gap-x-8 gap-y-2 px-6 py-4">
                     {item.children.map((child) => (
                       <li key={child.id}>
                         <Link
@@ -114,7 +114,7 @@ export function MainNav() {
       <div
         className={`${mobileOpen ? "block" : "hidden"} border-t border-border md:hidden`}
       >
-        <ul className="mx-auto flex max-w-6xl flex-col gap-1 px-6 py-3">
+        <ul className="mx-auto flex max-w-[1600px] flex-col gap-1 px-6 py-3">
           {navItems.map((item) => (
             <li key={item.label}>
               {item.children ? (

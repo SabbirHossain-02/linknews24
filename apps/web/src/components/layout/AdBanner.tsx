@@ -1,7 +1,7 @@
 export function AdBanner() {
   return (
     <div className="bg-surface">
-      <div className="mx-auto flex h-24 max-w-6xl items-center justify-center border-b border-border sm:h-[250px]">
+      <div className="mx-auto flex h-24 max-w-[1600px] items-center justify-center border-b border-border sm:h-[250px]">
         <span className="font-ui text-xs uppercase tracking-widest text-foreground-muted/60">
           বিজ্ঞাপনের স্থান
         </span>
