@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Hind_Siliguri, Inter } from "next/font/google";
+import { ConditionalAdBanner } from "@/components/layout/ConditionalAdBanner";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import "./globals.css";
@@ -37,6 +38,7 @@ export default function RootLayout({
         className={`${hindSiliguri.variable} ${inter.variable} antialiased`}
       >
         <div className="flex min-h-screen flex-col">
+          <ConditionalAdBanner />
           <SiteHeader />
           {children}
           <SiteFooter />
