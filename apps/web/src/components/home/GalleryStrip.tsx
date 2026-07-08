@@ -18,7 +18,7 @@ export function GalleryStrip({ articles }: { articles: Article[] }) {
         {articles.map((article) => (
           <Link
             key={article.id}
-            href={`/${article.category.slug}/${article.slug}`}
+            href={`/${article.slug}`}
             className="group block"
           >
             <div

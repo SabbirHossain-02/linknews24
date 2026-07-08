@@ -1003,6 +1003,28 @@ export function getArticlesByCategory(slug: string): Article[] {
   return allArticles.filter((article) => article.category.slug === slug);
 }
 
+export function getArticleBySlug(slug: string): Article | undefined {
+  return allArticles.find((article) => article.slug === slug);
+}
+
+const GENERIC_BODY_PARAGRAPHS = [
+  "ঘটনার সাথে সংশ্লিষ্ট কর্তৃপক্ষ বিষয়টি খতিয়ে দেখছে বলে জানা গেছে। প্রাথমিক পর্যায়ে সংগৃহীত তথ্য অনুযায়ী পরিস্থিতি পর্যবেক্ষণে রাখা হচ্ছে।",
+  "সংশ্লিষ্টরা বলছেন, আগামী কয়েক দিনের মধ্যে এ বিষয়ে আরও বিস্তারিত তথ্য জানানো হতে পারে। প্রয়োজনীয় পদক্ষেপ নেওয়ার আশ্বাস দিয়েছেন দায়িত্বশীলরা।",
+  "স্থানীয় সূত্র জানিয়েছে, বিষয়টি নিয়ে সাধারণ মানুষের মধ্যে আগ্রহ তৈরি হয়েছে। পরবর্তী অগ্রগতি এলে তা যথাসময়ে জানানো হবে।",
+];
+
+export function getArticleBody(article: Article): string[] {
+  return [article.excerpt || article.title, ...GENERIC_BODY_PARAGRAPHS];
+}
+
+export function getRelatedArticles(article: Article, count = 4): Article[] {
+  return allArticles
+    .filter(
+      (a) => a.id !== article.id && a.category.slug === article.category.slug,
+    )
+    .slice(0, count);
+}
+
 export const ARTICLES_PER_PAGE = 6;
 
 export function paginate<T>(

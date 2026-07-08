@@ -28,7 +28,7 @@ export function RankedArticleList({
         {articles.map((article, index) => (
           <li key={article.id} className="py-3.5 first:pt-0 last:pb-0">
             <Link
-              href={`/${article.category.slug}/${article.slug}`}
+              href={`/${article.slug}`}
               className="group flex items-start gap-3.5"
             >
               <span

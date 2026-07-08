@@ -4,7 +4,7 @@ import { toneGradientClass } from "@/lib/tone";
 
 export function HeroStory({ article }: { article: Article }) {
   return (
-    <Link href={`/${article.category.slug}/${article.slug}`} className="group block">
+    <Link href={`/${article.slug}`} className="group block">
       <div
         className={`relative aspect-[16/8] w-full overflow-hidden rounded-lg ${toneGradientClass(
           article.imageTone,
