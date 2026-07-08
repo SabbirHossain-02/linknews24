@@ -15,6 +15,7 @@ export interface Article {
   imageTone: "navy" | "crimson" | "slate" | "amber";
   isBreaking?: boolean;
   isVideo?: boolean;
+  isGallery?: boolean;
   videoDuration?: string;
   viewCount?: number;
 }

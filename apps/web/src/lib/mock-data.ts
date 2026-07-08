@@ -23,6 +23,7 @@ export const categories: Category[] = [
   { id: "crime", name: "আইন-আদালত", slug: "crime" },
   { id: "environment", name: "পরিবেশ", slug: "environment" },
   { id: "video", name: "ভিডিও", slug: "video" },
+  { id: "gallery", name: "ফটো গ্যালারি", slug: "gallery" },
 ];
 
 const findCategory = (slug: string): Category =>
@@ -922,6 +923,7 @@ export const galleryArticles: Article[] = [
     author: "ফটো ডেস্ক",
     publishedAt: "৩ ঘণ্টা আগে",
     imageTone: "amber",
+    isGallery: true,
   },
   {
     id: "gal-2",
@@ -932,6 +934,7 @@ export const galleryArticles: Article[] = [
     author: "ফটো ডেস্ক",
     publishedAt: "৫ ঘণ্টা আগে",
     imageTone: "crimson",
+    isGallery: true,
   },
   {
     id: "gal-3",
@@ -942,6 +945,7 @@ export const galleryArticles: Article[] = [
     author: "ফটো ডেস্ক",
     publishedAt: "৮ ঘণ্টা আগে",
     imageTone: "navy",
+    isGallery: true,
   },
   {
     id: "gal-4",
@@ -952,6 +956,29 @@ export const galleryArticles: Article[] = [
     author: "ফটো ডেস্ক",
     publishedAt: "১০ ঘণ্টা আগে",
     imageTone: "slate",
+    isGallery: true,
+  },
+  {
+    id: "gal-5",
+    title: "ছবিতে: ঈদ জামাতে মুসল্লিদের ঢল",
+    slug: "photo-story-eid-jamaat",
+    excerpt: "",
+    category: findCategory("religion"),
+    author: "ফটো ডেস্ক",
+    publishedAt: "১২ ঘণ্টা আগে",
+    imageTone: "crimson",
+    isGallery: true,
+  },
+  {
+    id: "gal-6",
+    title: "ছবিতে: হাওরে বর্ষার রূপ",
+    slug: "photo-story-haor-monsoon",
+    excerpt: "",
+    category: findCategory("environment"),
+    author: "ফটো ডেস্ক",
+    publishedAt: "১৪ ঘণ্টা আগে",
+    imageTone: "navy",
+    isGallery: true,
   },
 ];
 
@@ -1000,11 +1027,25 @@ export function getArticlesByCategory(slug: string): Article[] {
   if (slug === "video") {
     return allArticles.filter((article) => article.isVideo);
   }
+  if (slug === "gallery") {
+    return allArticles.filter((article) => article.isGallery);
+  }
   return allArticles.filter((article) => article.category.slug === slug);
 }
 
 export function getArticleBySlug(slug: string): Article | undefined {
   return allArticles.find((article) => article.slug === slug);
+}
+
+export function searchArticles(query: string): Article[] {
+  const normalized = query.trim().toLowerCase();
+  if (!normalized) return [];
+  return allArticles.filter(
+    (article) =>
+      article.title.toLowerCase().includes(normalized) ||
+      article.excerpt.toLowerCase().includes(normalized) ||
+      article.category.name.toLowerCase().includes(normalized),
+  );
 }
 
 const GENERIC_BODY_PARAGRAPHS = [

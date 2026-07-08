@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { CategoryListing } from "@/components/category/CategoryListing";
+import { GalleryListing } from "@/components/category/GalleryListing";
 import { ArticleContent } from "@/components/article/ArticleContent";
 import { ReadingSidebar } from "@/components/home/ReadingSidebar";
 import {
@@ -72,9 +73,11 @@ export default async function SlugPage({
       requestedPage,
     );
 
+    const Listing = category.slug === "gallery" ? GalleryListing : CategoryListing;
+
     return (
       <main className="mx-auto grid w-full max-w-[1600px] flex-1 gap-10 px-6 py-8 lg:grid-cols-[1fr_300px]">
-        <CategoryListing
+        <Listing
           category={category}
           items={items}
           currentPage={currentPage}

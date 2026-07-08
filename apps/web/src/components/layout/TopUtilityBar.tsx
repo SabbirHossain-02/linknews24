@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Search } from "lucide-react";
 import { formatBengaliDate } from "@/lib/bengali-calendar";
 
@@ -22,13 +23,18 @@ export function TopUtilityBar() {
           {bengaliDate}
         </span>
         <div className="flex items-center gap-4">
+          <Link href="/epaper" className="transition-colors hover:text-white">
+            ই-পেপার
+          </Link>
           <button className="transition-colors hover:text-white">
             লগইন
           </button>
           <button className="text-brand-crimson transition-colors hover:text-white">
             সাবস্ক্রাইব
           </button>
-          <Search className="h-3.5 w-3.5" aria-label="সার্চ" />
+          <Link href="/search" aria-label="সার্চ">
+            <Search className="h-3.5 w-3.5" />
+          </Link>
         </div>
       </div>
     </div>

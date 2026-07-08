@@ -41,12 +41,13 @@ export function MainNav() {
           />
         </Link>
 
-        <button
+        <Link
+          href="/search"
           className="hidden shrink-0 text-foreground/70 transition-colors hover:text-brand-crimson md:block"
           aria-label="সার্চ"
         >
           <Search className="h-5 w-5" />
-        </button>
+        </Link>
 
         <button
           onClick={() => setMobileOpen((v) => !v)}
