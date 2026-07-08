@@ -5,8 +5,8 @@ import { toneGradientClass } from "@/lib/tone";
 export function GalleryStrip({ articles }: { articles: Article[] }) {
   return (
     <section>
-      <div className="flex items-center justify-between border-b-2 border-brand-navy pb-2">
-        <h2 className="text-lg font-bold text-brand-navy">ফটো গ্যালারি</h2>
+      <div className="flex items-center justify-between border-b-2 border-heading pb-2">
+        <h2 className="text-lg font-bold text-heading">ফটো গ্যালারি</h2>
         <Link
           href="/gallery"
           className="font-ui text-xs font-medium text-brand-crimson hover:underline"

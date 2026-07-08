@@ -19,7 +19,7 @@ export function RankedArticleList({
         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-crimson/10 text-brand-crimson">
           <Icon className="h-4 w-4" />
         </span>
-        <h2 className="font-ui text-sm font-bold uppercase tracking-wider text-brand-navy">
+        <h2 className="font-ui text-sm font-bold uppercase tracking-wider text-heading">
           {title}
         </h2>
       </div>
@@ -35,7 +35,7 @@ export function RankedArticleList({
                 className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full font-ui text-[11px] font-bold transition-colors ${
                   index === 0
                     ? "bg-brand-crimson text-white"
-                    : "bg-brand-navy/[0.06] text-brand-navy/50 group-hover:bg-brand-crimson/10 group-hover:text-brand-crimson"
+                    : "bg-heading/[0.06] text-heading/50 group-hover:bg-brand-crimson/10 group-hover:text-brand-crimson"
                 }`}
               >
                 {String(index + 1).padStart(2, "0")}

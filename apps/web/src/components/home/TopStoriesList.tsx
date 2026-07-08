@@ -4,7 +4,7 @@ import type { Article } from "@/types/content";
 export function TopStoriesList({ articles }: { articles: Article[] }) {
   return (
     <div className="flex h-full flex-col">
-      <h2 className="border-b-2 border-brand-navy pb-2 text-lg font-bold text-brand-navy">
+      <h2 className="border-b-2 border-heading pb-2 text-lg font-bold text-heading">
         আরও শীর্ষ খবর
       </h2>
       <ul className="flex flex-1 flex-col divide-y divide-border">

@@ -48,7 +48,7 @@ export function CategoryListing({
 
   return (
     <div className="flex flex-col gap-2">
-      <h1 className="border-b-2 border-brand-navy pb-2 text-2xl font-bold text-brand-navy">
+      <h1 className="border-b-2 border-heading pb-2 text-2xl font-bold text-heading">
         {category.name}
       </h1>
 

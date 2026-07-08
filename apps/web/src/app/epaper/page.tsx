@@ -15,7 +15,7 @@ const today = new Date().toLocaleDateString("bn-BD", {
 export default function EpaperPage() {
   return (
     <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-10">
-      <h1 className="text-2xl font-bold text-brand-navy">ই-পেপার</h1>
+      <h1 className="text-2xl font-bold text-heading">ই-পেপার</h1>
 
       <div className="mt-5 flex items-center justify-between rounded-lg border border-border bg-surface px-4 py-2.5">
         <button
@@ -36,7 +36,7 @@ export default function EpaperPage() {
       </div>
 
       <div className="mt-6 flex aspect-[3/4] flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border bg-surface px-8 text-center">
-        <span className="text-xl font-bold tracking-tight text-brand-navy/30">
+        <span className="text-xl font-bold tracking-tight text-heading/30">
           Link News<span className="text-brand-crimson/40">24</span>
         </span>
         <p className="font-semibold text-foreground">

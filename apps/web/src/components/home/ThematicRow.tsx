@@ -13,8 +13,8 @@ export function ThematicRow({
 }) {
   return (
     <section>
-      <div className="flex items-center justify-between border-b-2 border-brand-navy pb-2">
-        <h2 className="text-lg font-bold text-brand-navy">{title}</h2>
+      <div className="flex items-center justify-between border-b-2 border-heading pb-2">
+        <h2 className="text-lg font-bold text-heading">{title}</h2>
         <Link
           href={href}
           className="font-ui text-xs font-medium text-brand-crimson hover:underline"

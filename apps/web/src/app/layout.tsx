@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Hind_Siliguri, Inter } from "next/font/google";
+import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { ConditionalAdBanner } from "@/components/layout/ConditionalAdBanner";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
@@ -33,16 +34,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="bn">
+    <html lang="bn" suppressHydrationWarning>
       <body
         className={`${hindSiliguri.variable} ${inter.variable} antialiased`}
       >
-        <div className="flex min-h-screen flex-col">
-          <ConditionalAdBanner />
-          <SiteHeader />
-          {children}
-          <SiteFooter />
-        </div>
+        <ThemeProvider>
+          <div className="flex min-h-screen flex-col">
+            <ConditionalAdBanner />
+            <SiteHeader />
+            {children}
+            <SiteFooter />
+          </div>
+        </ThemeProvider>
       </body>
     </html>
   );

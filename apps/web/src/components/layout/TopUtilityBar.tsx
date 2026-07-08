@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { Search } from "lucide-react";
 import { formatBengaliDate } from "@/lib/bengali-calendar";
+import { LoginButton } from "./LoginButton";
+import { ThemeToggle } from "./ThemeToggle";
+import { FontSizeControl } from "./FontSizeControl";
 
 const now = new Date();
 
@@ -23,15 +26,15 @@ export function TopUtilityBar() {
           {bengaliDate}
         </span>
         <div className="flex items-center gap-4">
+          <FontSizeControl />
+          <ThemeToggle />
           <Link href="/epaper" className="transition-colors hover:text-white">
             ই-পেপার
           </Link>
-          <button className="transition-colors hover:text-white">
-            লগইন
-          </button>
-          <button className="text-brand-crimson transition-colors hover:text-white">
+          <LoginButton />
+          <a href="#newsletter" className="text-brand-crimson transition-colors hover:text-white">
             সাবস্ক্রাইব
-          </button>
+          </a>
           <Link href="/search" aria-label="সার্চ">
             <Search className="h-3.5 w-3.5" />
           </Link>

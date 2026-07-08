@@ -42,7 +42,7 @@ export function ArticleContent({ article }: { article: Article }) {
           </Link>
         </div>
 
-        <h1 className="text-2xl font-bold leading-tight text-brand-navy sm:text-3xl md:text-4xl">
+        <h1 className="text-2xl font-bold leading-tight text-heading sm:text-3xl md:text-4xl">
           {article.title}
         </h1>
 

@@ -52,7 +52,7 @@ export function MainNav() {
         <button
           onClick={() => setMobileOpen((v) => !v)}
           aria-label="মেনু খুলুন"
-          className="shrink-0 text-brand-navy md:hidden"
+          className="shrink-0 text-heading md:hidden"
         >
           {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
         </button>

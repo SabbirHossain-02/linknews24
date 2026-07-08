@@ -4,9 +4,9 @@ import type { Article } from "@/types/content";
 export function LatestHeadlines({ articles }: { articles: Article[] }) {
   return (
     <section>
-      <div className="flex items-center gap-2 border-b-2 border-brand-navy pb-2">
+      <div className="flex items-center gap-2 border-b-2 border-heading pb-2">
         <span className="h-2 w-2 rounded-full bg-brand-crimson" />
-        <h2 className="text-lg font-bold text-brand-navy">সর্বশেষ</h2>
+        <h2 className="text-lg font-bold text-heading">সর্বশেষ</h2>
       </div>
       <ul className="mt-1 grid sm:grid-cols-2 sm:gap-x-10">
         {articles.map((article) => (

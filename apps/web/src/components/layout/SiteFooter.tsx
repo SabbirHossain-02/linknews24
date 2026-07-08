@@ -2,6 +2,7 @@ import Link from "next/link";
 import { navItems } from "@/lib/mock-data";
 import type { Category } from "@/types/content";
 import { FacebookIcon, XIcon, YoutubeIcon } from "@/components/icons/SocialIcons";
+import { NewsletterForm } from "./NewsletterForm";
 
 const legalLinks = [
   { label: "আমাদের সম্পর্কে", href: "/about" },
@@ -70,26 +71,14 @@ export function SiteFooter() {
           </ul>
         </div>
 
-        <div>
+        <div id="newsletter">
           <h3 className="font-ui text-xs font-semibold uppercase tracking-wider text-white/40">
             নিউজলেটার
           </h3>
           <p className="mt-3 font-ui text-sm text-white/50">
             প্রতিদিনের গুরুত্বপূর্ণ খবর সরাসরি আপনার ইমেইলে পান।
           </p>
-          <form className="mt-3 flex gap-2">
-            <input
-              type="email"
-              placeholder="ইমেইল ঠিকানা"
-              className="w-full rounded border border-white/15 bg-white/5 px-3 py-2 font-ui text-sm text-white placeholder:text-white/40 focus:border-brand-crimson focus:outline-none"
-            />
-            <button
-              type="submit"
-              className="shrink-0 rounded bg-brand-crimson px-4 py-2 font-ui text-sm font-medium text-white transition-colors hover:bg-brand-crimson-dark"
-            >
-              সাবস্ক্রাইব
-            </button>
-          </form>
+          <NewsletterForm />
         </div>
       </div>
 
