@@ -5,8 +5,11 @@ import Link from "next/link";
 import Image from "next/image";
 import { ChevronDown, Menu, Search, X } from "lucide-react";
 import { navItems } from "@/lib/mock-data";
+import { localizedName } from "@/lib/i18n";
+import { useLocale } from "@/components/providers/LocaleProvider";
 
 export function MainNav() {
+  const { locale, t } = useLocale();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [openDesktopDropdown, setOpenDesktopDropdown] = useState<
     string | null
@@ -14,6 +17,9 @@ export function MainNav() {
   const [openMobileDropdowns, setOpenMobileDropdowns] = useState<Set<string>>(
     new Set(),
   );
+
+  const navLabel = (item: (typeof navItems)[number]) =>
+    locale === "en" ? item.labelEn : item.label;
 
   const toggleMobileDropdown = (label: string) => {
     setOpenMobileDropdowns((prev) => {
@@ -44,14 +50,14 @@ export function MainNav() {
         <Link
           href="/search"
           className="hidden shrink-0 text-foreground/70 transition-colors hover:text-brand-crimson md:block"
-          aria-label="সার্চ"
+          aria-label={t("search")}
         >
           <Search className="h-5 w-5" />
         </Link>
 
         <button
           onClick={() => setMobileOpen((v) => !v)}
-          aria-label="মেনু খুলুন"
+          aria-label={t("openMenu")}
           className="shrink-0 text-heading md:hidden"
         >
           {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -78,7 +84,7 @@ export function MainNav() {
                   }
                   aria-expanded={openDesktopDropdown === item.label}
                 >
-                  {item.label}
+                  {navLabel(item)}
                   <ChevronDown className="h-3.5 w-3.5" />
                 </button>
               ) : (
@@ -86,7 +92,7 @@ export function MainNav() {
                   href={item.href!}
                   className="font-medium text-sm text-foreground/80 transition-colors hover:text-brand-crimson"
                 >
-                  {item.label}
+                  {navLabel(item)}
                 </Link>
               )}
 
@@ -100,7 +106,7 @@ export function MainNav() {
                           onClick={() => setOpenDesktopDropdown(null)}
                           className="font-medium text-sm text-foreground/80 transition-colors hover:text-brand-crimson"
                         >
-                          {child.name}
+                          {localizedName(child, locale)}
                         </Link>
                       </li>
                     ))}
@@ -125,7 +131,7 @@ export function MainNav() {
                     className="flex w-full items-center justify-between py-1.5 font-medium text-sm text-foreground/80"
                     aria-expanded={openMobileDropdowns.has(item.label)}
                   >
-                    {item.label}
+                    {navLabel(item)}
                     <ChevronDown
                       className={`h-4 w-4 transition-transform ${
                         openMobileDropdowns.has(item.label) ? "rotate-180" : ""
@@ -141,7 +147,7 @@ export function MainNav() {
                             onClick={() => setMobileOpen(false)}
                             className="block py-1.5 font-medium text-sm text-foreground/70 transition-colors hover:text-brand-crimson"
                           >
-                            {child.name}
+                            {localizedName(child, locale)}
                           </Link>
                         </li>
                       ))}
@@ -154,7 +160,7 @@ export function MainNav() {
                   onClick={() => setMobileOpen(false)}
                   className="block py-1.5 font-medium text-sm text-foreground/80 transition-colors hover:text-brand-crimson"
                 >
-                  {item.label}
+                  {navLabel(item)}
                 </Link>
               )}
             </li>

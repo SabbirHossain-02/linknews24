@@ -1,9 +1,15 @@
+"use client";
+
 import Link from "next/link";
 import { Play } from "lucide-react";
 import type { Article } from "@/types/content";
 import { toneGradientClass } from "@/lib/tone";
+import { localizedName } from "@/lib/i18n";
+import { useLocale } from "@/components/providers/LocaleProvider";
 
 export function ArticleCard({ article }: { article: Article }) {
+  const { locale } = useLocale();
+
   return (
     <Link href={`/${article.slug}`} className="group block">
       <div
@@ -29,7 +35,7 @@ export function ArticleCard({ article }: { article: Article }) {
 
       <div className="mt-2.5">
         <span className="font-ui text-xs font-semibold uppercase tracking-wide text-brand-crimson">
-          {article.category.name}
+          {localizedName(article.category, locale)}
         </span>
         <h3 className="mt-1 text-[15px] font-semibold leading-snug text-foreground transition-colors group-hover:text-brand-crimson">
           {article.title}

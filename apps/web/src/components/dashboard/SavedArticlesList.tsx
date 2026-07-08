@@ -4,9 +4,11 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Trash2 } from "lucide-react";
 import { getBookmarks, removeBookmark, type BookmarkedArticle } from "@/lib/auth-storage";
+import { useLocale } from "@/components/providers/LocaleProvider";
 
 export function SavedArticlesList() {
   const [items, setItems] = useState<BookmarkedArticle[]>([]);
+  const { t } = useLocale();
 
   useEffect(() => {
     setItems(getBookmarks());
@@ -19,11 +21,9 @@ export function SavedArticlesList() {
 
   return (
     <div className="rounded-xl border border-border bg-background p-5 shadow-sm">
-      <h2 className="text-lg font-bold text-heading">সংরক্ষিত সংবাদ</h2>
+      <h2 className="text-lg font-bold text-heading">{t("savedNews")}</h2>
       {items.length === 0 ? (
-        <p className="mt-3 font-ui text-sm text-foreground-muted">
-          এখনো কোনো সংবাদ সংরক্ষণ করেননি। আর্টিকেল পেজে &quot;সংরক্ষণ করুন&quot; বাটনে ক্লিক করুন।
-        </p>
+        <p className="mt-3 font-ui text-sm text-foreground-muted">{t("noSavedNews")}</p>
       ) : (
         <ul className="mt-4 flex flex-col divide-y divide-border">
           {items.map((item) => (
@@ -41,7 +41,7 @@ export function SavedArticlesList() {
               </Link>
               <button
                 onClick={() => handleRemove(item.slug)}
-                aria-label="সংরক্ষণ থেকে সরান"
+                aria-label={t("removeSaved")}
                 className="shrink-0 text-foreground-muted transition-colors hover:text-brand-crimson"
               >
                 <Trash2 className="h-4 w-4" />

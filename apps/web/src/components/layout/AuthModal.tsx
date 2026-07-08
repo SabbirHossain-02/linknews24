@@ -4,17 +4,19 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { X } from "lucide-react";
 import { useAuth } from "@/components/providers/AuthProvider";
+import { useLocale } from "@/components/providers/LocaleProvider";
 import { GoogleIcon } from "@/components/icons/GoogleIcon";
 
 type Mode = "login" | "register";
 
 function GoogleButton({ label }: { label: string }) {
   const [notice, setNotice] = useState(false);
+  const { t } = useLocale();
 
   if (notice) {
     return (
       <p className="rounded-lg bg-surface px-3.5 py-2.5 text-center font-ui text-xs text-foreground-muted">
-        Google সাইন-ইন এখনো সংযুক্ত হয়নি — শীঘ্রই চালু হবে।
+        {t("googleNotConnected")}
       </p>
     );
   }
@@ -33,7 +35,7 @@ function GoogleButton({ label }: { label: string }) {
 
 export function AuthModal({
   triggerClassName = "transition-colors hover:text-white",
-  triggerLabel = "লগইন",
+  triggerLabel,
 }: {
   triggerClassName?: string;
   triggerLabel?: string;
@@ -42,6 +44,7 @@ export function AuthModal({
   const [mode, setMode] = useState<Mode>("login");
   const [error, setError] = useState<string | null>(null);
   const { login, register } = useAuth();
+  const { t } = useLocale();
   const router = useRouter();
 
   const close = () => {
@@ -65,7 +68,7 @@ export function AuthModal({
     const confirmPassword = String(form.get("confirmPassword"));
 
     if (password !== confirmPassword) {
-      setError("পাসওয়ার্ড দুটো মিলছে না।");
+      setError(t("passwordMismatch"));
       return;
     }
 
@@ -77,7 +80,7 @@ export function AuthModal({
   return (
     <>
       <button onClick={() => setOpen(true)} className={triggerClassName}>
-        {triggerLabel}
+        {triggerLabel ?? t("login")}
       </button>
 
       {open && (
@@ -100,7 +103,7 @@ export function AuthModal({
                     mode === "login" ? "text-heading" : "text-foreground-muted"
                   }`}
                 >
-                  লগইন
+                  {t("login")}
                 </button>
                 <button
                   onClick={() => {
@@ -111,12 +114,12 @@ export function AuthModal({
                     mode === "register" ? "text-heading" : "text-foreground-muted"
                   }`}
                 >
-                  নতুন অ্যাকাউন্ট
+                  {t("newAccount")}
                 </button>
               </div>
               <button
                 onClick={close}
-                aria-label="বন্ধ করুন"
+                aria-label={t("close")}
                 className="text-foreground-muted hover:text-foreground"
               >
                 <X className="h-5 w-5" />
@@ -135,28 +138,28 @@ export function AuthModal({
                   name="email"
                   type="email"
                   required
-                  placeholder="ইমেইল ঠিকানা"
+                  placeholder={t("emailPlaceholder")}
                   className="w-full rounded-lg border border-border bg-background px-3.5 py-2.5 text-sm text-foreground placeholder:text-foreground-muted focus:border-brand-crimson focus:outline-none"
                 />
                 <input
                   name="password"
                   type="password"
                   required
-                  placeholder="পাসওয়ার্ড"
+                  placeholder={t("passwordPlaceholder")}
                   className="w-full rounded-lg border border-border bg-background px-3.5 py-2.5 text-sm text-foreground placeholder:text-foreground-muted focus:border-brand-crimson focus:outline-none"
                 />
                 <button
                   type="submit"
                   className="mt-1 rounded-lg bg-brand-crimson py-2.5 font-ui text-sm font-medium text-white transition-colors hover:bg-brand-crimson-dark"
                 >
-                  লগইন করুন
+                  {t("signIn")}
                 </button>
                 <div className="flex items-center gap-3 py-1 text-xs text-foreground-muted">
                   <div className="h-px flex-1 bg-border" />
-                  অথবা
+                  {t("or")}
                   <div className="h-px flex-1 bg-border" />
                 </div>
-                <GoogleButton label="Google দিয়ে লগইন করুন" />
+                <GoogleButton label={t("googleSignIn")} />
               </form>
             ) : (
               <form
@@ -168,14 +171,14 @@ export function AuthModal({
                   name="name"
                   type="text"
                   required
-                  placeholder="পূর্ণ নাম"
+                  placeholder={t("namePlaceholder")}
                   className="w-full rounded-lg border border-border bg-background px-3.5 py-2.5 text-sm text-foreground placeholder:text-foreground-muted focus:border-brand-crimson focus:outline-none"
                 />
                 <input
                   name="email"
                   type="email"
                   required
-                  placeholder="ইমেইল ঠিকানা"
+                  placeholder={t("emailPlaceholder")}
                   className="w-full rounded-lg border border-border bg-background px-3.5 py-2.5 text-sm text-foreground placeholder:text-foreground-muted focus:border-brand-crimson focus:outline-none"
                 />
                 <input
@@ -183,7 +186,7 @@ export function AuthModal({
                   type="password"
                   required
                   minLength={6}
-                  placeholder="পাসওয়ার্ড"
+                  placeholder={t("passwordPlaceholder")}
                   className="w-full rounded-lg border border-border bg-background px-3.5 py-2.5 text-sm text-foreground placeholder:text-foreground-muted focus:border-brand-crimson focus:outline-none"
                 />
                 <input
@@ -191,7 +194,7 @@ export function AuthModal({
                   type="password"
                   required
                   minLength={6}
-                  placeholder="পাসওয়ার্ড নিশ্চিত করুন"
+                  placeholder={t("confirmPasswordPlaceholder")}
                   className="w-full rounded-lg border border-border bg-background px-3.5 py-2.5 text-sm text-foreground placeholder:text-foreground-muted focus:border-brand-crimson focus:outline-none"
                 />
                 <label className="flex items-start gap-2 font-ui text-xs text-foreground-muted">
@@ -200,20 +203,20 @@ export function AuthModal({
                     required
                     className="mt-0.5 h-3.5 w-3.5 shrink-0 accent-brand-crimson"
                   />
-                  আমি রোবট নই এবং LinkNews24-এর শর্তাবলী ও গোপনীয়তা নীতিতে সম্মত।
+                  {t("agreeTerms")}
                 </label>
                 <button
                   type="submit"
                   className="mt-1 rounded-lg bg-brand-crimson py-2.5 font-ui text-sm font-medium text-white transition-colors hover:bg-brand-crimson-dark"
                 >
-                  রেজিস্টার করুন
+                  {t("register")}
                 </button>
                 <div className="flex items-center gap-3 py-1 text-xs text-foreground-muted">
                   <div className="h-px flex-1 bg-border" />
-                  অথবা
+                  {t("or")}
                   <div className="h-px flex-1 bg-border" />
                 </div>
-                <GoogleButton label="Google দিয়ে রেজিস্টার করুন" />
+                <GoogleButton label={t("googleSignUp")} />
               </form>
             )}
           </div>

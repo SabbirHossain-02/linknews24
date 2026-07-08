@@ -1,9 +1,15 @@
+"use client";
+
 import Link from "next/link";
 import { Pagination } from "@/components/home/Pagination";
 import { toneGradientClass } from "@/lib/tone";
+import { localizedName } from "@/lib/i18n";
+import { useLocale } from "@/components/providers/LocaleProvider";
 import type { Article, Category } from "@/types/content";
 
 function ArticleRow({ article }: { article: Article }) {
+  const { locale } = useLocale();
+
   return (
     <Link href={`/${article.slug}`} className="group flex gap-4 py-4">
       <div
@@ -13,7 +19,7 @@ function ArticleRow({ article }: { article: Article }) {
       />
       <div className="min-w-0">
         <span className="font-ui text-[11px] font-semibold uppercase tracking-wide text-brand-crimson">
-          {article.category.name}
+          {localizedName(article.category, locale)}
         </span>
         <h3 className="mt-1 line-clamp-2 text-[15px] font-semibold leading-snug text-foreground transition-colors group-hover:text-brand-crimson">
           {article.title}
@@ -42,19 +48,23 @@ export function CategoryListing({
   currentPage: number;
   totalPages: number;
 }) {
+  const { locale } = useLocale();
+  const categoryLabel = localizedName(category, locale);
   const showLead = currentPage === 1 && items.length > 0;
   const lead = showLead ? items[0] : undefined;
   const rest = showLead ? items.slice(1) : items;
 
   return (
     <div className="flex flex-col gap-2">
-      <h1 className="border-b-2 border-heading pb-2 text-2xl font-bold text-heading">
-        {category.name}
+      <h1 className="border-b-2 border-border pb-2 text-2xl font-bold text-heading">
+        {categoryLabel}
       </h1>
 
       {items.length === 0 ? (
         <p className="py-12 text-center font-ui text-sm text-foreground-muted">
-          এই মুহূর্তে {category.name} বিভাগে কোনো সংবাদ নেই।
+          {locale === "bn"
+            ? `এই মুহূর্তে ${categoryLabel} বিভাগে কোনো সংবাদ নেই।`
+            : `There's no news in ${categoryLabel} right now.`}
         </p>
       ) : (
         <>
@@ -67,7 +77,7 @@ export function CategoryListing({
               />
               <div className="mt-3">
                 <span className="font-ui text-xs font-semibold uppercase tracking-wide text-brand-crimson">
-                  {lead.category.name}
+                  {localizedName(lead.category, locale)}
                 </span>
                 <h2 className="mt-1 text-xl font-bold leading-snug text-foreground transition-colors group-hover:text-brand-crimson">
                   {lead.title}

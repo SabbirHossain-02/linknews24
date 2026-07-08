@@ -1,7 +1,11 @@
+"use client";
+
 import Link from "next/link";
 import type { Article } from "@/types/content";
 import { toneGradientClass } from "@/lib/tone";
 import { getArticleBody, getRelatedArticles } from "@/lib/mock-data";
+import { localizedName } from "@/lib/i18n";
+import { useLocale } from "@/components/providers/LocaleProvider";
 import { ThematicRow } from "@/components/home/ThematicRow";
 import { ShareButtons } from "./ShareButtons";
 import { BookmarkButton } from "./BookmarkButton";
@@ -11,6 +15,8 @@ import { ArticleSchema } from "./ArticleSchema";
 export function ArticleContent({ article }: { article: Article }) {
   const body = getArticleBody(article);
   const related = getRelatedArticles(article);
+  const { locale, t } = useLocale();
+  const categoryLabel = localizedName(article.category, locale);
 
   return (
     <article className="flex flex-col gap-8">
@@ -18,30 +24,30 @@ export function ArticleContent({ article }: { article: Article }) {
       <RecordHistory article={article} />
 
       <div className="flex flex-col gap-4">
-        <nav aria-label="ব্রেডক্রাম্ব" className="font-ui text-xs text-foreground-muted">
+        <nav aria-label="Breadcrumb" className="font-ui text-xs text-foreground-muted">
           <Link href="/" className="hover:text-brand-crimson">
-            হোম
+            {t("home")}
           </Link>
           <span className="mx-1.5">/</span>
           <Link
             href={`/${article.category.slug}`}
             className="hover:text-brand-crimson"
           >
-            {article.category.name}
+            {categoryLabel}
           </Link>
         </nav>
 
         <div className="flex items-center gap-2">
           {article.isBreaking && (
             <span className="rounded bg-brand-crimson px-2 py-0.5 font-ui text-[11px] font-bold uppercase tracking-wide text-white">
-              ব্রেকিং
+              {t("breaking")}
             </span>
           )}
           <Link
             href={`/${article.category.slug}`}
             className="font-ui text-xs font-semibold uppercase tracking-wide text-brand-crimson hover:underline"
           >
-            {article.category.name}
+            {categoryLabel}
           </Link>
         </div>
 
@@ -79,7 +85,7 @@ export function ArticleContent({ article }: { article: Article }) {
       {related.length > 0 && (
         <div className="border-t border-border pt-8">
           <ThematicRow
-            title="সম্পর্কিত সংবাদ"
+            title={t("relatedNews")}
             href={`/${article.category.slug}`}
             articles={related}
           />

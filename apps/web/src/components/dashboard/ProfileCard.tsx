@@ -1,4 +1,7 @@
+"use client";
+
 import type { MockUser } from "@/lib/auth-storage";
+import { useLocale } from "@/components/providers/LocaleProvider";
 
 export function ProfileCard({
   user,
@@ -8,6 +11,7 @@ export function ProfileCard({
   onLogout: () => void;
 }) {
   const initial = user.name.charAt(0).toUpperCase();
+  const { t } = useLocale();
 
   return (
     <div className="flex items-center gap-4 rounded-xl border border-border bg-background p-5 shadow-sm">
@@ -22,7 +26,7 @@ export function ProfileCard({
         onClick={onLogout}
         className="shrink-0 rounded-lg border border-border px-4 py-2 font-ui text-sm font-medium text-brand-crimson transition-colors hover:bg-surface"
       >
-        লগআউট
+        {t("logout")}
       </button>
     </div>
   );

@@ -1,29 +1,49 @@
 import type { Article, Category } from "@/types/content";
 
 export const categories: Category[] = [
-  { id: "national", name: "জাতীয়", slug: "national" },
-  { id: "politics", name: "রাজনীতি", slug: "politics" },
-  { id: "special-report", name: "বিশেষ প্রতিবেদন", slug: "special-report" },
-  { id: "secretariat", name: "সচিবালয়", slug: "secretariat" },
-  { id: "nationwide", name: "দেশজুড়ে", slug: "nationwide" },
-  { id: "business", name: "অর্থনীতি", slug: "business" },
-  { id: "world", name: "আন্তর্জাতিক", slug: "world" },
-  { id: "sports", name: "খেলাধুলা", slug: "sports" },
-  { id: "jobs", name: "চাকরি", slug: "jobs" },
-  { id: "top-ten", name: "টপ টেন", slug: "top-ten" },
-  { id: "entertainment", name: "বিনোদন", slug: "entertainment" },
-  { id: "features", name: "ফিচার", slug: "features" },
-  { id: "education", name: "শিক্ষা", slug: "education" },
-  { id: "health", name: "স্বাস্থ্য", slug: "health" },
-  { id: "diaspora", name: "প্রবাস", slug: "diaspora" },
-  { id: "lifestyle", name: "লাইফস্টাইল", slug: "lifestyle" },
-  { id: "technology", name: "প্রযুক্তি", slug: "technology" },
-  { id: "opinion", name: "মতামত", slug: "opinion" },
-  { id: "religion", name: "ধর্ম", slug: "religion" },
-  { id: "crime", name: "আইন-আদালত", slug: "crime" },
-  { id: "environment", name: "পরিবেশ", slug: "environment" },
-  { id: "video", name: "ভিডিও", slug: "video" },
-  { id: "gallery", name: "ফটো গ্যালারি", slug: "gallery" },
+  { id: "national", name: "জাতীয়", nameEn: "National", slug: "national" },
+  { id: "politics", name: "রাজনীতি", nameEn: "Politics", slug: "politics" },
+  {
+    id: "special-report",
+    name: "বিশেষ প্রতিবেদন",
+    nameEn: "Special Report",
+    slug: "special-report",
+  },
+  { id: "secretariat", name: "সচিবালয়", nameEn: "Secretariat", slug: "secretariat" },
+  { id: "nationwide", name: "দেশজুড়ে", nameEn: "Nationwide", slug: "nationwide" },
+  { id: "business", name: "অর্থনীতি", nameEn: "Business", slug: "business" },
+  { id: "world", name: "আন্তর্জাতিক", nameEn: "World", slug: "world" },
+  { id: "sports", name: "খেলাধুলা", nameEn: "Sports", slug: "sports" },
+  { id: "jobs", name: "চাকরি", nameEn: "Jobs", slug: "jobs" },
+  { id: "top-ten", name: "টপ টেন", nameEn: "Top Ten", slug: "top-ten" },
+  {
+    id: "entertainment",
+    name: "বিনোদন",
+    nameEn: "Entertainment",
+    slug: "entertainment",
+  },
+  { id: "features", name: "ফিচার", nameEn: "Features", slug: "features" },
+  { id: "education", name: "শিক্ষা", nameEn: "Education", slug: "education" },
+  { id: "health", name: "স্বাস্থ্য", nameEn: "Health", slug: "health" },
+  { id: "diaspora", name: "প্রবাস", nameEn: "Diaspora", slug: "diaspora" },
+  { id: "lifestyle", name: "লাইফস্টাইল", nameEn: "Lifestyle", slug: "lifestyle" },
+  { id: "technology", name: "প্রযুক্তি", nameEn: "Technology", slug: "technology" },
+  { id: "opinion", name: "মতামত", nameEn: "Opinion", slug: "opinion" },
+  { id: "religion", name: "ধর্ম", nameEn: "Religion", slug: "religion" },
+  { id: "crime", name: "আইন-আদালত", nameEn: "Law & Crime", slug: "crime" },
+  {
+    id: "environment",
+    name: "পরিবেশ",
+    nameEn: "Environment",
+    slug: "environment",
+  },
+  { id: "video", name: "ভিডিও", nameEn: "Video", slug: "video" },
+  {
+    id: "gallery",
+    name: "ফটো গ্যালারি",
+    nameEn: "Photo Gallery",
+    slug: "gallery",
+  },
 ];
 
 const findCategory = (slug: string): Category =>
@@ -31,6 +51,7 @@ const findCategory = (slug: string): Category =>
 
 export interface NavItem {
   label: string;
+  labelEn: string;
   href?: string;
   children?: Category[];
 }
@@ -38,6 +59,7 @@ export interface NavItem {
 export const navItems: NavItem[] = [
   {
     label: "বাংলাদেশ",
+    labelEn: "Bangladesh",
     children: [
       findCategory("national"),
       findCategory("politics"),
@@ -45,21 +67,22 @@ export const navItems: NavItem[] = [
       findCategory("secretariat"),
     ],
   },
-  { label: "দেশজুড়ে", href: "/nationwide" },
-  { label: "অর্থনীতি", href: "/business" },
-  { label: "আন্তর্জাতিক", href: "/world" },
-  { label: "খেলাধুলা", href: "/sports" },
-  { label: "চাকরি", href: "/jobs" },
-  { label: "টপ টেন", href: "/top-ten" },
-  { label: "বিনোদন", href: "/entertainment" },
-  { label: "প্রযুক্তি", href: "/technology" },
-  { label: "মতামত", href: "/opinion" },
-  { label: "ধর্ম", href: "/religion" },
-  { label: "আইন-আদালত", href: "/crime" },
-  { label: "পরিবেশ", href: "/environment" },
-  { label: "ফিচার", href: "/features" },
+  { label: "দেশজুড়ে", labelEn: "Nationwide", href: "/nationwide" },
+  { label: "অর্থনীতি", labelEn: "Business", href: "/business" },
+  { label: "আন্তর্জাতিক", labelEn: "World", href: "/world" },
+  { label: "খেলাধুলা", labelEn: "Sports", href: "/sports" },
+  { label: "চাকরি", labelEn: "Jobs", href: "/jobs" },
+  { label: "টপ টেন", labelEn: "Top Ten", href: "/top-ten" },
+  { label: "বিনোদন", labelEn: "Entertainment", href: "/entertainment" },
+  { label: "প্রযুক্তি", labelEn: "Technology", href: "/technology" },
+  { label: "মতামত", labelEn: "Opinion", href: "/opinion" },
+  { label: "ধর্ম", labelEn: "Religion", href: "/religion" },
+  { label: "আইন-আদালত", labelEn: "Law & Crime", href: "/crime" },
+  { label: "পরিবেশ", labelEn: "Environment", href: "/environment" },
+  { label: "ফিচার", labelEn: "Features", href: "/features" },
   {
     label: "অন্যান্য",
+    labelEn: "Others",
     children: [
       findCategory("education"),
       findCategory("health"),

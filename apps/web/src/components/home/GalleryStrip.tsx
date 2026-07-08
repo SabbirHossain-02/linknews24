@@ -1,17 +1,22 @@
+"use client";
+
 import Link from "next/link";
 import type { Article } from "@/types/content";
 import { toneGradientClass } from "@/lib/tone";
+import { useLocale } from "@/components/providers/LocaleProvider";
 
 export function GalleryStrip({ articles }: { articles: Article[] }) {
+  const { t } = useLocale();
+
   return (
     <section>
-      <div className="flex items-center justify-between border-b-2 border-heading pb-2">
-        <h2 className="text-lg font-bold text-heading">ফটো গ্যালারি</h2>
+      <div className="flex items-center justify-between border-b-2 border-border pb-2">
+        <h2 className="text-lg font-bold text-heading">{t("photoGallery")}</h2>
         <Link
           href="/gallery"
           className="font-ui text-xs font-medium text-brand-crimson hover:underline"
         >
-          সব দেখুন →
+          {t("viewAll")}
         </Link>
       </div>
       <div className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-4">

@@ -1,15 +1,19 @@
 "use client";
 
 import { useState } from "react";
+import { useLocale } from "@/components/providers/LocaleProvider";
 
 export function NewsletterForm() {
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const { locale, t } = useLocale();
 
   if (submitted) {
     return (
-      <p className="mt-3 rounded border border-white/15 bg-white/5 px-3 py-2.5 font-ui text-sm text-white/70">
-        ব্যাকএন্ড এখনো সংযুক্ত হয়নি — নিউজলেটার ফিচারটি শীঘ্রই চালু হবে।
+      <p className="mt-3 rounded border border-border bg-background px-3 py-2.5 font-ui text-sm text-foreground-muted">
+        {locale === "bn"
+          ? "ব্যাকএন্ড এখনো সংযুক্ত হয়নি — নিউজলেটার ফিচারটি শীঘ্রই চালু হবে।"
+          : "Backend isn't connected yet — the newsletter feature will be enabled soon."}
       </p>
     );
   }
@@ -27,14 +31,14 @@ export function NewsletterForm() {
         required
         value={email}
         onChange={(e) => setEmail(e.target.value)}
-        placeholder="ইমেইল ঠিকানা"
-        className="w-full rounded border border-white/15 bg-white/5 px-3 py-2 font-ui text-sm text-white placeholder:text-white/40 focus:border-brand-crimson focus:outline-none"
+        placeholder={t("footerEmailPlaceholder")}
+        className="w-full rounded border border-border bg-background px-3 py-2 font-ui text-sm text-foreground placeholder:text-foreground-muted focus:border-brand-crimson focus:outline-none"
       />
       <button
         type="submit"
         className="shrink-0 rounded bg-brand-crimson px-4 py-2 font-ui text-sm font-medium text-white transition-colors hover:bg-brand-crimson-dark"
       >
-        সাবস্ক্রাইব
+        {t("subscribe")}
       </button>
     </form>
   );

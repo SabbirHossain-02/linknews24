@@ -1,8 +1,14 @@
+"use client";
+
 import Link from "next/link";
 import type { Article } from "@/types/content";
 import { toneGradientClass } from "@/lib/tone";
+import { localizedName } from "@/lib/i18n";
+import { useLocale } from "@/components/providers/LocaleProvider";
 
 export function HeroStory({ article }: { article: Article }) {
+  const { locale, t } = useLocale();
+
   return (
     <Link href={`/${article.slug}`} className="group block">
       <div
@@ -15,11 +21,11 @@ export function HeroStory({ article }: { article: Article }) {
           <div className="flex items-center gap-2">
             {article.isBreaking && (
               <span className="rounded bg-brand-crimson px-2 py-0.5 font-ui text-[11px] font-bold uppercase tracking-wide text-white">
-                ব্রেকিং
+                {t("breaking")}
               </span>
             )}
             <span className="font-ui text-xs font-semibold uppercase tracking-wide text-white/80">
-              {article.category.name}
+              {localizedName(article.category, locale)}
             </span>
           </div>
           <h1 className="mt-3 max-w-2xl text-2xl font-bold leading-tight text-white transition-colors group-hover:text-white/90 sm:text-3xl md:text-4xl">

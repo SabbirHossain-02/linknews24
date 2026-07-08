@@ -3,10 +3,12 @@
 import { useEffect, useState } from "react";
 import { Bookmark } from "lucide-react";
 import { isBookmarked, toggleBookmark } from "@/lib/auth-storage";
+import { useLocale } from "@/components/providers/LocaleProvider";
 import type { Article } from "@/types/content";
 
 export function BookmarkButton({ article }: { article: Article }) {
   const [saved, setSaved] = useState(false);
+  const { t } = useLocale();
 
   useEffect(() => {
     setSaved(isBookmarked(article.slug));
@@ -33,7 +35,7 @@ export function BookmarkButton({ article }: { article: Article }) {
       }`}
     >
       <Bookmark className="h-3.5 w-3.5" fill={saved ? "currentColor" : "none"} />
-      {saved ? "সংরক্ষিত" : "সংরক্ষণ করুন"}
+      {saved ? t("saved") : t("save")}
     </button>
   );
 }

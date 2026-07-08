@@ -4,10 +4,12 @@ import { useState } from "react";
 import Link from "next/link";
 import { ChevronDown } from "lucide-react";
 import { useAuth } from "@/components/providers/AuthProvider";
+import { useLocale } from "@/components/providers/LocaleProvider";
 import { AuthModal } from "./AuthModal";
 
 export function UserMenu() {
   const { user, ready, logout } = useAuth();
+  const { t } = useLocale();
   const [open, setOpen] = useState(false);
 
   if (!ready) return <div className="h-3.5 w-10" aria-hidden />;
@@ -30,7 +32,7 @@ export function UserMenu() {
             onClick={() => setOpen(false)}
             className="block px-3.5 py-2 font-ui text-sm transition-colors hover:bg-surface"
           >
-            ড্যাশবোর্ড
+            {t("dashboard")}
           </Link>
           <button
             onClick={() => {
@@ -39,7 +41,7 @@ export function UserMenu() {
             }}
             className="block w-full px-3.5 py-2 text-left font-ui text-sm text-brand-crimson transition-colors hover:bg-surface"
           >
-            লগআউট
+            {t("logout")}
           </button>
         </div>
       )}

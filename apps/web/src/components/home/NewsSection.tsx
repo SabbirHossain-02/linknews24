@@ -1,7 +1,10 @@
+"use client";
+
 import Link from "next/link";
 import { Play } from "lucide-react";
 import type { Article } from "@/types/content";
 import { toneGradientClass } from "@/lib/tone";
+import { useLocale } from "@/components/providers/LocaleProvider";
 
 export function NewsSection({
   title,
@@ -12,19 +15,20 @@ export function NewsSection({
   href: string;
   articles: Article[];
 }) {
+  const { t } = useLocale();
   const [lead, ...rest] = articles;
   if (!lead) return null;
   const listItems = rest.slice(0, 5);
 
   return (
     <section>
-      <div className="flex items-center justify-between border-b-2 border-heading pb-2">
+      <div className="flex items-center justify-between border-b-2 border-border pb-2">
         <h2 className="text-lg font-bold text-heading">{title}</h2>
         <Link
           href={href}
           className="font-ui text-xs font-medium text-brand-crimson hover:underline"
         >
-          সব দেখুন →
+          {t("viewAll")}
         </Link>
       </div>
 

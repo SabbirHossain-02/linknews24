@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useLocale } from "@/components/providers/LocaleProvider";
 
 const PREFS_KEY = "linknews24-preferences";
 
@@ -44,6 +45,7 @@ function Toggle({
 
 export function PreferencesPanel() {
   const [prefs, setPrefs] = useState<Preferences>(DEFAULT_PREFS);
+  const { t } = useLocale();
 
   useEffect(() => {
     const raw = localStorage.getItem(PREFS_KEY);
@@ -58,17 +60,17 @@ export function PreferencesPanel() {
 
   return (
     <div className="rounded-xl border border-border bg-background p-5 shadow-sm">
-      <h2 className="text-lg font-bold text-heading">প্রেফারেন্স</h2>
+      <h2 className="text-lg font-bold text-heading">{t("preferences")}</h2>
       <div className="mt-3 flex flex-col divide-y divide-border">
         <Toggle
           checked={prefs.newsletter}
           onChange={(v) => update({ newsletter: v })}
-          label="দৈনিক নিউজলেটার ইমেইল"
+          label={t("dailyNewsletterEmail")}
         />
         <Toggle
           checked={prefs.breakingAlerts}
           onChange={(v) => update({ breakingAlerts: v })}
-          label="ব্রেকিং নিউজ নোটিফিকেশন"
+          label={t("breakingNewsNotifications")}
         />
       </div>
     </div>

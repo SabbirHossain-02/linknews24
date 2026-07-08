@@ -1,6 +1,10 @@
+"use client";
+
 import Link from "next/link";
 import { Pagination } from "@/components/home/Pagination";
 import { toneGradientClass } from "@/lib/tone";
+import { localizedName } from "@/lib/i18n";
+import { useLocale } from "@/components/providers/LocaleProvider";
 import type { Article, Category } from "@/types/content";
 
 export function GalleryListing({
@@ -14,15 +18,17 @@ export function GalleryListing({
   currentPage: number;
   totalPages: number;
 }) {
+  const { locale, t } = useLocale();
+
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="border-b-2 border-heading pb-2 text-2xl font-bold text-heading">
-        {category.name}
+      <h1 className="border-b-2 border-border pb-2 text-2xl font-bold text-heading">
+        {localizedName(category, locale)}
       </h1>
 
       {items.length === 0 ? (
         <p className="py-12 text-center font-ui text-sm text-foreground-muted">
-          এই মুহূর্তে কোনো ছবির গ্যালারি নেই।
+          {t("noGalleryItems")}
         </p>
       ) : (
         <>
