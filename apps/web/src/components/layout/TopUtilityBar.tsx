@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Search } from "lucide-react";
 import { formatBengaliDate } from "@/lib/bengali-calendar";
-import { LoginButton } from "./LoginButton";
+import { UserMenu } from "./UserMenu";
 import { ThemeToggle } from "./ThemeToggle";
 import { FontSizeControl } from "./FontSizeControl";
 
@@ -31,7 +31,7 @@ export function TopUtilityBar() {
           <Link href="/epaper" className="transition-colors hover:text-white">
             ই-পেপার
           </Link>
-          <LoginButton />
+          <UserMenu />
           <a href="#newsletter" className="text-brand-crimson transition-colors hover:text-white">
             সাবস্ক্রাইব
           </a>

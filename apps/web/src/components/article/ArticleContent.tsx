@@ -4,6 +4,8 @@ import { toneGradientClass } from "@/lib/tone";
 import { getArticleBody, getRelatedArticles } from "@/lib/mock-data";
 import { ThematicRow } from "@/components/home/ThematicRow";
 import { ShareButtons } from "./ShareButtons";
+import { BookmarkButton } from "./BookmarkButton";
+import { RecordHistory } from "./RecordHistory";
 import { ArticleSchema } from "./ArticleSchema";
 
 export function ArticleContent({ article }: { article: Article }) {
@@ -13,6 +15,7 @@ export function ArticleContent({ article }: { article: Article }) {
   return (
     <article className="flex flex-col gap-8">
       <ArticleSchema article={article} />
+      <RecordHistory article={article} />
 
       <div className="flex flex-col gap-4">
         <nav aria-label="ব্রেডক্রাম্ব" className="font-ui text-xs text-foreground-muted">
@@ -52,7 +55,10 @@ export function ArticleContent({ article }: { article: Article }) {
             <span className="mx-1.5">·</span>
             {article.publishedAt}
           </p>
-          <ShareButtons title={article.title} />
+          <div className="flex items-center gap-3">
+            <BookmarkButton article={article} />
+            <ShareButtons title={article.title} />
+          </div>
         </div>
       </div>
 
