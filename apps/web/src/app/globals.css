@@ -53,3 +53,10 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans), var(--font-ui), sans-serif;
 }
+
+@media print {
+  header,
+  footer {
+    display: none !important;
+  }
+}

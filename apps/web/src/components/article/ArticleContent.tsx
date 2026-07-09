@@ -7,8 +7,7 @@ import { getArticleBody, getRelatedArticles } from "@/lib/mock-data";
 import { localizedAuthor, localizedName, localizedPublishedAt } from "@/lib/i18n";
 import { useLocale } from "@/components/providers/LocaleProvider";
 import { ThematicRow } from "@/components/home/ThematicRow";
-import { ShareButtons } from "./ShareButtons";
-import { BookmarkButton } from "./BookmarkButton";
+import { ArticleActions } from "./ArticleActions";
 import { RecordHistory } from "./RecordHistory";
 import { ArticleSchema } from "./ArticleSchema";
 
@@ -64,10 +63,7 @@ export function ArticleContent({ article }: { article: Article }) {
             <span className="mx-1.5">·</span>
             {localizedPublishedAt(article.publishedAt, locale)}
           </p>
-          <div className="flex items-center gap-3">
-            <BookmarkButton article={article} />
-            <ShareButtons title={title} />
-          </div>
+          <ArticleActions article={article} title={title} />
         </div>
       </div>
 
