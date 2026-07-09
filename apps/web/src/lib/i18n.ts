@@ -54,6 +54,14 @@ export const translations = {
     bn: "পাসওয়ার্ড নিশ্চিত করুন",
     en: "Confirm password",
   },
+  loginSubtitle: {
+    bn: "আপনার অ্যাকাউন্টে প্রবেশ করুন",
+    en: "Sign in to your account",
+  },
+  registerSubtitle: {
+    bn: "নতুন অ্যাকাউন্ট তৈরি করুন",
+    en: "Create your new account",
+  },
   signIn: { bn: "লগইন করুন", en: "Sign In" },
   register: { bn: "রেজিস্টার করুন", en: "Register" },
   or: { bn: "অথবা", en: "or" },
