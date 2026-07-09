@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { ArrowUp, Mail, MapPin, Phone, Smartphone } from "lucide-react";
 import { navItems } from "@/lib/mock-data";
 import { localizedName } from "@/lib/i18n";
 import { useLocale } from "@/components/providers/LocaleProvider";
@@ -24,16 +25,24 @@ const footerCategories: Category[] = navItems.flatMap((item) =>
 export function SiteFooter() {
   const { locale, t } = useLocale();
 
-  const legalLinks = [
+  const companyLinks = [
     { label: t("footerAbout"), href: "/about" },
     { label: t("footerContact"), href: "/contact" },
+    { label: t("footerAdvertise"), href: "/advertise" },
+    { label: t("footerCareers"), href: "/careers" },
+    { label: t("footerFeedback"), href: "/feedback" },
+    { label: t("epaper"), href: "/epaper" },
     { label: t("footerPrivacy"), href: "/privacy" },
     { label: t("footerTerms"), href: "/terms" },
   ];
 
+  const scrollTop = () =>
+    window.scrollTo({ top: 0, behavior: "smooth" });
+
   return (
     <footer className="border-t border-border bg-surface text-foreground-muted">
-      <div className="mx-auto grid max-w-[1600px] gap-10 px-6 py-12 md:grid-cols-4">
+      <div className="mx-auto grid max-w-[1600px] gap-10 px-6 py-12 md:grid-cols-2 lg:grid-cols-4">
+        {/* Brand + social + app */}
         <div>
           <span className="text-xl font-bold tracking-tight text-heading">
             Link News<span className="text-brand-crimson">24</span>
@@ -52,8 +61,32 @@ export function SiteFooter() {
               <YoutubeIcon className="h-5 w-5" />
             </a>
           </div>
+
+          <div className="mt-6">
+            <h3 className="font-ui text-xs font-semibold uppercase tracking-wider text-foreground-muted/70">
+              {t("footerApp")}
+            </h3>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {["Google Play", "App Store"].map((store) => (
+                <span
+                  key={store}
+                  className="flex items-center gap-2 rounded-lg bg-heading px-3 py-2 text-background"
+                  title={t("footerAppSoon")}
+                >
+                  <Smartphone className="h-5 w-5" />
+                  <span className="flex flex-col leading-tight">
+                    <span className="font-ui text-[9px] uppercase tracking-wide opacity-70">
+                      {t("footerAppSoon")}
+                    </span>
+                    <span className="text-sm font-semibold">{store}</span>
+                  </span>
+                </span>
+              ))}
+            </div>
+          </div>
         </div>
 
+        {/* Categories */}
         <div>
           <h3 className="font-ui text-xs font-semibold uppercase tracking-wider text-foreground-muted/70">
             {t("footerCategories")}
@@ -69,12 +102,13 @@ export function SiteFooter() {
           </ul>
         </div>
 
+        {/* Company links */}
         <div>
           <h3 className="font-ui text-xs font-semibold uppercase tracking-wider text-foreground-muted/70">
-            {t("footerImportantLinks")}
+            {t("footerCompany")}
           </h3>
-          <ul className="mt-3 flex flex-col gap-2 font-ui text-sm">
-            {legalLinks.map((link) => (
+          <ul className="mt-3 grid grid-cols-2 gap-2 font-ui text-sm lg:grid-cols-1">
+            {companyLinks.map((link) => (
               <li key={link.href}>
                 <Link href={link.href} className="hover:text-brand-crimson">
                   {link.label}
@@ -84,6 +118,7 @@ export function SiteFooter() {
           </ul>
         </div>
 
+        {/* Newsletter + contact */}
         <div id="newsletter">
           <h3 className="font-ui text-xs font-semibold uppercase tracking-wider text-foreground-muted/70">
             {t("footerNewsletter")}
@@ -92,11 +127,51 @@ export function SiteFooter() {
             {t("footerNewsletterCopy")}
           </p>
           <NewsletterForm />
+
+          <div className="mt-6 border-t border-border pt-5">
+            <h3 className="font-ui text-xs font-semibold uppercase tracking-wider text-foreground-muted/70">
+              {t("footerContactInfo")}
+            </h3>
+            <ul className="mt-3 flex flex-col gap-2.5 font-ui text-sm">
+              <li className="flex items-start gap-2.5">
+                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-brand-crimson" />
+                {t("footerAddress")}
+              </li>
+              <li className="flex items-center gap-2.5">
+                <Mail className="h-4 w-4 shrink-0 text-brand-crimson" />
+                <a
+                  href="mailto:info@linknews24.com"
+                  className="hover:text-brand-crimson"
+                >
+                  info@linknews24.com
+                </a>
+              </li>
+              <li className="flex items-center gap-2.5">
+                <Phone className="h-4 w-4 shrink-0 text-brand-crimson" />
+                <a href="tel:+880255000000" className="hover:text-brand-crimson">
+                  +880 255-000000
+                </a>
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
 
-      <div className="border-t border-border py-4 text-center font-ui text-xs text-foreground-muted/70">
-        © {new Date().getFullYear()} LinkNews24. {t("footerRights")}
+      {/* Bottom bar */}
+      <div className="border-t border-border">
+        <div className="mx-auto flex max-w-[1600px] flex-col items-center gap-2 px-6 py-4 text-center font-ui text-xs text-foreground-muted/70 sm:flex-row sm:justify-between sm:text-left">
+          <span>{t("footerEditor")}</span>
+          <span>
+            © {new Date().getFullYear()} LinkNews24. {t("footerRights")}
+          </span>
+          <button
+            onClick={scrollTop}
+            className="flex items-center gap-1 transition-colors hover:text-brand-crimson"
+          >
+            {t("backToTop")}
+            <ArrowUp className="h-3.5 w-3.5" />
+          </button>
+        </div>
       </div>
     </footer>
   );

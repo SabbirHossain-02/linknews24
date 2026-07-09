@@ -46,6 +46,22 @@ export const translations = {
   footerPrivacy: { bn: "গোপনীয়তা নীতি", en: "Privacy Policy" },
   footerTerms: { bn: "ব্যবহারের শর্তাবলী", en: "Terms of Use" },
   footerRights: { bn: "সর্বস্বত্ব সংরক্ষিত।", en: "All rights reserved." },
+  footerAdvertise: { bn: "বিজ্ঞাপন", en: "Advertise" },
+  footerCareers: { bn: "ক্যারিয়ার", en: "Careers" },
+  footerFeedback: { bn: "মতামত ও অভিযোগ", en: "Feedback" },
+  footerCompany: { bn: "প্রতিষ্ঠান", en: "Company" },
+  footerContactInfo: { bn: "যোগাযোগ", en: "Contact" },
+  footerApp: { bn: "আমাদের অ্যাপ", en: "Get the App" },
+  footerAppSoon: { bn: "শীঘ্রই আসছে", en: "Coming soon" },
+  footerAddress: {
+    bn: "১২৩ প্রেস রোড, তেজগাঁও, ঢাকা ১২০৮, বাংলাদেশ",
+    en: "123 Press Road, Tejgaon, Dhaka 1208, Bangladesh",
+  },
+  footerEditor: {
+    bn: "সম্পাদক ও প্রকাশক: সাব্বির হোসেন",
+    en: "Editor & Publisher: Sabbir Hossain",
+  },
+  backToTop: { bn: "উপরে ফিরুন", en: "Back to top" },
 
   emailPlaceholder: { bn: "ইমেইল ঠিকানা", en: "Email address" },
   passwordPlaceholder: { bn: "পাসওয়ার্ড", en: "Password" },
