@@ -19,27 +19,31 @@ export function UserMenu() {
   const initial = user.name.charAt(0).toUpperCase();
 
   return (
-    <div className="relative" onMouseLeave={() => setOpen(false)}>
+    <div className="relative flex items-center gap-1.5" onMouseLeave={() => setOpen(false)}>
+      <Link
+        href="/dashboard"
+        aria-label={t("myDashboard")}
+        className="relative flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-crimson ring-1 ring-white/25 transition-opacity hover:opacity-90"
+      >
+        {user.avatar ? (
+          <Image
+            src={user.avatar}
+            alt={user.name}
+            fill
+            sizes="28px"
+            className="object-cover"
+          />
+        ) : (
+          <span className="font-ui text-xs font-bold text-white">
+            {initial}
+          </span>
+        )}
+      </Link>
       <button
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-1.5 transition-opacity hover:opacity-90"
-        aria-label={t("myDashboard")}
+        aria-label="Menu"
+        className="transition-colors hover:text-white"
       >
-        <span className="relative flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-crimson ring-1 ring-white/25">
-          {user.avatar ? (
-            <Image
-              src={user.avatar}
-              alt={user.name}
-              fill
-              sizes="28px"
-              className="object-cover"
-            />
-          ) : (
-            <span className="font-ui text-xs font-bold text-white">
-              {initial}
-            </span>
-          )}
-        </span>
         <ChevronDown className="h-3 w-3" />
       </button>
 
