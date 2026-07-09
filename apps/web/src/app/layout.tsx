@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Hind_Siliguri, Inter } from "next/font/google";
+import localFont from "next/font/local";
 import { LocaleProvider } from "@/components/providers/LocaleProvider";
 import { AuthProvider } from "@/components/providers/AuthProvider";
 import { ConditionalAdBanner } from "@/components/layout/ConditionalAdBanner";
@@ -20,6 +21,14 @@ const inter = Inter({
   display: "swap",
 });
 
+// Siyam Rupali — the free Bengali font from Prothom Alo's font stack
+// (self-hosted; Shurjo itself is proprietary and cannot be used).
+const siyamRupali = localFont({
+  src: "./fonts/SiyamRupali.ttf",
+  variable: "--font-siyam-rupali",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   title: {
     default: "LinkNews24 — বাংলাদেশের নির্ভরযোগ্য অনলাইন নিউজ পোর্টাল",
@@ -37,7 +46,7 @@ export default function RootLayout({
   return (
     <html lang="bn">
       <body
-        className={`${hindSiliguri.variable} ${inter.variable} antialiased`}
+        className={`${siyamRupali.variable} ${hindSiliguri.variable} ${inter.variable} antialiased`}
       >
         <LocaleProvider>
           <AuthProvider>

@@ -29,7 +29,7 @@
   --color-brand-crimson: var(--brand-crimson);
   --color-brand-crimson-dark: var(--brand-crimson-dark);
 
-  --font-sans: var(--font-hind-siliguri);
+  --font-sans: var(--font-siyam-rupali), var(--font-hind-siliguri);
   --font-ui: var(--font-inter);
 
   --animate-ticker: ticker 28s linear infinite;
