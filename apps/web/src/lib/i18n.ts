@@ -66,9 +66,11 @@ export const translations = {
   register: { bn: "রেজিস্টার করুন", en: "Register" },
   or: { bn: "অথবা", en: "or" },
   agreeTerms: {
-    bn: "আমি রোবট নই এবং LinkNews24-এর শর্তাবলী ও গোপনীয়তা নীতিতে সম্মত।",
-    en: "I'm not a robot and I agree to LinkNews24's terms and privacy policy.",
+    bn: "LinkNews24-এর শর্তাবলী ও গোপনীয়তা নীতিতে সম্মত।",
+    en: "I agree to LinkNews24's terms and privacy policy.",
   },
+  showPassword: { bn: "পাসওয়ার্ড দেখুন", en: "Show password" },
+  hidePassword: { bn: "পাসওয়ার্ড লুকান", en: "Hide password" },
   googleSignIn: { bn: "Google দিয়ে লগইন করুন", en: "Sign in with Google" },
   googleSignUp: { bn: "Google দিয়ে রেজিস্টার করুন", en: "Sign up with Google" },
   googleNotConnected: {

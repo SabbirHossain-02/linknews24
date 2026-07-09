@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Lock, Mail, User, X } from "lucide-react";
+import { Eye, EyeOff, Lock, Mail, User, X } from "lucide-react";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useLocale } from "@/components/providers/LocaleProvider";
 import { GoogleIcon } from "@/components/icons/GoogleIcon";
@@ -21,6 +21,32 @@ function IconInput({
     <div className="relative">
       <Icon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground-muted" />
       <input {...props} className={fieldClass} />
+    </div>
+  );
+}
+
+function PasswordInput(
+  props: React.InputHTMLAttributes<HTMLInputElement>,
+) {
+  const [visible, setVisible] = useState(false);
+  const { t } = useLocale();
+
+  return (
+    <div className="relative">
+      <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground-muted" />
+      <input
+        {...props}
+        type={visible ? "text" : "password"}
+        className={`${fieldClass} pr-10`}
+      />
+      <button
+        type="button"
+        onClick={() => setVisible((v) => !v)}
+        aria-label={visible ? t("hidePassword") : t("showPassword")}
+        className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground-muted transition-colors hover:text-foreground"
+      >
+        {visible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+      </button>
     </div>
   );
 }
@@ -168,10 +194,8 @@ export function AuthModal({
                     required
                     placeholder={t("emailPlaceholder")}
                   />
-                  <IconInput
-                    icon={Lock}
+                  <PasswordInput
                     name="password"
-                    type="password"
                     required
                     placeholder={t("passwordPlaceholder")}
                   />
@@ -208,18 +232,14 @@ export function AuthModal({
                     required
                     placeholder={t("emailPlaceholder")}
                   />
-                  <IconInput
-                    icon={Lock}
+                  <PasswordInput
                     name="password"
-                    type="password"
                     required
                     minLength={6}
                     placeholder={t("passwordPlaceholder")}
                   />
-                  <IconInput
-                    icon={Lock}
+                  <PasswordInput
                     name="confirmPassword"
-                    type="password"
                     required
                     minLength={6}
                     placeholder={t("confirmPasswordPlaceholder")}
