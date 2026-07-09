@@ -13,6 +13,7 @@ interface AuthContextValue {
   ready: boolean;
   login: (email: string) => void;
   register: (name: string, email: string) => void;
+  updateUser: (patch: Partial<MockUser>) => void;
   logout: () => void;
 }
 
@@ -29,15 +30,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = (email: string) => {
     const nameFromEmail = email.split("@")[0];
-    const nextUser = { name: nameFromEmail, email };
+    const nextUser: MockUser = {
+      ...getStoredUser(),
+      name: nameFromEmail,
+      email,
+      joinedAt: getStoredUser()?.joinedAt ?? new Date().toISOString(),
+    };
     storeUser(nextUser);
     setUser(nextUser);
   };
 
   const register = (name: string, email: string) => {
-    const nextUser = { name, email };
+    const nextUser: MockUser = {
+      name,
+      email,
+      joinedAt: getStoredUser()?.joinedAt ?? new Date().toISOString(),
+    };
     storeUser(nextUser);
     setUser(nextUser);
+  };
+
+  const updateUser = (patch: Partial<MockUser>) => {
+    setUser((prev) => {
+      if (!prev) return prev;
+      const next = { ...prev, ...patch };
+      storeUser(next);
+      return next;
+    });
   };
 
   const logout = () => {
@@ -46,7 +65,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, ready, login, register, logout }}>
+    <AuthContext.Provider
+      value={{ user, ready, login, register, updateUser, logout }}
+    >
       {children}
     </AuthContext.Provider>
   );

@@ -1,6 +1,11 @@
 export interface MockUser {
   name: string;
   email: string;
+  avatar?: string; // data URL
+  bio?: string;
+  phone?: string;
+  city?: string;
+  joinedAt?: string; // ISO date
 }
 
 export interface BookmarkedArticle {
@@ -22,6 +27,7 @@ export interface HistoryEntry {
 const USER_KEY = "linknews24-user";
 const BOOKMARKS_KEY = "linknews24-bookmarks";
 const HISTORY_KEY = "linknews24-history";
+const FOLLOWS_KEY = "linknews24-follows";
 const HISTORY_LIMIT = 20;
 
 function readJSON<T>(key: string, fallback: T): T {
@@ -48,6 +54,31 @@ export function storeUser(user: MockUser) {
 
 export function clearUser() {
   localStorage.removeItem(USER_KEY);
+}
+
+// --- Followed topics (category slugs) ---
+
+export function getFollowedTopics(): string[] {
+  return readJSON<string[]>(FOLLOWS_KEY, []);
+}
+
+export function isFollowingTopic(slug: string): boolean {
+  return getFollowedTopics().includes(slug);
+}
+
+export function toggleTopic(slug: string): boolean {
+  const list = getFollowedTopics();
+  const index = list.indexOf(slug);
+
+  if (index >= 0) {
+    list.splice(index, 1);
+    writeJSON(FOLLOWS_KEY, list);
+    return false;
+  }
+
+  list.push(slug);
+  writeJSON(FOLLOWS_KEY, list);
+  return true;
 }
 
 export function getBookmarks(): BookmarkedArticle[] {

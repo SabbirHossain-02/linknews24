@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ChevronDown } from "lucide-react";
+import Image from "next/image";
+import { ChevronDown, LayoutDashboard, LogOut } from "lucide-react";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useLocale } from "@/components/providers/LocaleProvider";
 import { AuthModal } from "./AuthModal";
@@ -12,26 +13,52 @@ export function UserMenu() {
   const { t } = useLocale();
   const [open, setOpen] = useState(false);
 
-  if (!ready) return <div className="h-3.5 w-10" aria-hidden />;
+  if (!ready) return <div className="h-7 w-7" aria-hidden />;
   if (!user) return <AuthModal />;
+
+  const initial = user.name.charAt(0).toUpperCase();
 
   return (
     <div className="relative" onMouseLeave={() => setOpen(false)}>
       <button
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-1 transition-colors hover:text-white"
+        className="flex items-center gap-1.5 transition-opacity hover:opacity-90"
+        aria-label={t("myDashboard")}
       >
-        {user.name}
+        <span className="relative flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-crimson ring-1 ring-white/25">
+          {user.avatar ? (
+            <Image
+              src={user.avatar}
+              alt={user.name}
+              fill
+              sizes="28px"
+              className="object-cover"
+            />
+          ) : (
+            <span className="font-ui text-xs font-bold text-white">
+              {initial}
+            </span>
+          )}
+        </span>
         <ChevronDown className="h-3 w-3" />
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full z-50 mt-2 w-40 rounded-lg border border-border bg-background py-1.5 text-foreground shadow-lg">
+        <div className="absolute right-0 top-full z-50 mt-2 w-48 overflow-hidden rounded-lg border border-border bg-background text-foreground shadow-lg">
+          <div className="border-b border-border px-3.5 py-3">
+            <p className="truncate text-sm font-semibold text-heading">
+              {user.name}
+            </p>
+            <p className="truncate font-ui text-xs text-foreground-muted">
+              {user.email}
+            </p>
+          </div>
           <Link
             href="/dashboard"
             onClick={() => setOpen(false)}
-            className="block px-3.5 py-2 font-ui text-sm transition-colors hover:bg-surface"
+            className="flex items-center gap-2.5 px-3.5 py-2.5 font-ui text-sm transition-colors hover:bg-surface"
           >
+            <LayoutDashboard className="h-4 w-4" />
             {t("dashboard")}
           </Link>
           <button
@@ -39,8 +66,9 @@ export function UserMenu() {
               logout();
               setOpen(false);
             }}
-            className="block w-full px-3.5 py-2 text-left font-ui text-sm text-brand-crimson transition-colors hover:bg-surface"
+            className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left font-ui text-sm text-brand-crimson transition-colors hover:bg-surface"
           >
+            <LogOut className="h-4 w-4" />
             {t("logout")}
           </button>
         </div>
