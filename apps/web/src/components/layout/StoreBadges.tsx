@@ -36,44 +36,40 @@ function Badge({
   icon,
   line1,
   line2,
-  title,
 }: {
   icon: React.ReactNode;
   line1: string;
   line2: string;
-  title?: string;
 }) {
   return (
     <a
       href="#"
-      title={title}
-      className="inline-flex items-center gap-2.5 rounded-lg border border-black/15 bg-white px-3 py-2 text-black transition-shadow hover:shadow-md"
+      title={line1}
+      className="inline-flex items-center gap-2 rounded-lg border border-black/15 bg-white px-2.5 py-1.5 text-black transition-shadow hover:shadow-md"
     >
       {icon}
       <span className="flex flex-col leading-none">
-        <span className="font-ui text-[9px] font-medium tracking-wide">
+        <span className="font-ui text-[8px] font-medium tracking-wide text-black/60">
           {line1}
         </span>
-        <span className="-mt-0.5 font-ui text-base font-semibold">{line2}</span>
+        <span className="-mt-0.5 font-ui text-[13px] font-semibold">{line2}</span>
       </span>
     </a>
   );
 }
 
-export function StoreBadges({ soonLabel }: { soonLabel?: string }) {
+export function StoreBadges({ soonLabel = "" }: { soonLabel?: string }) {
   return (
     <div className="flex flex-wrap gap-2">
       <Badge
-        icon={<GooglePlayIcon className="h-6 w-6" />}
-        line1="GET IT ON"
+        icon={<GooglePlayIcon className="h-5 w-5" />}
+        line1={soonLabel}
         line2="Google Play"
-        title={soonLabel}
       />
       <Badge
-        icon={<AppleIcon className="h-6 w-6" />}
-        line1="Download on the"
+        icon={<AppleIcon className="h-5 w-5" />}
+        line1={soonLabel}
         line2="App Store"
-        title={soonLabel}
       />
     </div>
   );
