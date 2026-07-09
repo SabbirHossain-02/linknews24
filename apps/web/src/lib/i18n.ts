@@ -11,6 +11,15 @@ export const translations = {
   searchPlaceholder: { bn: "সংবাদ খুঁজুন...", en: "Search news..." },
   openMenu: { bn: "মেনু খুলুন", en: "Open menu" },
 
+  liveTv: { bn: "লাইভ টিভি", en: "Live TV" },
+  onAir: { bn: "সরাসরি", en: "On Air" },
+  liveBroadcast: { bn: "সরাসরি সম্প্রচার", en: "Live Broadcast" },
+  watchLive: { bn: "লাইভ দেখুন", en: "Watch Live" },
+  liveStreamSoon: {
+    bn: "সরাসরি সম্প্রচার শীঘ্রই শুরু হবে",
+    en: "Live stream starting soon",
+  },
+
   viewAll: { bn: "সব দেখুন →", en: "View All →" },
   moreTopStories: { bn: "আরও শীর্ষ খবর", en: "More Top Stories" },
   latest: { bn: "সর্বশেষ", en: "Latest" },
