@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Maximize2, Play, Volume2, X } from "lucide-react";
 import { useLocale } from "@/components/providers/LocaleProvider";
 import { breakingNewsItems, breakingNewsItemsEn } from "@/lib/mock-data";
@@ -17,20 +18,18 @@ export function LiveTV() {
 
   const ticker = locale === "en" ? breakingNewsItemsEn : breakingNewsItems;
 
-  const openLive = () => {
-    setOpen(true);
-    // Best-effort native fullscreen — falls back to the in-page overlay.
-    overlayRef.current?.requestFullscreen?.().catch(() => {});
-  };
-
   const closeLive = () => {
     setOpen(false);
     if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
   };
 
-  // Keep overlay state in sync with Esc / native fullscreen exit.
+  // Request native fullscreen once the overlay is mounted, and keep state in
+  // sync with Esc / native fullscreen exit.
   useEffect(() => {
     if (!open) return;
+
+    // Best-effort native fullscreen — falls back to the fixed overlay.
+    overlayRef.current?.requestFullscreen?.().catch(() => {});
 
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") setOpen(false);
@@ -69,7 +68,7 @@ export function LiveTV() {
         {/* 16:9 screen — click to go fullscreen */}
         <button
           type="button"
-          onClick={openLive}
+          onClick={() => setOpen(true)}
           aria-label={t("watchLive")}
           className="group relative block aspect-video w-full bg-black"
         >
@@ -83,8 +82,10 @@ export function LiveTV() {
         </button>
       </section>
 
-      {/* Fullscreen live-news overlay */}
-      {open && (
+      {/* Fullscreen live-news overlay — portalled to <body> so it escapes the
+          sidebar's stacking context and covers the whole viewport. */}
+      {open &&
+        createPortal(
         <div
           ref={overlayRef}
           className="fixed inset-0 z-[100] flex flex-col bg-black"
@@ -153,8 +154,9 @@ export function LiveTV() {
               </div>
             </div>
           </div>
-        </div>
-      )}
+        </div>,
+          document.body,
+        )}
     </>
   );
 }
