@@ -1,13 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowUp, Mail, MapPin, Phone, Smartphone } from "lucide-react";
+import { ArrowUp, Mail, MapPin, Phone } from "lucide-react";
 import { navItems } from "@/lib/mock-data";
 import { localizedName } from "@/lib/i18n";
 import { useLocale } from "@/components/providers/LocaleProvider";
 import type { Category } from "@/types/content";
 import { FacebookIcon, XIcon, YoutubeIcon } from "@/components/icons/SocialIcons";
 import { NewsletterForm } from "./NewsletterForm";
+import { StoreBadges } from "./StoreBadges";
 
 const footerCategories: Category[] = navItems.flatMap((item) =>
   item.children
@@ -66,22 +67,8 @@ export function SiteFooter() {
             <h3 className="font-ui text-xs font-semibold uppercase tracking-wider text-foreground-muted/70">
               {t("footerApp")}
             </h3>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {["Google Play", "App Store"].map((store) => (
-                <span
-                  key={store}
-                  className="flex items-center gap-2 rounded-lg bg-heading px-3 py-2 text-background"
-                  title={t("footerAppSoon")}
-                >
-                  <Smartphone className="h-5 w-5" />
-                  <span className="flex flex-col leading-tight">
-                    <span className="font-ui text-[9px] uppercase tracking-wide opacity-70">
-                      {t("footerAppSoon")}
-                    </span>
-                    <span className="text-sm font-semibold">{store}</span>
-                  </span>
-                </span>
-              ))}
+            <div className="mt-3">
+              <StoreBadges soonLabel={t("footerAppSoon")} />
             </div>
           </div>
         </div>
