@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
-import { apiFetch } from "@/lib/admin-api";
+import { ArrowLeft, Eye, Upload } from "lucide-react";
+import { apiFetch, uploadFile } from "@/lib/admin-api";
 import { RichTextEditor } from "./RichTextEditor";
+import { Modal } from "./Modal";
+import { toneGradientClass } from "@/lib/tone";
 
 interface Category {
   id: string;
@@ -60,6 +62,26 @@ export function ArticleForm({ articleId }: { articleId?: string }) {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(Boolean(articleId));
+  const [showPreview, setShowPreview] = useState(false);
+  const [uploadingCover, setUploadingCover] = useState(false);
+  const coverRef = useRef<HTMLInputElement>(null);
+
+  const pickCover = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setUploadingCover(true);
+    try {
+      set("featuredImage", await uploadFile(file));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "আপলোড ব্যর্থ");
+    } finally {
+      setUploadingCover(false);
+    }
+  };
+
+  const categoryName =
+    categories.find((c) => c.id === form.categoryId)?.name ?? "";
 
   const set = <K extends keyof FormState>(key: K, val: FormState[K]) =>
     setForm((f) => ({ ...f, [key]: val }));
@@ -228,6 +250,13 @@ export function ArticleForm({ articleId }: { articleId?: string }) {
                 খসড়া
               </button>
             </div>
+            <button
+              onClick={() => setShowPreview(true)}
+              className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg border border-border py-2.5 font-ui text-sm font-medium text-foreground hover:bg-surface"
+            >
+              <Eye className="h-4 w-4" />
+              প্রিভিউ দেখুন
+            </button>
           </div>
 
           <div className="flex flex-col gap-3 rounded-xl border border-border bg-background p-4">
@@ -277,14 +306,39 @@ export function ArticleForm({ articleId }: { articleId?: string }) {
             </div>
             <div>
               <label className="font-ui text-xs font-semibold text-foreground-muted">
-                ফিচার্ড ইমেজ URL
+                ফিচার্ড ইমেজ
               </label>
-              <input
-                value={form.featuredImage}
-                onChange={(e) => set("featuredImage", e.target.value)}
-                placeholder="https://…"
-                className={`${inputCls} mt-1`}
-              />
+              <div className="mt-1 flex gap-2">
+                <input
+                  value={form.featuredImage}
+                  onChange={(e) => set("featuredImage", e.target.value)}
+                  placeholder="URL অথবা আপলোড"
+                  className={inputCls}
+                />
+                <button
+                  type="button"
+                  onClick={() => coverRef.current?.click()}
+                  disabled={uploadingCover}
+                  className="flex shrink-0 items-center gap-1.5 rounded-lg border border-border px-3 font-ui text-sm text-foreground hover:bg-surface disabled:opacity-50"
+                >
+                  <Upload className="h-4 w-4" />
+                </button>
+                <input
+                  ref={coverRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={pickCover}
+                  className="hidden"
+                />
+              </div>
+              {form.featuredImage && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={form.featuredImage}
+                  alt=""
+                  className="mt-2 aspect-video w-full rounded-lg object-cover"
+                />
+              )}
             </div>
             <label className="flex items-center gap-2 font-ui text-sm text-foreground">
               <input
@@ -326,6 +380,43 @@ export function ArticleForm({ articleId }: { articleId?: string }) {
           </div>
         </div>
       </div>
+
+      {showPreview && (
+        <Modal title="প্রিভিউ — ফ্রন্টএন্ডে যেমন দেখাবে" wide onClose={() => setShowPreview(false)}>
+          <article className="ln-editor max-h-[70vh] overflow-y-auto">
+            {categoryName && (
+              <span className="font-ui text-xs font-semibold uppercase tracking-wide text-brand-crimson">
+                {categoryName}
+              </span>
+            )}
+            <h1 className="mt-1 text-2xl font-bold leading-tight text-heading sm:text-3xl">
+              {form.title || "শিরোনাম নেই"}
+            </h1>
+            {form.excerpt && (
+              <p className="mt-2 text-base text-foreground-muted">{form.excerpt}</p>
+            )}
+            {form.featuredImage ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={form.featuredImage}
+                alt=""
+                className="mt-4 aspect-video w-full rounded-lg object-cover"
+              />
+            ) : (
+              <div
+                className={`mt-4 aspect-video w-full rounded-lg ${toneGradientClass(
+                  (form.imageTone as "navy" | "crimson" | "slate" | "amber") ??
+                    "navy",
+                )}`}
+              />
+            )}
+            <div
+              className="mt-5 text-[17px] leading-relaxed text-foreground"
+              dangerouslySetInnerHTML={{ __html: form.body || "<p>লেখা নেই</p>" }}
+            />
+          </article>
+        </Modal>
+      )}
     </div>
   );
 }

@@ -1,10 +1,46 @@
 import { Router } from "express";
 import { z } from "zod";
+import path from "node:path";
+import fs from "node:fs";
+import multer from "multer";
 import { prisma } from "../prisma";
 import { requireRole } from "../middleware/auth";
 import { CAN_PUBLISH, CAN_WRITE, slugify } from "../lib/roles";
 
 export const adminRouter = Router();
+
+// --- Media upload (images) ---
+export const UPLOAD_DIR = path.join(process.cwd(), "uploads");
+fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+
+const storage = multer.diskStorage({
+  destination: UPLOAD_DIR,
+  filename: (_req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    const name = `${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
+    cb(null, name);
+  },
+});
+const upload = multer({
+  storage,
+  limits: { fileSize: 6 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) =>
+    cb(null, file.mimetype.startsWith("image/")),
+});
+
+adminRouter.post(
+  "/media/upload",
+  requireRole(...CAN_WRITE),
+  upload.single("file"),
+  async (req, res) => {
+    if (!req.file) return res.status(400).json({ error: "ছবি পাওয়া যায়নি" });
+    const url = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
+    await prisma.media.create({
+      data: { url, type: "IMAGE", uploadedById: req.user!.id },
+    });
+    res.json({ url });
+  },
+);
 
 const articleSchema = z.object({
   title: z.string().min(1),

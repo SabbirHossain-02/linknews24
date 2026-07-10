@@ -22,3 +22,16 @@ export async function apiFetch<T = unknown>(
   }
   return data as T;
 }
+
+export async function uploadFile(file: File): Promise<string> {
+  const fd = new FormData();
+  fd.append("file", file);
+  const res = await fetch(`${API_BASE}/api/admin/media/upload`, {
+    method: "POST",
+    credentials: "include",
+    body: fd,
+  });
+  const data = await res.json().catch(() => null);
+  if (!res.ok) throw new Error((data && data.error) || "আপলোড ব্যর্থ");
+  return (data as { url: string }).url;
+}

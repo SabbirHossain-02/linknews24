@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef, useState } from "react";
 import { useEditor, EditorContent, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
@@ -20,6 +21,7 @@ import {
   AlignLeft,
   AlignRight,
   Bold,
+  ChevronDown,
   Code,
   Eraser,
   Heading1,
@@ -31,6 +33,7 @@ import {
   Link as LinkIcon,
   List,
   ListOrdered,
+  Loader2,
   Minus,
   Quote,
   Redo,
@@ -38,8 +41,10 @@ import {
   Underline as UnderlineIcon,
   Undo,
 } from "lucide-react";
+import { uploadFile } from "@/lib/admin-api";
+import { PromptModal } from "./Modal";
 
-const FONT_SIZES = ["14px", "16px", "18px", "20px", "24px", "30px"];
+const FONT_SIZES = ["14px", "16px", "18px", "20px", "24px", "30px", "36px"];
 const FONTS = [
   { label: "ডিফল্ট", value: "" },
   { label: "Siyam Rupali", value: "var(--font-siyam-rupali)" },
@@ -47,6 +52,9 @@ const FONTS = [
   { label: "Serif", value: "serif" },
   { label: "Monospace", value: "monospace" },
 ];
+
+// keep the editor selection when clicking toolbar controls
+const keepFocus = (e: React.MouseEvent) => e.preventDefault();
 
 function Btn({
   active,
@@ -66,11 +74,10 @@ function Btn({
       type="button"
       title={title}
       disabled={disabled}
+      onMouseDown={keepFocus}
       onClick={onClick}
       className={`flex h-8 w-8 items-center justify-center rounded transition-colors disabled:opacity-30 ${
-        active
-          ? "bg-brand-crimson text-white"
-          : "text-foreground hover:bg-surface"
+        active ? "bg-brand-crimson text-white" : "text-foreground hover:bg-surface"
       }`}
     >
       {children}
@@ -78,58 +85,101 @@ function Btn({
   );
 }
 
-function Toolbar({ editor }: { editor: Editor }) {
-  const setLink = () => {
-    const prev = editor.getAttributes("link").href as string | undefined;
-    const url = window.prompt("লিংক URL", prev ?? "https://");
-    if (url === null) return;
-    if (url === "") {
-      editor.chain().focus().unsetLink().run();
-      return;
-    }
-    editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
-  };
+function ToolbarSelect({
+  label,
+  options,
+  onSelect,
+  width = "w-24",
+}: {
+  label: string;
+  options: { label: string; value: string }[];
+  onSelect: (value: string) => void;
+  width?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onMouseDown={keepFocus}
+        onClick={() => setOpen((v) => !v)}
+        className={`flex ${width} h-8 items-center justify-between gap-1 rounded border border-border bg-background px-2 font-ui text-xs text-foreground hover:bg-surface`}
+      >
+        {label}
+        <ChevronDown className="h-3 w-3 shrink-0" />
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
+          <div
+            className={`absolute left-0 top-full z-20 mt-1 ${width} max-h-64 overflow-y-auto rounded-lg border border-border bg-background py-1 shadow-lg`}
+          >
+            {options.map((o) => (
+              <button
+                key={o.label}
+                type="button"
+                onMouseDown={keepFocus}
+                onClick={() => {
+                  onSelect(o.value);
+                  setOpen(false);
+                }}
+                className="block w-full px-3 py-1.5 text-left font-ui text-xs text-foreground hover:bg-surface"
+              >
+                {o.label}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
 
-  const addImage = () => {
-    const url = window.prompt("ছবির URL");
-    if (url) editor.chain().focus().setImage({ src: url }).run();
+function Toolbar({ editor }: { editor: Editor }) {
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [showLink, setShowLink] = useState(false);
+
+  const onPickImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setUploading(true);
+    try {
+      const url = await uploadFile(file);
+      editor.chain().focus().setImage({ src: url }).run();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "আপলোড ব্যর্থ");
+    } finally {
+      setUploading(false);
+    }
   };
 
   return (
     <div className="flex flex-wrap items-center gap-1 border-b border-border bg-background p-2">
-      <select
-        title="ফন্ট"
-        onChange={(e) =>
-          e.target.value
-            ? editor.chain().focus().setFontFamily(e.target.value).run()
+      <ToolbarSelect
+        label="ফন্ট"
+        width="w-28"
+        options={FONTS}
+        onSelect={(v) =>
+          v
+            ? editor.chain().focus().setFontFamily(v).run()
             : editor.chain().focus().unsetFontFamily().run()
         }
-        className="h-8 rounded border border-border bg-background px-2 font-ui text-xs text-foreground"
-      >
-        {FONTS.map((f) => (
-          <option key={f.label} value={f.value}>
-            {f.label}
-          </option>
-        ))}
-      </select>
-
-      <select
-        title="ফন্ট সাইজ"
-        defaultValue=""
-        onChange={(e) =>
-          e.target.value
-            ? editor.chain().focus().setFontSize(e.target.value).run()
+      />
+      <ToolbarSelect
+        label="সাইজ"
+        width="w-16"
+        options={[
+          { label: "রিসেট", value: "" },
+          ...FONT_SIZES.map((s) => ({ label: s.replace("px", ""), value: s })),
+        ]}
+        onSelect={(v) =>
+          v
+            ? editor.chain().focus().setFontSize(v).run()
             : editor.chain().focus().unsetFontSize().run()
         }
-        className="h-8 rounded border border-border bg-background px-2 font-ui text-xs text-foreground"
-      >
-        <option value="">সাইজ</option>
-        {FONT_SIZES.map((s) => (
-          <option key={s} value={s}>
-            {s.replace("px", "")}
-          </option>
-        ))}
-      </select>
+      />
 
       <span className="mx-1 h-6 w-px bg-border" />
 
@@ -148,13 +198,14 @@ function Toolbar({ editor }: { editor: Editor }) {
 
       <label
         title="টেক্সট কালার"
-        className="flex h-8 w-8 cursor-pointer items-center justify-center rounded text-foreground hover:bg-surface"
+        onMouseDown={keepFocus}
+        className="relative flex h-8 w-8 cursor-pointer items-center justify-center rounded text-foreground hover:bg-surface"
       >
         <span className="text-sm font-bold">A</span>
         <input
           type="color"
           onChange={(e) => editor.chain().focus().setColor(e.target.value).run()}
-          className="absolute h-0 w-0 opacity-0"
+          className="absolute inset-0 cursor-pointer opacity-0"
         />
       </label>
       <Btn title="হাইলাইট" active={editor.isActive("highlight")} onClick={() => editor.chain().focus().toggleHighlight().run()}>
@@ -205,12 +256,13 @@ function Toolbar({ editor }: { editor: Editor }) {
 
       <span className="mx-1 h-6 w-px bg-border" />
 
-      <Btn title="লিংক" active={editor.isActive("link")} onClick={setLink}>
+      <Btn title="লিংক" active={editor.isActive("link")} onClick={() => setShowLink(true)}>
         <LinkIcon className="h-4 w-4" />
       </Btn>
-      <Btn title="ছবি" onClick={addImage}>
-        <ImageIcon className="h-4 w-4" />
+      <Btn title="ছবি আপলোড" disabled={uploading} onClick={() => fileRef.current?.click()}>
+        {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImageIcon className="h-4 w-4" />}
       </Btn>
+      <input ref={fileRef} type="file" accept="image/*" onChange={onPickImage} className="hidden" />
       <Btn title="বিভাজক" onClick={() => editor.chain().focus().setHorizontalRule().run()}>
         <Minus className="h-4 w-4" />
       </Btn>
@@ -226,6 +278,24 @@ function Toolbar({ editor }: { editor: Editor }) {
       <Btn title="Redo" disabled={!editor.can().redo()} onClick={() => editor.chain().focus().redo().run()}>
         <Redo className="h-4 w-4" />
       </Btn>
+
+      {showLink && (
+        <PromptModal
+          title="লিংক যুক্ত করুন"
+          label="URL"
+          initial={(editor.getAttributes("link").href as string) ?? "https://"}
+          confirmLabel="যুক্ত করুন"
+          onClose={() => setShowLink(false)}
+          onSubmit={(url) => {
+            setShowLink(false);
+            if (!url) {
+              editor.chain().focus().unsetLink().run();
+            } else {
+              editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
+            }
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -257,16 +327,12 @@ export function RichTextEditor({
     content: value,
     onUpdate: ({ editor }) => onChange(editor.getHTML()),
     editorProps: {
-      attributes: {
-        class: "ln-editor min-h-[280px] px-4 py-3 focus:outline-none",
-      },
+      attributes: { class: "ln-editor min-h-[280px] px-4 py-3 focus:outline-none" },
     },
   });
 
   if (!editor) {
-    return (
-      <div className="min-h-[340px] rounded-lg border border-border bg-background" />
-    );
+    return <div className="min-h-[340px] rounded-lg border border-border bg-background" />;
   }
 
   return (

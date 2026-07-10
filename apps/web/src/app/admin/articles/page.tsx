@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { apiFetch } from "@/lib/admin-api";
+import { ConfirmModal } from "@/components/admin/Modal";
 
 interface AdminArticle {
   id: string;
@@ -26,6 +27,7 @@ const STATUS_LABEL: Record<string, string> = {
 export default function AdminArticlesPage() {
   const [articles, setArticles] = useState<AdminArticle[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const load = () =>
     apiFetch<{ articles: AdminArticle[] }>("/api/admin/articles")
@@ -46,7 +48,6 @@ export default function AdminArticlesPage() {
   };
 
   const remove = async (id: string) => {
-    if (!confirm("এই আর্টিকেল মুছে ফেলবেন?")) return;
     await apiFetch(`/api/admin/articles/${id}`, { method: "DELETE" });
     load();
   };
@@ -145,7 +146,7 @@ export default function AdminArticlesPage() {
                         <Pencil className="h-4 w-4" />
                       </Link>
                       <button
-                        onClick={() => remove(a.id)}
+                        onClick={() => setDeleteId(a.id)}
                         className="rounded p-1.5 text-foreground-muted hover:bg-surface hover:text-brand-crimson"
                         title="ডিলিট"
                       >
@@ -159,6 +160,15 @@ export default function AdminArticlesPage() {
           </tbody>
         </table>
       </div>
+
+      {deleteId && (
+        <ConfirmModal
+          title="আর্টিকেল মুছবেন?"
+          message="এই আর্টিকেলটি স্থায়ীভাবে মুছে যাবে। আপনি কি নিশ্চিত?"
+          onConfirm={() => remove(deleteId)}
+          onClose={() => setDeleteId(null)}
+        />
+      )}
     </div>
   );
 }
