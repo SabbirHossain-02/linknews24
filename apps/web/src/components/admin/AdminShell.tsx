@@ -29,7 +29,7 @@ interface NavItem {
 
 const NAV: NavItem[] = [
   { label: "ড্যাশবোর্ড", href: "/admin", icon: LayoutDashboard },
-  { label: "আর্টিকেল", href: null, icon: Newspaper },
+  { label: "আর্টিকেল", href: "/admin/articles", icon: Newspaper },
   { label: "ক্যাটাগরি ও ট্যাগ", href: null, icon: FolderTree },
   { label: "ব্রেকিং নিউজ", href: null, icon: Radio },
   { label: "হোমপেজ বিল্ডার", href: null, icon: LayoutTemplate },

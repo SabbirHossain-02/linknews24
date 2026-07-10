@@ -60,3 +60,34 @@ body {
     display: none !important;
   }
 }
+
+/* Rich text editor (admin) content styles */
+.ln-editor h1 { font-size: 1.6rem; font-weight: 700; margin: 0.6em 0 0.3em; }
+.ln-editor h2 { font-size: 1.35rem; font-weight: 700; margin: 0.6em 0 0.3em; }
+.ln-editor h3 { font-size: 1.15rem; font-weight: 600; margin: 0.5em 0 0.3em; }
+.ln-editor p { margin: 0.4em 0; line-height: 1.7; }
+.ln-editor ul { list-style: disc; padding-left: 1.4em; margin: 0.4em 0; }
+.ln-editor ol { list-style: decimal; padding-left: 1.4em; margin: 0.4em 0; }
+.ln-editor blockquote {
+  border-left: 3px solid var(--brand-crimson);
+  padding-left: 1em;
+  color: var(--foreground-muted);
+  margin: 0.6em 0;
+}
+.ln-editor pre {
+  background: var(--surface);
+  padding: 0.8em 1em;
+  border-radius: 0.5rem;
+  overflow-x: auto;
+  font-family: monospace;
+}
+.ln-editor a { color: var(--brand-crimson); text-decoration: underline; }
+.ln-editor img { max-width: 100%; border-radius: 0.5rem; }
+.ln-editor hr { border: none; border-top: 1px solid var(--border); margin: 1em 0; }
+.ln-editor p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: var(--foreground-muted);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}

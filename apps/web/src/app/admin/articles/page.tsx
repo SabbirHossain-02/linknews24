@@ -1,0 +1,164 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { Pencil, Plus, Trash2 } from "lucide-react";
+import { apiFetch } from "@/lib/admin-api";
+
+interface AdminArticle {
+  id: string;
+  title: string;
+  slug: string;
+  status: "DRAFT" | "SCHEDULED" | "PUBLISHED";
+  isBreaking: boolean;
+  featured: boolean;
+  category: { name: string } | null;
+  author: { name: string } | null;
+  updatedAt: string;
+}
+
+const STATUS_LABEL: Record<string, string> = {
+  DRAFT: "খসড়া",
+  SCHEDULED: "শিডিউল",
+  PUBLISHED: "প্রকাশিত",
+};
+
+export default function AdminArticlesPage() {
+  const [articles, setArticles] = useState<AdminArticle[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const load = () =>
+    apiFetch<{ articles: AdminArticle[] }>("/api/admin/articles")
+      .then((d) => setArticles(d.articles))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  const patchFlags = async (id: string, body: Record<string, unknown>) => {
+    await apiFetch(`/api/admin/articles/${id}/flags`, {
+      method: "PATCH",
+      body: JSON.stringify(body),
+    });
+    load();
+  };
+
+  const remove = async (id: string) => {
+    if (!confirm("এই আর্টিকেল মুছে ফেলবেন?")) return;
+    await apiFetch(`/api/admin/articles/${id}`, { method: "DELETE" });
+    load();
+  };
+
+  return (
+    <div>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-heading">আর্টিকেল</h1>
+        <Link
+          href="/admin/articles/new"
+          className="flex items-center gap-1.5 rounded-lg bg-brand-crimson px-4 py-2.5 font-ui text-sm font-semibold text-white hover:bg-brand-crimson-dark"
+        >
+          <Plus className="h-4 w-4" />
+          নতুন আর্টিকেল
+        </Link>
+      </div>
+
+      <div className="mt-5 overflow-x-auto rounded-xl border border-border bg-background">
+        <table className="w-full text-left text-sm">
+          <thead className="border-b border-border font-ui text-xs uppercase tracking-wide text-foreground-muted/70">
+            <tr>
+              <th className="px-4 py-3">শিরোনাম</th>
+              <th className="px-4 py-3">ক্যাটাগরি</th>
+              <th className="px-4 py-3">স্ট্যাটাস</th>
+              <th className="px-4 py-3">ব্রেকিং</th>
+              <th className="px-4 py-3 text-right">অ্যাকশন</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border">
+            {loading ? (
+              <tr>
+                <td colSpan={5} className="px-4 py-8 text-center text-foreground-muted">
+                  লোড হচ্ছে…
+                </td>
+              </tr>
+            ) : articles.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="px-4 py-8 text-center text-foreground-muted">
+                  কোনো আর্টিকেল নেই। নতুন একটি তৈরি করুন।
+                </td>
+              </tr>
+            ) : (
+              articles.map((a) => (
+                <tr key={a.id} className="hover:bg-surface/50">
+                  <td className="px-4 py-3">
+                    <p className="font-medium text-foreground">{a.title}</p>
+                    <p className="font-ui text-xs text-foreground-muted">
+                      {a.author?.name}
+                    </p>
+                  </td>
+                  <td className="px-4 py-3 text-foreground-muted">
+                    {a.category?.name ?? "—"}
+                  </td>
+                  <td className="px-4 py-3">
+                    <button
+                      onClick={() =>
+                        patchFlags(a.id, {
+                          status:
+                            a.status === "PUBLISHED" ? "DRAFT" : "PUBLISHED",
+                        })
+                      }
+                      className={`rounded-full px-2.5 py-1 font-ui text-xs font-semibold ${
+                        a.status === "PUBLISHED"
+                          ? "bg-green-100 text-green-700"
+                          : "bg-surface text-foreground-muted"
+                      }`}
+                    >
+                      {STATUS_LABEL[a.status]}
+                    </button>
+                  </td>
+                  <td className="px-4 py-3">
+                    <button
+                      onClick={() =>
+                        patchFlags(a.id, { isBreaking: !a.isBreaking })
+                      }
+                      role="switch"
+                      aria-checked={a.isBreaking}
+                      className={`relative h-5 w-9 rounded-full transition-colors ${
+                        a.isBreaking ? "bg-brand-crimson" : "bg-border"
+                      }`}
+                    >
+                      <span
+                        className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition-transform ${
+                          a.isBreaking ? "translate-x-4" : "translate-x-0.5"
+                        }`}
+                      />
+                    </button>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center justify-end gap-2">
+                      <Link
+                        href={`/admin/articles/${a.id}/edit`}
+                        className="rounded p-1.5 text-foreground-muted hover:bg-surface hover:text-brand-crimson"
+                        title="এডিট"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Link>
+                      <button
+                        onClick={() => remove(a.id)}
+                        className="rounded p-1.5 text-foreground-muted hover:bg-surface hover:text-brand-crimson"
+                        title="ডিলিট"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
