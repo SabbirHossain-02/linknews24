@@ -5,7 +5,7 @@ import fs from "node:fs";
 import multer from "multer";
 import { prisma } from "../prisma";
 import { requireRole } from "../middleware/auth";
-import { CAN_PUBLISH, CAN_WRITE, slugify } from "../lib/roles";
+import { CAN_MANAGE, CAN_PUBLISH, CAN_WRITE, slugify } from "../lib/roles";
 
 export const adminRouter = Router();
 
@@ -244,3 +244,142 @@ adminRouter.delete(
     res.json({ ok: true });
   },
 );
+
+// ===================== LIVE TV =====================
+adminRouter.get("/livetv", async (_req, res) => {
+  const live = await prisma.liveTvSetting.upsert({
+    where: { id: "live-tv" },
+    update: {},
+    create: { id: "live-tv" },
+  });
+  res.json({ live });
+});
+
+const liveSchema = z.object({
+  streamUrl: z.string().default(""),
+  active: z.boolean().default(false),
+  title: z.string().default("লাইভ টিভি"),
+  titleEn: z.string().default("Live TV"),
+});
+
+adminRouter.put("/livetv", requireRole(...CAN_MANAGE), async (req, res) => {
+  const parsed = liveSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: "Invalid input" });
+  const live = await prisma.liveTvSetting.upsert({
+    where: { id: "live-tv" },
+    update: parsed.data,
+    create: { id: "live-tv", ...parsed.data },
+  });
+  res.json({ live });
+});
+
+// ===================== BREAKING TICKER =====================
+adminRouter.get("/breaking", async (_req, res) => {
+  const items = await prisma.breakingItem.findMany({
+    orderBy: { order: "asc" },
+  });
+  res.json({ items });
+});
+
+const breakingSchema = z.object({
+  text: z.string().min(1),
+  textEn: z.string().default(""),
+  active: z.boolean().default(true),
+  order: z.number().int().default(0),
+});
+
+adminRouter.post("/breaking", requireRole(...CAN_PUBLISH), async (req, res) => {
+  const parsed = breakingSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: "Invalid input" });
+  const count = await prisma.breakingItem.count();
+  const item = await prisma.breakingItem.create({
+    data: { ...parsed.data, order: parsed.data.order || count },
+  });
+  res.status(201).json({ item });
+});
+
+adminRouter.put("/breaking/:id", requireRole(...CAN_PUBLISH), async (req, res) => {
+  const parsed = breakingSchema.partial().safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: "Invalid input" });
+  const item = await prisma.breakingItem
+    .update({ where: { id: req.params.id }, data: parsed.data })
+    .catch(() => null);
+  if (!item) return res.status(404).json({ error: "Not found" });
+  res.json({ item });
+});
+
+adminRouter.delete("/breaking/:id", requireRole(...CAN_PUBLISH), async (req, res) => {
+  await prisma.breakingItem.delete({ where: { id: req.params.id } }).catch(() => null);
+  res.json({ ok: true });
+});
+
+// ===================== CATEGORIES =====================
+adminRouter.get("/categories", async (_req, res) => {
+  const categories = await prisma.category.findMany({
+    orderBy: { order: "asc" },
+    include: { _count: { select: { articles: true } } },
+  });
+  res.json({ categories });
+});
+
+const categorySchema = z.object({
+  name: z.string().min(1),
+  nameEn: z.string().min(1),
+  slug: z.string().optional(),
+  visible: z.boolean().default(true),
+  order: z.number().int().optional(),
+});
+
+adminRouter.post("/categories", requireRole(...CAN_PUBLISH), async (req, res) => {
+  const parsed = categorySchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: "Invalid input" });
+  const d = parsed.data;
+  const slug = await (async () => {
+    const base = slugify(d.slug || d.nameEn || d.name);
+    let s = base;
+    let n = 1;
+    while (await prisma.category.findUnique({ where: { slug: s } })) {
+      n += 1;
+      s = `${base}-${n}`;
+    }
+    return s;
+  })();
+  const count = await prisma.category.count();
+  const category = await prisma.category.create({
+    data: {
+      name: d.name,
+      nameEn: d.nameEn,
+      slug,
+      visible: d.visible,
+      order: d.order ?? count,
+    },
+  });
+  res.status(201).json({ category });
+});
+
+adminRouter.put("/categories/:id", requireRole(...CAN_PUBLISH), async (req, res) => {
+  const parsed = categorySchema.partial().safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: "Invalid input" });
+  const category = await prisma.category
+    .update({
+      where: { id: req.params.id },
+      data: {
+        name: parsed.data.name,
+        nameEn: parsed.data.nameEn,
+        visible: parsed.data.visible,
+        order: parsed.data.order,
+      },
+    })
+    .catch(() => null);
+  if (!category) return res.status(404).json({ error: "Not found" });
+  res.json({ category });
+});
+
+adminRouter.delete("/categories/:id", requireRole(...CAN_MANAGE), async (req, res) => {
+  try {
+    await prisma.category.delete({ where: { id: req.params.id } });
+    res.json({ ok: true });
+  } catch {
+    res.status(400).json({ error: "এই ক্যাটাগরিতে আর্টিকেল আছে — মুছতে পারবেন না" });
+  }
+});

@@ -11,6 +11,21 @@ publicRouter.get("/categories", async (_req, res) => {
   res.json({ categories });
 });
 
+publicRouter.get("/livetv", async (_req, res) => {
+  const live = await prisma.liveTvSetting.findUnique({
+    where: { id: "live-tv" },
+  });
+  res.json({ live });
+});
+
+publicRouter.get("/breaking", async (_req, res) => {
+  const items = await prisma.breakingItem.findMany({
+    where: { active: true },
+    orderBy: { order: "asc" },
+  });
+  res.json({ items });
+});
+
 publicRouter.get("/articles", async (req, res) => {
   const { category, page = "1", limit = "12" } = req.query as Record<string, string>;
   const take = Math.min(Number(limit) || 12, 50);

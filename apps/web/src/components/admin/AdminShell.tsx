@@ -33,10 +33,10 @@ interface NavItem {
 const NAV: NavItem[] = [
   { key: "dashboard", href: "/admin", icon: LayoutDashboard },
   { key: "articles", href: "/admin/articles", icon: Newspaper },
-  { key: "categoriesTags", href: null, icon: FolderTree },
-  { key: "breaking", href: null, icon: Radio },
+  { key: "categoriesTags", href: "/admin/categories", icon: FolderTree },
+  { key: "breaking", href: "/admin/breaking", icon: Radio },
   { key: "homepageBuilder", href: null, icon: LayoutTemplate },
-  { key: "liveTv", href: null, icon: Tv },
+  { key: "liveTv", href: "/admin/live-tv", icon: Tv },
   { key: "media", href: null, icon: ImageIcon },
   { key: "lawyers", href: null, icon: Scale },
   { key: "donors", href: null, icon: Droplet },

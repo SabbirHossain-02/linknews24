@@ -129,6 +129,36 @@ export const adminDict = {
   linkUrl: { bn: "URL", en: "URL" },
   add: { bn: "যুক্ত করুন", en: "Add" },
   writeHere: { bn: "এখানে লিখুন…", en: "Write here…" },
+
+  // Common
+  save: { bn: "সংরক্ষণ", en: "Save" },
+  saving: { bn: "সংরক্ষণ হচ্ছে…", en: "Saving…" },
+  create: { bn: "তৈরি করুন", en: "Create" },
+  active: { bn: "সক্রিয়", en: "Active" },
+  visible: { bn: "দৃশ্যমান", en: "Visible" },
+  noItems: { bn: "কোনো আইটেম নেই।", en: "No items yet." },
+  nameBn: { bn: "নাম (বাংলা)", en: "Name (Bangla)" },
+  nameEn: { bn: "নাম (English)", en: "Name (English)" },
+
+  // Live TV
+  streamUrl: {
+    bn: "স্ট্রিম URL (YouTube/HLS)",
+    en: "Stream URL (YouTube/HLS)",
+  },
+  liveActive: { bn: "সক্রিয় — সাইটে দেখাবে", en: "Active — shown on site" },
+  liveNote: {
+    bn: "স্ট্রিম URL খালি রাখলে সাইটে 'শীঘ্রই আসছে' দেখাবে।",
+    en: "Leave the URL empty to show 'coming soon' on the site.",
+  },
+
+  // Breaking
+  addItem: { bn: "নতুন আইটেম", en: "New item" },
+  textBn: { bn: "টেক্সট (বাংলা)", en: "Text (Bangla)" },
+  textEnLabel: { bn: "টেক্সট (English)", en: "Text (English)" },
+
+  // Categories
+  addCategory: { bn: "নতুন ক্যাটাগরি", en: "New category" },
+  colArticles: { bn: "আর্টিকেল", en: "Articles" },
 } as const;
 
 export type AdminKey = keyof typeof adminDict;
