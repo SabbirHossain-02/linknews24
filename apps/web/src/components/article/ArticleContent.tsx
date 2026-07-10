@@ -4,8 +4,9 @@ import Link from "next/link";
 import type { Article } from "@/types/content";
 import { toneGradientClass } from "@/lib/tone";
 import { getArticleBody, getRelatedArticles } from "@/lib/mock-data";
-import { localizedAuthor, localizedName, localizedPublishedAt } from "@/lib/i18n";
+import { localizedAuthor, localizedName } from "@/lib/i18n";
 import { useLocale } from "@/components/providers/LocaleProvider";
+import { TimeAgo } from "@/components/home/TimeAgo";
 import { ThematicRow } from "@/components/home/ThematicRow";
 import { ArticleActions } from "./ArticleActions";
 import { RecordHistory } from "./RecordHistory";
@@ -73,7 +74,7 @@ export function ArticleContent({
               {localizedAuthor(article.author, locale)}
             </span>
             <span className="mx-1.5">·</span>
-            {localizedPublishedAt(article.publishedAt, locale)}
+            <TimeAgo iso={article.publishedAt} />
           </p>
           <ArticleActions article={article} title={title} />
         </div>

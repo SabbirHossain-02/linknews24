@@ -298,6 +298,39 @@ export function toLocaleDigits(value: string | number, locale: Locale): string {
   return locale === "en" ? s : s.replace(/[0-9]/g, (d) => ARABIC_TO_BENGALI[d]);
 }
 
+// Relative time from an ISO date: "just now / X min / X hr / X days ago",
+// falling back to an absolute date after a week.
+export function relativeTime(value: string, locale: Locale): string {
+  const d = new Date(value);
+  if (isNaN(d.getTime())) return value; // non-ISO (mock) strings unchanged
+  const diff = Date.now() - d.getTime();
+  const min = Math.floor(diff / 60000);
+
+  if (min < 1) return locale === "bn" ? "এইমাত্র" : "just now";
+  if (min < 60)
+    return locale === "bn"
+      ? `${toLocaleDigits(min, locale)} মিনিট আগে`
+      : `${min} min ago`;
+
+  const hr = Math.floor(min / 60);
+  if (hr < 24)
+    return locale === "bn"
+      ? `${toLocaleDigits(hr, locale)} ঘণ্টা আগে`
+      : `${hr} hr ago`;
+
+  const day = Math.floor(hr / 24);
+  if (day < 7)
+    return locale === "bn"
+      ? `${toLocaleDigits(day, locale)} দিন আগে`
+      : `${day} day${day > 1 ? "s" : ""} ago`;
+
+  return d.toLocaleDateString(locale === "bn" ? "bn-BD" : "en-GB", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+}
+
 export function localizedPublishedAt(publishedAt: string, locale: Locale): string {
   // API dates are ISO strings — format as a localized date (deterministic,
   // avoids hydration mismatch).

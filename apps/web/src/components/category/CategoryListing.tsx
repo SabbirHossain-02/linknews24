@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { Pagination } from "@/components/home/Pagination";
 import { toneGradientClass } from "@/lib/tone";
-import { localizedAuthor, localizedName, localizedPublishedAt } from "@/lib/i18n";
+import { localizedAuthor, localizedName } from "@/lib/i18n";
 import { useLocale } from "@/components/providers/LocaleProvider";
+import { TimeAgo } from "@/components/home/TimeAgo";
 import type { Article, Category } from "@/types/content";
 
 function ArticleRow({ article }: { article: Article }) {
@@ -39,8 +40,7 @@ function ArticleRow({ article }: { article: Article }) {
           </p>
         )}
         <p className="mt-1 font-ui text-xs text-foreground-muted">
-          {localizedAuthor(article.author, locale)} ·{" "}
-          {localizedPublishedAt(article.publishedAt, locale)}
+          {localizedAuthor(article.author, locale)} · <TimeAgo iso={article.publishedAt} />
         </p>
       </div>
     </Link>
@@ -107,8 +107,7 @@ export function CategoryListing({
                   </p>
                 )}
                 <p className="mt-1.5 font-ui text-xs text-foreground-muted">
-                  {localizedAuthor(lead.author, locale)} ·{" "}
-                  {localizedPublishedAt(lead.publishedAt, locale)}
+                  {localizedAuthor(lead.author, locale)} · <TimeAgo iso={lead.publishedAt} />
                 </p>
               </div>
             </Link>

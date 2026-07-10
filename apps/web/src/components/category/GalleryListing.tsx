@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { Pagination } from "@/components/home/Pagination";
 import { toneGradientClass } from "@/lib/tone";
-import { localizedAuthor, localizedName, localizedPublishedAt } from "@/lib/i18n";
+import { localizedAuthor, localizedName } from "@/lib/i18n";
 import { useLocale } from "@/components/providers/LocaleProvider";
+import { TimeAgo } from "@/components/home/TimeAgo";
 import type { Article, Category } from "@/types/content";
 
 export function GalleryListing({
@@ -46,8 +47,7 @@ export function GalleryListing({
                   {locale === "en" ? article.titleEn : article.title}
                 </h3>
                 <p className="mt-1 font-ui text-xs text-foreground-muted">
-                  {localizedAuthor(article.author, locale)} ·{" "}
-                  {localizedPublishedAt(article.publishedAt, locale)}
+                  {localizedAuthor(article.author, locale)} · <TimeAgo iso={article.publishedAt} />
                 </p>
               </Link>
             ))}

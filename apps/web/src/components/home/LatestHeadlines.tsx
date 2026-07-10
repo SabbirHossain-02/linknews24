@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import type { Article } from "@/types/content";
-import { localizedPublishedAt } from "@/lib/i18n";
 import { useLocale } from "@/components/providers/LocaleProvider";
+import { TimeAgo } from "./TimeAgo";
 
 export function LatestHeadlines({ articles }: { articles: Article[] }) {
   const { locale, t } = useLocale();
@@ -25,7 +25,7 @@ export function LatestHeadlines({ articles }: { articles: Article[] }) {
                 {locale === "en" ? article.titleEn : article.title}
               </span>
               <span className="shrink-0 font-ui text-xs text-foreground-muted">
-                {localizedPublishedAt(article.publishedAt, locale)}
+                <TimeAgo iso={article.publishedAt} />
               </span>
             </Link>
           </li>

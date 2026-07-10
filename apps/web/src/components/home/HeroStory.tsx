@@ -3,8 +3,9 @@
 import Link from "next/link";
 import type { Article } from "@/types/content";
 import { toneGradientClass } from "@/lib/tone";
-import { localizedAuthor, localizedName, localizedPublishedAt } from "@/lib/i18n";
+import { localizedAuthor, localizedName } from "@/lib/i18n";
 import { useLocale } from "@/components/providers/LocaleProvider";
+import { TimeAgo } from "./TimeAgo";
 
 export function HeroStory({ article }: { article: Article }) {
   const { locale, t } = useLocale();
@@ -43,8 +44,7 @@ export function HeroStory({ article }: { article: Article }) {
             {locale === "en" ? article.excerptEn : article.excerpt}
           </p>
           <p className="mt-3 font-ui text-xs text-white/50">
-            {localizedAuthor(article.author, locale)} ·{" "}
-            {localizedPublishedAt(article.publishedAt, locale)}
+            {localizedAuthor(article.author, locale)} · <TimeAgo iso={article.publishedAt} />
           </p>
         </div>
       </div>

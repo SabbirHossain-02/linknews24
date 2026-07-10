@@ -4,8 +4,9 @@ import Link from "next/link";
 import { Play } from "lucide-react";
 import type { Article } from "@/types/content";
 import { toneGradientClass } from "@/lib/tone";
-import { localizedAuthor, localizedName, localizedPublishedAt } from "@/lib/i18n";
+import { localizedAuthor, localizedName } from "@/lib/i18n";
 import { useLocale } from "@/components/providers/LocaleProvider";
+import { TimeAgo } from "./TimeAgo";
 
 export function NewsSection({
   title,
@@ -72,8 +73,7 @@ export function NewsSection({
               </p>
             )}
             <p className="mt-1.5 font-ui text-xs text-foreground-muted">
-              {localizedAuthor(lead.author, locale)} ·{" "}
-              {localizedPublishedAt(lead.publishedAt, locale)}
+              {localizedAuthor(lead.author, locale)} · <TimeAgo iso={lead.publishedAt} />
             </p>
           </div>
         </Link>
@@ -101,7 +101,7 @@ export function NewsSection({
                     {locale === "en" ? article.titleEn : article.title}
                   </h4>
                   <p className="mt-1 font-ui text-xs text-foreground-muted">
-                    {localizedPublishedAt(article.publishedAt, locale)}
+                    <TimeAgo iso={article.publishedAt} />
                   </p>
                 </div>
               </Link>

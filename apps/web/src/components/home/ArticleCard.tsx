@@ -4,13 +4,9 @@ import Link from "next/link";
 import { Play } from "lucide-react";
 import type { Article } from "@/types/content";
 import { toneGradientClass } from "@/lib/tone";
-import {
-  localizedAuthor,
-  localizedDuration,
-  localizedName,
-  localizedPublishedAt,
-} from "@/lib/i18n";
+import { localizedAuthor, localizedDuration, localizedName } from "@/lib/i18n";
 import { useLocale } from "@/components/providers/LocaleProvider";
+import { TimeAgo } from "./TimeAgo";
 
 export function ArticleCard({ article }: { article: Article }) {
   const { locale } = useLocale();
@@ -54,8 +50,7 @@ export function ArticleCard({ article }: { article: Article }) {
           {locale === "en" ? article.titleEn : article.title}
         </h3>
         <p className="mt-1 font-ui text-xs text-foreground-muted">
-          {localizedAuthor(article.author, locale)} ·{" "}
-          {localizedPublishedAt(article.publishedAt, locale)}
+          {localizedAuthor(article.author, locale)} · <TimeAgo iso={article.publishedAt} />
         </p>
       </div>
     </Link>
