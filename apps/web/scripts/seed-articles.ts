@@ -1,8 +1,13 @@
-// One-off: import the frontend mock articles into the database so the
-// public site (once wired to the API) has real content. Idempotent by slug.
-// mock-data only uses type-only imports for "@/..." so tsx runs it fine.
-import { prisma } from "../src/prisma";
-import { allArticles, getArticleBody } from "../../web/src/lib/mock-data";
+// One-off: import the frontend mock articles into the database so the public
+// site (wired to the API) has real content. Run from apps/web so the "@/"
+// alias resolves:
+//   DATABASE_URL="postgresql://..." npx tsx scripts/seed-articles.ts
+import { PrismaClient } from "@prisma/client";
+import { allArticles, getArticleBody } from "@/lib/mock-data";
+
+const prisma = new PrismaClient({
+  datasources: { db: { url: process.env.DATABASE_URL } },
+});
 
 function bodyHtml(article: (typeof allArticles)[number], locale: "bn" | "en") {
   return getArticleBody(article, locale)
@@ -11,9 +16,7 @@ function bodyHtml(article: (typeof allArticles)[number], locale: "bn" | "en") {
 }
 
 async function main() {
-  const admin = await prisma.user.findFirst({
-    where: { role: "SUPER_ADMIN" },
-  });
+  const admin = await prisma.user.findFirst({ where: { role: "SUPER_ADMIN" } });
   if (!admin) throw new Error("No super admin found — run the main seed first.");
 
   const cats = await prisma.category.findMany();
@@ -50,7 +53,6 @@ async function main() {
         isBreaking: Boolean(a.isBreaking),
         status: "PUBLISHED",
         viewCount: a.viewCount ?? 0,
-        // spread publish times over the last two weeks, newest first
         publishedAt: new Date(Date.now() - i * 3 * 60 * 60 * 1000),
       },
     });
