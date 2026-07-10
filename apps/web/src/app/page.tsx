@@ -3,19 +3,13 @@ import { TopStoriesList } from "@/components/home/TopStoriesList";
 import { LatestHeadlines } from "@/components/home/LatestHeadlines";
 import { NewsSection } from "@/components/home/NewsSection";
 import { ReadingSidebar } from "@/components/home/ReadingSidebar";
-import { getArticles, getCategories, getSidebar, toArticle } from "@/lib/api";
-import type { Article } from "@/types/content";
+import { getHomepage, getSidebar, toArticle } from "@/lib/api";
 
 export default async function Home() {
-  const [{ articles: raw }, cats, sidebar] = await Promise.all([
-    getArticles({ limit: 80 }),
-    getCategories(),
-    getSidebar(),
-  ]);
+  const [{ hero: heroRaw, latest: latestRaw, sections }, sidebar] =
+    await Promise.all([getHomepage(), getSidebar()]);
 
-  const mapped = raw.map(toArticle);
-
-  if (mapped.length === 0) {
+  if (!heroRaw) {
     return (
       <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col items-center gap-3 px-6 py-20 text-center">
         <h1 className="text-2xl font-bold text-heading">
@@ -28,22 +22,12 @@ export default async function Home() {
     );
   }
 
-  const heroIdx = raw.findIndex((a) => a.featured);
-  const hero = toArticle(raw[heroIdx >= 0 ? heroIdx : 0]);
-  const rest = mapped.filter((a) => a.slug !== hero.slug);
-  const topStories = rest.slice(0, 5);
-  const latest = rest.slice(0, 10);
-
-  const byCat = new Map<string, Article[]>();
-  for (const a of mapped) {
-    const arr = byCat.get(a.category.slug) ?? [];
-    arr.push(a);
-    byCat.set(a.category.slug, arr);
-  }
-  const sections = cats
-    .map((c) => ({ c, items: byCat.get(c.slug) ?? [] }))
-    .filter((s) => s.items.length >= 2)
-    .slice(0, 12);
+  const hero = toArticle(heroRaw);
+  const latestMapped = latestRaw
+    .map(toArticle)
+    .filter((a) => a.slug !== hero.slug);
+  const topStories = latestMapped.slice(0, 5);
+  const latest = latestMapped.slice(0, 10);
 
   return (
     <main className="mx-auto grid w-full max-w-[1600px] flex-1 gap-8 px-6 py-6 lg:grid-cols-[1fr_300px]">
@@ -57,13 +41,13 @@ export default async function Home() {
 
         <LatestHeadlines articles={latest} />
 
-        {sections.map(({ c, items }) => (
+        {sections.map((s) => (
           <NewsSection
-            key={c.slug}
-            title={c.name}
-            titleEn={c.nameEn}
-            href={`/${c.slug}`}
-            articles={items}
+            key={s.category.slug}
+            title={s.category.name}
+            titleEn={s.category.nameEn}
+            href={`/${s.category.slug}`}
+            articles={s.articles.map(toArticle)}
           />
         ))}
       </div>

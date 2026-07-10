@@ -35,7 +35,7 @@ const NAV: NavItem[] = [
   { key: "articles", href: "/admin/articles", icon: Newspaper },
   { key: "categoriesTags", href: "/admin/categories", icon: FolderTree },
   { key: "breaking", href: "/admin/breaking", icon: Radio },
-  { key: "homepageBuilder", href: null, icon: LayoutTemplate },
+  { key: "homepageBuilder", href: "/admin/homepage", icon: LayoutTemplate },
   { key: "liveTv", href: "/admin/live-tv", icon: Tv },
   { key: "media", href: null, icon: ImageIcon },
   { key: "lawyers", href: null, icon: Scale },

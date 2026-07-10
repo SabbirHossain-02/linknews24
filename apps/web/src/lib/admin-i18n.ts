@@ -159,6 +159,18 @@ export const adminDict = {
   // Categories
   addCategory: { bn: "নতুন ক্যাটাগরি", en: "New category" },
   colArticles: { bn: "আর্টিকেল", en: "Articles" },
+
+  // Homepage builder
+  addSection: { bn: "সেকশন যোগ করুন", en: "Add section" },
+  cardCount: { bn: "কার্ড", en: "Cards" },
+  homepageNote: {
+    bn: "সেকশন যোগ না করলে হোমপেজ স্বয়ংক্রিয়ভাবে সব ক্যাটাগরি দেখায়। নিজে সাজাতে নিচে সেকশন যোগ করুন।",
+    en: "Without sections the homepage auto-shows all categories. Add sections below to arrange it yourself.",
+  },
+  heroHint: {
+    bn: "হিরো স্টোরি = যে আর্টিকেলে 'হোমপেজে ফিচার' টিক দেওয়া থাকে (সবচেয়ে সাম্প্রতিক)।",
+    en: "The hero story is the most recent article marked 'Feature on homepage'.",
+  },
 } as const;
 
 export type AdminKey = keyof typeof adminDict;

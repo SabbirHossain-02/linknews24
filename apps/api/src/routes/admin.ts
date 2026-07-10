@@ -383,3 +383,50 @@ adminRouter.delete("/categories/:id", requireRole(...CAN_MANAGE), async (req, re
     res.status(400).json({ error: "এই ক্যাটাগরিতে আর্টিকেল আছে — মুছতে পারবেন না" });
   }
 });
+
+// ===================== HOMEPAGE BUILDER =====================
+adminRouter.get("/homepage", async (_req, res) => {
+  const sections = await prisma.homepageSection.findMany({
+    orderBy: { order: "asc" },
+    include: { category: { select: { name: true, nameEn: true, slug: true } } },
+  });
+  res.json({ sections });
+});
+
+const sectionSchema = z.object({
+  categoryId: z.string().min(1),
+  cardCount: z.number().int().min(2).max(12).default(6),
+  visible: z.boolean().default(true),
+  order: z.number().int().optional(),
+});
+
+adminRouter.post("/homepage", requireRole(...CAN_MANAGE), async (req, res) => {
+  const parsed = sectionSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: "Invalid input" });
+  const count = await prisma.homepageSection.count();
+  const section = await prisma.homepageSection.create({
+    data: {
+      type: "ROW",
+      categoryId: parsed.data.categoryId,
+      cardCount: parsed.data.cardCount,
+      visible: parsed.data.visible,
+      order: parsed.data.order ?? count,
+    },
+  });
+  res.status(201).json({ section });
+});
+
+adminRouter.put("/homepage/:id", requireRole(...CAN_MANAGE), async (req, res) => {
+  const parsed = sectionSchema.partial().safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: "Invalid input" });
+  const section = await prisma.homepageSection
+    .update({ where: { id: req.params.id }, data: parsed.data })
+    .catch(() => null);
+  if (!section) return res.status(404).json({ error: "Not found" });
+  res.json({ section });
+});
+
+adminRouter.delete("/homepage/:id", requireRole(...CAN_MANAGE), async (req, res) => {
+  await prisma.homepageSection.delete({ where: { id: req.params.id } }).catch(() => null);
+  res.json({ ok: true });
+});
