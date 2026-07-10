@@ -1,12 +1,15 @@
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import { createServer } from "node:http";
+import { Server as SocketIOServer } from "socket.io";
 import { env } from "./env";
 import { UPLOAD_DIR } from "./routes/admin";
 import { authRouter } from "./routes/auth";
 import { publicRouter } from "./routes/public";
 import { adminRouter } from "./routes/admin";
 import { authenticate } from "./middleware/auth";
+import { setIo } from "./realtime";
 import { notFound, errorHandler } from "./middleware/error";
 
 const app = express();
@@ -36,6 +39,12 @@ app.use("/api/admin", authenticate, adminRouter);
 app.use(notFound);
 app.use(errorHandler);
 
-app.listen(env.port, () => {
+const server = createServer(app);
+const io = new SocketIOServer(server, {
+  cors: { origin: env.corsOrigin, credentials: true },
+});
+setIo(io);
+
+server.listen(env.port, () => {
   console.log(`ln24-api listening on :${env.port} (${env.nodeEnv})`);
 });

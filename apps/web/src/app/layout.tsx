@@ -7,6 +7,7 @@ import { ConditionalAdBanner } from "@/components/layout/ConditionalAdBanner";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { HideOnAdmin } from "@/components/layout/HideOnAdmin";
+import { RealtimeRefresh } from "@/components/providers/RealtimeRefresh";
 import "./globals.css";
 
 const hindSiliguri = Hind_Siliguri({
@@ -53,6 +54,7 @@ export default function RootLayout({
           <AuthProvider>
             <div className="flex min-h-screen flex-col">
               <HideOnAdmin>
+                <RealtimeRefresh />
                 <ConditionalAdBanner />
                 <SiteHeader />
               </HideOnAdmin>

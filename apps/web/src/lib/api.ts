@@ -32,12 +32,10 @@ export interface ApiCategory {
   slug: string;
 }
 
-export async function apiGet<T>(
-  path: string,
-  revalidate = 60,
-): Promise<T | null> {
+export async function apiGet<T>(path: string): Promise<T | null> {
   try {
-    const res = await fetch(`${API_INTERNAL}${path}`, { next: { revalidate } });
+    // Always fresh so realtime refreshes show the latest content.
+    const res = await fetch(`${API_INTERNAL}${path}`, { cache: "no-store" });
     if (!res.ok) return null;
     return (await res.json()) as T;
   } catch {

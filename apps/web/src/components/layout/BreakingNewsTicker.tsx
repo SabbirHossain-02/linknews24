@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { breakingNewsItems, breakingNewsItemsEn } from "@/lib/mock-data";
 import { API_BASE } from "@/lib/admin-api";
+import { getSocket } from "@/lib/socket";
 import { useLocale } from "@/components/providers/LocaleProvider";
 
 interface ApiBreaking {
@@ -15,12 +16,20 @@ export function BreakingNewsTicker() {
   const [apiItems, setApiItems] = useState<ApiBreaking[] | null>(null);
 
   useEffect(() => {
-    fetch(`${API_BASE}/api/breaking`)
-      .then((r) => r.json())
-      .then((d) => {
-        if (Array.isArray(d.items) && d.items.length) setApiItems(d.items);
-      })
-      .catch(() => {});
+    const refetch = () =>
+      fetch(`${API_BASE}/api/breaking`)
+        .then((r) => r.json())
+        .then((d) => {
+          if (Array.isArray(d.items)) setApiItems(d.items.length ? d.items : null);
+        })
+        .catch(() => {});
+
+    refetch();
+    const socket = getSocket();
+    socket.on("content:changed", refetch);
+    return () => {
+      socket.off("content:changed", refetch);
+    };
   }, []);
 
   const items = apiItems

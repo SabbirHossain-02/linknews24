@@ -6,6 +6,7 @@ import { Maximize2, Play, Volume2, X } from "lucide-react";
 import { useLocale } from "@/components/providers/LocaleProvider";
 import { breakingNewsItems, breakingNewsItemsEn } from "@/lib/mock-data";
 import { API_BASE } from "@/lib/admin-api";
+import { getSocket } from "@/lib/socket";
 
 export function LiveTV() {
   const { locale, t } = useLocale();
@@ -13,14 +14,25 @@ export function LiveTV() {
   const [streamUrl, setStreamUrl] = useState("");
   const overlayRef = useRef<HTMLDivElement>(null);
 
-  // Live stream config comes from the admin (Live TV settings).
+  // Live stream config comes from the admin (Live TV settings) — refetched
+  // live when the admin changes it.
   useEffect(() => {
-    fetch(`${API_BASE}/api/livetv`)
-      .then((r) => r.json())
-      .then((d) => {
-        if (d.live?.active && d.live?.streamUrl) setStreamUrl(d.live.streamUrl);
-      })
-      .catch(() => {});
+    const refetch = () =>
+      fetch(`${API_BASE}/api/livetv`)
+        .then((r) => r.json())
+        .then((d) => {
+          setStreamUrl(
+            d.live?.active && d.live?.streamUrl ? d.live.streamUrl : "",
+          );
+        })
+        .catch(() => {});
+
+    refetch();
+    const socket = getSocket();
+    socket.on("content:changed", refetch);
+    return () => {
+      socket.off("content:changed", refetch);
+    };
   }, []);
 
   const ticker = locale === "en" ? breakingNewsItemsEn : breakingNewsItems;

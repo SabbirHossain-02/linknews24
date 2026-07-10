@@ -6,8 +6,19 @@ import multer from "multer";
 import { prisma } from "../prisma";
 import { requireRole } from "../middleware/auth";
 import { CAN_MANAGE, CAN_PUBLISH, CAN_WRITE, slugify } from "../lib/roles";
+import { emitChange } from "../realtime";
 
 export const adminRouter = Router();
+
+// Broadcast a realtime "content changed" event after any successful mutation.
+adminRouter.use((req, res, next) => {
+  if (req.method !== "GET") {
+    res.on("finish", () => {
+      if (res.statusCode < 400) emitChange({ path: req.path });
+    });
+  }
+  next();
+});
 
 // --- Media upload (images) ---
 export const UPLOAD_DIR = path.join(process.cwd(), "uploads");
