@@ -86,7 +86,12 @@ export const adminDict = {
   featuredImage: { bn: "ফিচার্ড ইমেজ", en: "Featured Image" },
   urlOrUpload: { bn: "URL অথবা আপলোড", en: "URL or upload" },
   breakingNews: { bn: "ব্রেকিং নিউজ", en: "Breaking News" },
-  featureHome: { bn: "হোমপেজে ফিচার", en: "Feature on homepage" },
+  featureHome: { bn: "আরও শীর্ষ খবরে দেখাও", en: "Show in Top Stories" },
+  heroStory: { bn: "হিরো স্টোরি (উপরের বড়)", en: "Hero story (big top)" },
+  heroStoryNote: {
+    bn: "টিক দিলে ঠিক এই খবরটাই হোমপেজের উপরের বড় হিরোতে দেখাবে (একটাই থাকবে)।",
+    en: "When ticked, exactly this article becomes the big hero on top (only one).",
+  },
   seo: { bn: "SEO", en: "SEO" },
   seoTitle: { bn: "SEO টাইটেল", en: "SEO title" },
   seoDesc: { bn: "SEO ডেসক্রিপশন", en: "SEO description" },

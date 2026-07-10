@@ -68,10 +68,19 @@ const articleSchema = z.object({
   featuredImage: z.string().nullable().optional(),
   isBreaking: z.boolean().default(false),
   featured: z.boolean().default(false),
+  isHero: z.boolean().default(false),
   status: z.enum(["DRAFT", "SCHEDULED", "PUBLISHED"]).default("DRAFT"),
   seoTitle: z.string().nullable().optional(),
   seoDescription: z.string().nullable().optional(),
 });
+
+// Only one article can be the hero — unset it on all others.
+async function clearOtherHeroes(keepId: string) {
+  await prisma.article.updateMany({
+    where: { isHero: true, id: { not: keepId } },
+    data: { isHero: false },
+  });
+}
 
 async function uniqueSlug(desired: string, excludeId?: string): Promise<string> {
   const base = slugify(desired);
@@ -164,6 +173,7 @@ adminRouter.post("/articles", requireRole(...CAN_WRITE), async (req, res) => {
       featuredImage: data.featuredImage ?? null,
       isBreaking: canPublish ? data.isBreaking : false,
       featured: canPublish ? data.featured : false,
+      isHero: canPublish ? data.isHero : false,
       status,
       seoTitle: data.seoTitle ?? null,
       seoDescription: data.seoDescription ?? null,
@@ -172,6 +182,7 @@ adminRouter.post("/articles", requireRole(...CAN_WRITE), async (req, res) => {
       publishedAt: status === "PUBLISHED" ? new Date() : null,
     },
   });
+  if (article.isHero) await clearOtherHeroes(article.id);
   res.status(201).json({ article });
 });
 
@@ -210,6 +221,7 @@ adminRouter.put("/articles/:id", requireRole(...CAN_WRITE), async (req, res) => 
       featuredImage: data.featuredImage ?? null,
       isBreaking: canPublish ? data.isBreaking : existing.isBreaking,
       featured: canPublish ? data.featured : existing.featured,
+      isHero: canPublish ? data.isHero : existing.isHero,
       status,
       seoTitle: data.seoTitle ?? null,
       seoDescription: data.seoDescription ?? null,
@@ -222,6 +234,7 @@ adminRouter.put("/articles/:id", requireRole(...CAN_WRITE), async (req, res) => 
             : existing.publishedAt,
     },
   });
+  if (article.isHero) await clearOtherHeroes(article.id);
   res.json({ article });
 });
 

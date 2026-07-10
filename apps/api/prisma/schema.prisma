@@ -93,6 +93,7 @@ model Article {
   status         ArticleStatus @default(DRAFT)
   isBreaking     Boolean       @default(false)
   featured       Boolean       @default(false)
+  isHero         Boolean       @default(false)
   imageTone      String        @default("navy")
   featuredImage  String?
   categoryId     String

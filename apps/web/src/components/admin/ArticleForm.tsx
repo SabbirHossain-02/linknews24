@@ -32,6 +32,7 @@ interface FormState {
   featuredImage: string;
   isBreaking: boolean;
   featured: boolean;
+  isHero: boolean;
   seoTitle: string;
   seoDescription: string;
 }
@@ -50,6 +51,7 @@ const EMPTY: FormState = {
   featuredImage: "",
   isBreaking: false,
   featured: false,
+  isHero: false,
   seoTitle: "",
   seoDescription: "",
 };
@@ -126,6 +128,7 @@ export function ArticleForm({ articleId }: { articleId?: string }) {
           featuredImage: a.featuredImage ?? "",
           isBreaking: a.isBreaking ?? false,
           featured: a.featured ?? false,
+          isHero: a.isHero ?? false,
           seoTitle: a.seoTitle ?? "",
           seoDescription: a.seoDescription ?? "",
         });
@@ -382,6 +385,18 @@ export function ArticleForm({ articleId }: { articleId?: string }) {
               />
               {t("featureHome")}
             </label>
+            <label className="flex items-center gap-2 font-ui text-sm font-semibold text-foreground">
+              <input
+                type="checkbox"
+                checked={form.isHero}
+                onChange={(e) => set("isHero", e.target.checked)}
+                className="h-4 w-4 accent-brand-crimson"
+              />
+              {t("heroStory")}
+            </label>
+            <p className="font-ui text-xs text-foreground-muted">
+              {t("heroStoryNote")}
+            </p>
           </div>
 
           <div className="flex flex-col gap-3 rounded-xl border border-border bg-background p-4">

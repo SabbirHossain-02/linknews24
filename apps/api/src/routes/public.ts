@@ -42,7 +42,13 @@ publicRouter.get("/homepage", async (_req, res) => {
     include: { category: CAT_SELECT },
   });
 
-  // Hero + "top stories" are driven by the "Feature on homepage" flag.
+  // Hero: an explicitly pinned article wins; else newest featured; else newest.
+  const pinnedHero = await prisma.article.findFirst({
+    where: { status: "PUBLISHED", isHero: true },
+    orderBy: { publishedAt: "desc" },
+    include: { category: CAT_SELECT },
+  });
+
   const featured = await prisma.article.findMany({
     where: { status: "PUBLISHED", featured: true },
     orderBy: { publishedAt: "desc" },
@@ -50,7 +56,7 @@ publicRouter.get("/homepage", async (_req, res) => {
     include: { category: CAT_SELECT },
   });
 
-  const hero = featured[0] ?? latest[0] ?? null;
+  const hero = pinnedHero ?? featured[0] ?? latest[0] ?? null;
   let topStories = featured.filter((a) => a.id !== hero?.id).slice(0, 5);
   // fall back to latest if not enough featured articles
   if (topStories.length < 4) {
