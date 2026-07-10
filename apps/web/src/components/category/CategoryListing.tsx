@@ -13,10 +13,19 @@ function ArticleRow({ article }: { article: Article }) {
   return (
     <Link href={`/${article.slug}`} className="group flex gap-4 py-4">
       <div
-        className={`h-20 w-28 shrink-0 overflow-hidden rounded md:h-24 md:w-36 ${toneGradientClass(
+        className={`relative h-20 w-28 shrink-0 overflow-hidden rounded md:h-24 md:w-36 ${toneGradientClass(
           article.imageTone,
         )}`}
-      />
+      >
+        {article.featuredImage && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={article.featuredImage}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        )}
+      </div>
       <div className="min-w-0">
         <span className="font-ui text-[11px] font-semibold uppercase tracking-wide text-brand-crimson">
           {localizedName(article.category, locale)}
@@ -75,7 +84,16 @@ export function CategoryListing({
                 className={`relative aspect-[21/9] w-full overflow-hidden rounded-md ${toneGradientClass(
                   lead.imageTone,
                 )}`}
-              />
+              >
+                {lead.featuredImage && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={lead.featuredImage}
+                    alt=""
+                    className="absolute inset-0 h-full w-full object-cover"
+                  />
+                )}
+              </div>
               <div className="mt-3">
                 <span className="font-ui text-xs font-semibold uppercase tracking-wide text-brand-crimson">
                   {localizedName(lead.category, locale)}

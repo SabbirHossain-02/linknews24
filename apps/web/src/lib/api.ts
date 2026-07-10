@@ -15,6 +15,7 @@ export interface ApiArticle {
   body?: string;
   bodyEn?: string;
   imageTone: string;
+  featuredImage?: string | null;
   isBreaking: boolean;
   featured?: boolean;
   viewCount: number;
@@ -61,6 +62,7 @@ export function toArticle(a: ApiArticle): Article {
     imageTone: (TONES.includes(a.imageTone)
       ? a.imageTone
       : "navy") as Article["imageTone"],
+    featuredImage: a.featuredImage ?? null,
     isBreaking: a.isBreaking,
     viewCount: a.viewCount,
   };

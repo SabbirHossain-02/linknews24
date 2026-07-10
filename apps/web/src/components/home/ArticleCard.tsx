@@ -22,6 +22,14 @@ export function ArticleCard({ article }: { article: Article }) {
           article.imageTone,
         )}`}
       >
+        {article.featuredImage && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={article.featuredImage}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        )}
         {article.isVideo && (
           <>
             <div className="absolute inset-0 flex items-center justify-center">

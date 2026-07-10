@@ -16,6 +16,7 @@ export interface Article {
   author: string;
   publishedAt: string;
   imageTone: "navy" | "crimson" | "slate" | "amber";
+  featuredImage?: string | null;
   isBreaking?: boolean;
   isVideo?: boolean;
   isGallery?: boolean;

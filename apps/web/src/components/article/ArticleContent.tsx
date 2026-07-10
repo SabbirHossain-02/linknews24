@@ -79,11 +79,20 @@ export function ArticleContent({
         </div>
       </div>
 
-      <div
-        className={`aspect-video w-full overflow-hidden rounded-lg ${toneGradientClass(
-          article.imageTone,
-        )}`}
-      />
+      {article.featuredImage ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={article.featuredImage}
+          alt={title}
+          className="aspect-video w-full rounded-lg object-cover"
+        />
+      ) : (
+        <div
+          className={`aspect-video w-full overflow-hidden rounded-lg ${toneGradientClass(
+            article.imageTone,
+          )}`}
+        />
+      )}
 
       {hasHtml ? (
         <div

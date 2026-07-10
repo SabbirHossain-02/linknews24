@@ -16,6 +16,14 @@ export function HeroStory({ article }: { article: Article }) {
           article.imageTone,
         )}`}
       >
+        {article.featuredImage && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={article.featuredImage}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
         <div className="absolute inset-x-0 bottom-0 p-6 sm:p-8">
           <div className="flex items-center gap-2">

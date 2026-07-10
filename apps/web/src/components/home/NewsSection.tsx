@@ -43,6 +43,14 @@ export function NewsSection({
               lead.imageTone,
             )}`}
           >
+            {lead.featuredImage && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={lead.featuredImage}
+                alt=""
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+            )}
             {lead.isVideo && (
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 transition-transform group-hover:scale-110">
@@ -75,10 +83,19 @@ export function NewsSection({
             <li key={article.id} className="py-3 first:pt-0 last:pb-0">
               <Link href={`/${article.slug}`} className="group flex gap-3">
                 <div
-                  className={`h-16 w-24 shrink-0 overflow-hidden rounded ${toneGradientClass(
+                  className={`relative h-16 w-24 shrink-0 overflow-hidden rounded ${toneGradientClass(
                     article.imageTone,
                   )}`}
-                />
+                >
+                  {article.featuredImage && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={article.featuredImage}
+                      alt=""
+                      className="absolute inset-0 h-full w-full object-cover"
+                    />
+                  )}
+                </div>
                 <div className="min-w-0">
                   <h4 className="line-clamp-2 text-sm font-semibold leading-snug text-foreground transition-colors group-hover:text-brand-crimson">
                     {locale === "en" ? article.titleEn : article.title}
