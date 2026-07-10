@@ -200,6 +200,15 @@ export const adminDict = {
   subscriberCount: { bn: "জন সাবস্ক্রাইবার", en: "subscribers" },
   exportCsv: { bn: "CSV এক্সপোর্ট", en: "Export CSV" },
   noSubscribers: { bn: "কোনো সাবস্ক্রাইবার নেই।", en: "No subscribers yet." },
+
+  // Article list filters
+  searchByTitle: { bn: "শিরোনাম দিয়ে খুঁজুন…", en: "Search by title…" },
+  allCategories: { bn: "সব ক্যাটাগরি", en: "All categories" },
+  allStatus: { bn: "সব স্ট্যাটাস", en: "All status" },
+  totalLabel: { bn: "মোট", en: "Total" },
+  prev: { bn: "আগে", en: "Prev" },
+  next: { bn: "পরে", en: "Next" },
+  pageOf: { bn: "পৃষ্ঠা {p} / {t}", en: "Page {p} of {t}" },
 } as const;
 
 export type AdminKey = keyof typeof adminDict;

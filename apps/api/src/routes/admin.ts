@@ -86,28 +86,46 @@ async function uniqueSlug(desired: string, excludeId?: string): Promise<string> 
   }
 }
 
-// --- Article list (all statuses) ---
+// --- Article list (all statuses, filtered + paginated) ---
 adminRouter.get("/articles", async (req, res) => {
-  const { status, category, q } = req.query as Record<string, string>;
-  const articles = await prisma.article.findMany({
-    where: {
-      status: status ? (status as never) : undefined,
-      categoryId: category || undefined,
-      OR: q
-        ? [
-            { title: { contains: q, mode: "insensitive" } },
-            { titleEn: { contains: q, mode: "insensitive" } },
-          ]
-        : undefined,
-    },
-    include: {
-      category: { select: { name: true, nameEn: true, slug: true } },
-      author: { select: { name: true } },
-    },
-    orderBy: { updatedAt: "desc" },
-    take: 100,
-  });
-  res.json({ articles });
+  const {
+    status,
+    category,
+    q,
+    page = "1",
+    limit = "20",
+  } = req.query as Record<string, string>;
+
+  const take = Math.min(Number(limit) || 20, 50);
+  const currentPage = Math.max(Number(page) || 1, 1);
+  const skip = (currentPage - 1) * take;
+
+  const where = {
+    status: status ? (status as never) : undefined,
+    categoryId: category || undefined,
+    OR: q
+      ? [
+          { title: { contains: q, mode: "insensitive" as const } },
+          { titleEn: { contains: q, mode: "insensitive" as const } },
+        ]
+      : undefined,
+  };
+
+  const [articles, total] = await Promise.all([
+    prisma.article.findMany({
+      where,
+      include: {
+        category: { select: { name: true, nameEn: true, slug: true } },
+        author: { select: { name: true } },
+      },
+      orderBy: { updatedAt: "desc" },
+      skip,
+      take,
+    }),
+    prisma.article.count({ where }),
+  ]);
+
+  res.json({ articles, total, page: currentPage, limit: take });
 });
 
 // --- Single article ---
