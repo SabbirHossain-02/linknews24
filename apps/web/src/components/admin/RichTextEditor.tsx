@@ -42,11 +42,11 @@ import {
   Undo,
 } from "lucide-react";
 import { uploadFile } from "@/lib/admin-api";
+import { useAdminT } from "@/lib/admin-i18n";
 import { PromptModal } from "./Modal";
 
 const FONT_SIZES = ["14px", "16px", "18px", "20px", "24px", "30px", "36px"];
 const FONTS = [
-  { label: "ডিফল্ট", value: "" },
   { label: "Siyam Rupali", value: "var(--font-siyam-rupali)" },
   { label: "Hind Siliguri", value: "var(--font-hind-siliguri)" },
   { label: "Serif", value: "serif" },
@@ -136,6 +136,7 @@ function ToolbarSelect({
 }
 
 function Toolbar({ editor }: { editor: Editor }) {
+  const t = useAdminT();
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [showLink, setShowLink] = useState(false);
@@ -149,7 +150,7 @@ function Toolbar({ editor }: { editor: Editor }) {
       const url = await uploadFile(file);
       editor.chain().focus().setImage({ src: url }).run();
     } catch (err) {
-      alert(err instanceof Error ? err.message : "আপলোড ব্যর্থ");
+      alert(err instanceof Error ? err.message : t("uploadFailed"));
     } finally {
       setUploading(false);
     }
@@ -158,9 +159,9 @@ function Toolbar({ editor }: { editor: Editor }) {
   return (
     <div className="flex flex-wrap items-center gap-1 border-b border-border bg-background p-2">
       <ToolbarSelect
-        label="ফন্ট"
+        label={t("font")}
         width="w-28"
-        options={FONTS}
+        options={[{ label: t("defaultFont"), value: "" }, ...FONTS]}
         onSelect={(v) =>
           v
             ? editor.chain().focus().setFontFamily(v).run()
@@ -168,10 +169,10 @@ function Toolbar({ editor }: { editor: Editor }) {
         }
       />
       <ToolbarSelect
-        label="সাইজ"
+        label={t("size")}
         width="w-16"
         options={[
-          { label: "রিসেট", value: "" },
+          { label: t("reset"), value: "" },
           ...FONT_SIZES.map((s) => ({ label: s.replace("px", ""), value: s })),
         ]}
         onSelect={(v) =>
@@ -281,10 +282,10 @@ function Toolbar({ editor }: { editor: Editor }) {
 
       {showLink && (
         <PromptModal
-          title="লিংক যুক্ত করুন"
-          label="URL"
+          title={t("addLink")}
+          label={t("linkUrl")}
           initial={(editor.getAttributes("link").href as string) ?? "https://"}
-          confirmLabel="যুক্ত করুন"
+          confirmLabel={t("add")}
           onClose={() => setShowLink(false)}
           onSubmit={(url) => {
             setShowLink(false);

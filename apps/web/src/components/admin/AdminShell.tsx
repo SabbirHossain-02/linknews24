@@ -22,36 +22,29 @@ import {
 } from "lucide-react";
 import { useAdminAuth } from "./AdminAuthProvider";
 import { useLocale } from "@/components/providers/LocaleProvider";
+import { useAdminT, type AdminKey } from "@/lib/admin-i18n";
 
 interface NavItem {
-  label: string;
+  key: AdminKey;
   href: string | null;
   icon: typeof LayoutDashboard;
 }
 
 const NAV: NavItem[] = [
-  { label: "ড্যাশবোর্ড", href: "/admin", icon: LayoutDashboard },
-  { label: "আর্টিকেল", href: "/admin/articles", icon: Newspaper },
-  { label: "ক্যাটাগরি ও ট্যাগ", href: null, icon: FolderTree },
-  { label: "ব্রেকিং নিউজ", href: null, icon: Radio },
-  { label: "হোমপেজ বিল্ডার", href: null, icon: LayoutTemplate },
-  { label: "লাইভ টিভি", href: null, icon: Tv },
-  { label: "মিডিয়া", href: null, icon: ImageIcon },
-  { label: "আইনজীবী", href: null, icon: Scale },
-  { label: "রক্তদাতা", href: null, icon: Droplet },
-  { label: "নিউজলেটার", href: null, icon: Mail },
-  { label: "কমেন্ট", href: null, icon: MessageSquare },
-  { label: "সেটিংস", href: null, icon: Settings },
-  { label: "ইউজার ও রোল", href: null, icon: Users },
+  { key: "dashboard", href: "/admin", icon: LayoutDashboard },
+  { key: "articles", href: "/admin/articles", icon: Newspaper },
+  { key: "categoriesTags", href: null, icon: FolderTree },
+  { key: "breaking", href: null, icon: Radio },
+  { key: "homepageBuilder", href: null, icon: LayoutTemplate },
+  { key: "liveTv", href: null, icon: Tv },
+  { key: "media", href: null, icon: ImageIcon },
+  { key: "lawyers", href: null, icon: Scale },
+  { key: "donors", href: null, icon: Droplet },
+  { key: "newsletter", href: null, icon: Mail },
+  { key: "comments", href: null, icon: MessageSquare },
+  { key: "settings", href: null, icon: Settings },
+  { key: "usersRoles", href: null, icon: Users },
 ];
-
-const ROLE_LABEL: Record<string, string> = {
-  SUPER_ADMIN: "সুপার অ্যাডমিন",
-  ADMIN: "অ্যাডমিন",
-  EDITOR: "এডিটর",
-  REPORTER: "রিপোর্টার",
-  MODERATOR: "মডারেটর",
-};
 
 const FONT_KEY = "linknews24-font-scale";
 
@@ -92,6 +85,7 @@ function FontScale() {
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAdminAuth();
   const { locale, setLocale } = useLocale();
+  const t = useAdminT();
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -118,28 +112,28 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           </span>
         </div>
         <nav className="flex-1 overflow-y-auto px-3 py-4">
-          {NAV.map(({ label, href, icon: Icon }) => {
+          {NAV.map(({ key, href, icon: Icon }) => {
             const active = href && pathname === href;
             const cls =
               "flex items-center gap-3 rounded-lg px-3 py-2.5 font-ui text-sm transition-colors";
             if (!href) {
               return (
-                <div key={label} className={`${cls} cursor-default text-white/35`} title="শীঘ্রই আসছে">
+                <div key={key} className={`${cls} cursor-default text-white/35`}>
                   <Icon className="h-4 w-4 shrink-0" />
-                  <span className="flex-1">{label}</span>
-                  <span className="text-[9px] text-white/25">শীঘ্রই</span>
+                  <span className="flex-1">{t(key)}</span>
+                  <span className="text-[9px] text-white/25">{t("comingSoon")}</span>
                 </div>
               );
             }
             return (
               <Link
-                key={label}
+                key={key}
                 href={href}
                 onClick={() => setOpen(false)}
                 className={`${cls} ${active ? "bg-brand-crimson text-white" : "text-white/80 hover:bg-white/10"}`}
               >
                 <Icon className="h-4 w-4 shrink-0" />
-                {label}
+                {t(key)}
               </Link>
             );
           })}
@@ -154,7 +148,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       <div className="lg:pl-60">
         <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-background px-5">
           <div className="flex items-center gap-4">
-            <button onClick={() => setOpen((v) => !v)} className="text-heading lg:hidden" aria-label="মেনু">
+            <button onClick={() => setOpen((v) => !v)} className="text-heading lg:hidden" aria-label={t("menu")}>
               <Menu className="h-6 w-6" />
             </button>
             <FontScale />
@@ -169,7 +163,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             <div className="text-right">
               <p className="text-sm font-semibold text-heading">{user?.name}</p>
               <p className="font-ui text-xs text-foreground-muted">
-                {user ? ROLE_LABEL[user.role] ?? user.role : ""}
+                {user ? t(`role${user.role}` as AdminKey) : ""}
               </p>
             </div>
             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-crimson font-ui text-sm font-bold text-white">
@@ -180,7 +174,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 font-ui text-sm text-foreground-muted transition-colors hover:text-brand-crimson"
             >
               <LogOut className="h-4 w-4" />
-              <span className="hidden sm:inline">লগআউট</span>
+              <span className="hidden sm:inline">{t("logout")}</span>
             </button>
           </div>
         </header>

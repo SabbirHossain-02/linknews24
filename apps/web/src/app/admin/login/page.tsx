@@ -4,9 +4,11 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, Lock, Mail } from "lucide-react";
 import { useAdminAuth } from "@/components/admin/AdminAuthProvider";
+import { useAdminT } from "@/lib/admin-i18n";
 
 export default function AdminLoginPage() {
   const { login } = useAdminAuth();
+  const t = useAdminT();
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -22,7 +24,7 @@ export default function AdminLoginPage() {
       await login(email, password);
       router.replace("/admin");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "লগইন ব্যর্থ হয়েছে");
+      setError(err instanceof Error ? err.message : t("loginFailed"));
     } finally {
       setBusy(false);
     }
@@ -38,7 +40,7 @@ export default function AdminLoginPage() {
               Link News<span className="text-brand-crimson">24</span>
             </span>
             <p className="mt-1 font-ui text-sm text-foreground-muted">
-              অ্যাডমিন প্যানেল — লগইন করুন
+              {t("loginSubtitle")}
             </p>
           </div>
 
@@ -56,7 +58,7 @@ export default function AdminLoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="ইমেইল ঠিকানা"
+                placeholder={t("emailPlaceholder")}
                 className="w-full rounded-lg border border-border bg-background py-2.5 pl-10 pr-3.5 text-sm text-foreground placeholder:text-foreground-muted focus:border-brand-crimson focus:outline-none focus:ring-2 focus:ring-brand-crimson/15"
               />
             </div>
@@ -67,14 +69,14 @@ export default function AdminLoginPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="পাসওয়ার্ড"
+                placeholder={t("passwordPlaceholder")}
                 className="w-full rounded-lg border border-border bg-background py-2.5 pl-10 pr-10 text-sm text-foreground placeholder:text-foreground-muted focus:border-brand-crimson focus:outline-none focus:ring-2 focus:ring-brand-crimson/15"
               />
               <button
                 type="button"
                 onClick={() => setShow((v) => !v)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground-muted hover:text-foreground"
-                aria-label={show ? "পাসওয়ার্ড লুকান" : "পাসওয়ার্ড দেখুন"}
+                aria-label={show ? t("hidePwd") : t("showPwd")}
               >
                 {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
@@ -84,7 +86,7 @@ export default function AdminLoginPage() {
               disabled={busy}
               className="mt-1 rounded-lg bg-brand-crimson py-2.5 font-ui text-sm font-semibold text-white transition-colors hover:bg-brand-crimson-dark disabled:opacity-60"
             >
-              {busy ? "লগইন হচ্ছে…" : "লগইন করুন"}
+              {busy ? t("loggingIn") : t("loginBtn")}
             </button>
           </form>
         </div>

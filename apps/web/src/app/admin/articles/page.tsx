@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { apiFetch } from "@/lib/admin-api";
 import { ConfirmModal } from "@/components/admin/Modal";
+import { useAdminT, type AdminKey } from "@/lib/admin-i18n";
 
 interface AdminArticle {
   id: string;
@@ -18,13 +19,8 @@ interface AdminArticle {
   updatedAt: string;
 }
 
-const STATUS_LABEL: Record<string, string> = {
-  DRAFT: "খসড়া",
-  SCHEDULED: "শিডিউল",
-  PUBLISHED: "প্রকাশিত",
-};
-
 export default function AdminArticlesPage() {
+  const t = useAdminT();
   const [articles, setArticles] = useState<AdminArticle[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -55,13 +51,13 @@ export default function AdminArticlesPage() {
   return (
     <div>
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-heading">আর্টিকেল</h1>
+        <h1 className="text-2xl font-bold text-heading">{t("articles")}</h1>
         <Link
           href="/admin/articles/new"
           className="flex items-center gap-1.5 rounded-lg bg-brand-crimson px-4 py-2.5 font-ui text-sm font-semibold text-white hover:bg-brand-crimson-dark"
         >
           <Plus className="h-4 w-4" />
-          নতুন আর্টিকেল
+          {t("newArticle")}
         </Link>
       </div>
 
@@ -69,24 +65,24 @@ export default function AdminArticlesPage() {
         <table className="w-full text-left text-sm">
           <thead className="border-b border-border font-ui text-xs uppercase tracking-wide text-foreground-muted/70">
             <tr>
-              <th className="px-4 py-3">শিরোনাম</th>
-              <th className="px-4 py-3">ক্যাটাগরি</th>
-              <th className="px-4 py-3">স্ট্যাটাস</th>
-              <th className="px-4 py-3">ব্রেকিং</th>
-              <th className="px-4 py-3 text-right">অ্যাকশন</th>
+              <th className="px-4 py-3">{t("colTitle")}</th>
+              <th className="px-4 py-3">{t("colCategory")}</th>
+              <th className="px-4 py-3">{t("colStatus")}</th>
+              <th className="px-4 py-3">{t("colBreaking")}</th>
+              <th className="px-4 py-3 text-right">{t("colActions")}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
             {loading ? (
               <tr>
                 <td colSpan={5} className="px-4 py-8 text-center text-foreground-muted">
-                  লোড হচ্ছে…
+                  {t("loading")}
                 </td>
               </tr>
             ) : articles.length === 0 ? (
               <tr>
                 <td colSpan={5} className="px-4 py-8 text-center text-foreground-muted">
-                  কোনো আর্টিকেল নেই। নতুন একটি তৈরি করুন।
+                  {t("noArticles")}
                 </td>
               </tr>
             ) : (
@@ -105,8 +101,7 @@ export default function AdminArticlesPage() {
                     <button
                       onClick={() =>
                         patchFlags(a.id, {
-                          status:
-                            a.status === "PUBLISHED" ? "DRAFT" : "PUBLISHED",
+                          status: a.status === "PUBLISHED" ? "DRAFT" : "PUBLISHED",
                         })
                       }
                       className={`rounded-full px-2.5 py-1 font-ui text-xs font-semibold ${
@@ -115,14 +110,12 @@ export default function AdminArticlesPage() {
                           : "bg-surface text-foreground-muted"
                       }`}
                     >
-                      {STATUS_LABEL[a.status]}
+                      {t(`status${a.status}` as AdminKey)}
                     </button>
                   </td>
                   <td className="px-4 py-3">
                     <button
-                      onClick={() =>
-                        patchFlags(a.id, { isBreaking: !a.isBreaking })
-                      }
+                      onClick={() => patchFlags(a.id, { isBreaking: !a.isBreaking })}
                       role="switch"
                       aria-checked={a.isBreaking}
                       className={`relative h-5 w-9 rounded-full transition-colors ${
@@ -141,14 +134,14 @@ export default function AdminArticlesPage() {
                       <Link
                         href={`/admin/articles/${a.id}/edit`}
                         className="rounded p-1.5 text-foreground-muted hover:bg-surface hover:text-brand-crimson"
-                        title="এডিট"
+                        title={t("edit")}
                       >
                         <Pencil className="h-4 w-4" />
                       </Link>
                       <button
                         onClick={() => setDeleteId(a.id)}
                         className="rounded p-1.5 text-foreground-muted hover:bg-surface hover:text-brand-crimson"
-                        title="ডিলিট"
+                        title={t("delete")}
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -163,8 +156,9 @@ export default function AdminArticlesPage() {
 
       {deleteId && (
         <ConfirmModal
-          title="আর্টিকেল মুছবেন?"
-          message="এই আর্টিকেলটি স্থায়ীভাবে মুছে যাবে। আপনি কি নিশ্চিত?"
+          title={t("deleteTitle")}
+          message={t("deleteMessage")}
+          confirmLabel={t("remove")}
           onConfirm={() => remove(deleteId)}
           onClose={() => setDeleteId(null)}
         />

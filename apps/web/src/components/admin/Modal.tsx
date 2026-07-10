@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
+import { useAdminT } from "@/lib/admin-i18n";
 
 export function Modal({
   title,
@@ -14,6 +15,7 @@ export function Modal({
   children: React.ReactNode;
   wide?: boolean;
 }) {
+  const t = useAdminT();
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     document.addEventListener("keydown", onKey);
@@ -34,7 +36,7 @@ export function Modal({
           <button
             onClick={onClose}
             className="text-foreground-muted hover:text-foreground"
-            aria-label="বন্ধ"
+            aria-label={t("close")}
           >
             <X className="h-5 w-5" />
           </button>
@@ -50,7 +52,7 @@ export function PromptModal({
   label,
   initial = "",
   placeholder,
-  confirmLabel = "ঠিক আছে",
+  confirmLabel,
   onSubmit,
   onClose,
 }: {
@@ -62,6 +64,7 @@ export function PromptModal({
   onSubmit: (value: string) => void;
   onClose: () => void;
 }) {
+  const t = useAdminT();
   const [value, setValue] = useState(initial);
 
   return (
@@ -90,13 +93,13 @@ export function PromptModal({
             onClick={onClose}
             className="rounded-lg border border-border px-4 py-2 font-ui text-sm text-foreground hover:bg-surface"
           >
-            বাতিল
+            {t("cancel")}
           </button>
           <button
             type="submit"
             className="rounded-lg bg-brand-crimson px-4 py-2 font-ui text-sm font-semibold text-white hover:bg-brand-crimson-dark"
           >
-            {confirmLabel}
+            {confirmLabel ?? t("ok")}
           </button>
         </div>
       </form>
@@ -107,7 +110,7 @@ export function PromptModal({
 export function ConfirmModal({
   title,
   message,
-  confirmLabel = "মুছুন",
+  confirmLabel,
   onConfirm,
   onClose,
 }: {
@@ -117,6 +120,7 @@ export function ConfirmModal({
   onConfirm: () => void;
   onClose: () => void;
 }) {
+  const t = useAdminT();
   return (
     <Modal title={title} onClose={onClose}>
       <p className="font-ui text-sm text-foreground-muted">{message}</p>
@@ -125,7 +129,7 @@ export function ConfirmModal({
           onClick={onClose}
           className="rounded-lg border border-border px-4 py-2 font-ui text-sm text-foreground hover:bg-surface"
         >
-          বাতিল
+          {t("cancel")}
         </button>
         <button
           onClick={() => {
@@ -134,7 +138,7 @@ export function ConfirmModal({
           }}
           className="rounded-lg bg-brand-crimson px-4 py-2 font-ui text-sm font-semibold text-white hover:bg-brand-crimson-dark"
         >
-          {confirmLabel}
+          {confirmLabel ?? t("remove")}
         </button>
       </div>
     </Modal>
