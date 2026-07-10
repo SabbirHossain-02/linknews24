@@ -1,5 +1,20 @@
 import type { Article, Category } from "@/types/content";
 import type { Locale } from "@/lib/i18n";
+import { districts, bloodGroups } from "@/lib/directory-data";
+
+const lawyerNavChildren: Category[] = districts.map((d) => ({
+  id: `lawyer-${d.slug}`,
+  name: d.name,
+  nameEn: d.nameEn,
+  slug: `lawyers/${d.slug}`,
+}));
+
+const bloodNavChildren: Category[] = bloodGroups.map((g) => ({
+  id: `blood-${g.slug}`,
+  name: g.label,
+  nameEn: g.label,
+  slug: `blood/${g.slug}`,
+}));
 
 export const categories: Category[] = [
   { id: "national", name: "জাতীয়", nameEn: "National", slug: "national" },
@@ -81,6 +96,8 @@ export const navItems: NavItem[] = [
   { label: "আইন-আদালত", labelEn: "Law & Crime", href: "/crime" },
   { label: "পরিবেশ", labelEn: "Environment", href: "/environment" },
   { label: "ফিচার", labelEn: "Features", href: "/features" },
+  { label: "আইনজীবী", labelEn: "Lawyers", children: lawyerNavChildren },
+  { label: "রক্তের গ্রুপ", labelEn: "Blood Group", children: bloodNavChildren },
   {
     label: "অন্যান্য",
     labelEn: "Others",

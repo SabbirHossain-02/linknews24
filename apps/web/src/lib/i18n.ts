@@ -175,6 +175,33 @@ export const translations = {
     bn: "কোনো সংবাদ পাওয়া যায়নি। ভিন্ন কীওয়ার্ড দিয়ে আবার চেষ্টা করুন।",
     en: "No news found. Try a different keyword.",
   },
+
+  lawyersTitle: { bn: "আইনজীবী তালিকা", en: "Lawyer Directory" },
+  lawyersSubtitle: {
+    bn: "জেলা অনুযায়ী আইনজীবীদের যোগাযোগ নম্বর।",
+    en: "Lawyers' contact numbers by district.",
+  },
+  bloodTitle: { bn: "রক্তদাতা তালিকা", en: "Blood Donor Directory" },
+  bloodSubtitle: {
+    bn: "রক্তের গ্রুপ অনুযায়ী রক্তদাতাদের যোগাযোগ নম্বর।",
+    en: "Blood donors' contact numbers by group.",
+  },
+  selectBloodGroup: {
+    bn: "রক্তের গ্রুপ নির্বাচন করুন",
+    en: "Select a blood group",
+  },
+  allDistricts: { bn: "সব জেলা", en: "All districts" },
+  allGroups: { bn: "সব গ্রুপ", en: "All groups" },
+  callNow: { bn: "কল করুন", en: "Call" },
+  districtLabel: { bn: "জেলা", en: "District" },
+  lastDonationLabel: { bn: "সর্বশেষ রক্তদান", en: "Last donation" },
+  monthsAgo: { bn: "মাস আগে", en: "months ago" },
+  donorsCount: { bn: "জন রক্তদাতা", en: "donors" },
+  lawyersCount: { bn: "জন আইনজীবী", en: "lawyers" },
+  directoryDisclaimer: {
+    bn: "তথ্যগুলো নমুনা — প্রকৃত তালিকা পরবর্তীতে যুক্ত হবে।",
+    en: "Listings are sample data — real entries will be added later.",
+  },
 } as const;
 
 export type TranslationKey = keyof typeof translations;
@@ -251,6 +278,24 @@ export function localizedDuration(duration: string, locale: Locale): string {
     /[০-৯]/g,
     (digit) => BENGALI_DIGIT_TO_ARABIC[digit],
   );
+}
+
+const ARABIC_TO_BENGALI: Record<string, string> = {
+  "0": "০",
+  "1": "১",
+  "2": "২",
+  "3": "৩",
+  "4": "৪",
+  "5": "৫",
+  "6": "৬",
+  "7": "৭",
+  "8": "৮",
+  "9": "৯",
+};
+
+export function toLocaleDigits(value: string | number, locale: Locale): string {
+  const s = String(value);
+  return locale === "en" ? s : s.replace(/[0-9]/g, (d) => ARABIC_TO_BENGALI[d]);
 }
 
 export function localizedPublishedAt(publishedAt: string, locale: Locale): string {
