@@ -14,24 +14,30 @@ publicRouter.get("/categories", async (_req, res) => {
 const CAT_SELECT = { select: { name: true, nameEn: true, slug: true } };
 
 publicRouter.get("/homepage", async (_req, res) => {
-  const hero =
-    (await prisma.article.findFirst({
-      where: { status: "PUBLISHED", featured: true },
-      orderBy: { publishedAt: "desc" },
-      include: { category: CAT_SELECT },
-    })) ??
-    (await prisma.article.findFirst({
-      where: { status: "PUBLISHED" },
-      orderBy: { publishedAt: "desc" },
-      include: { category: CAT_SELECT },
-    }));
-
   const latest = await prisma.article.findMany({
     where: { status: "PUBLISHED" },
     orderBy: { publishedAt: "desc" },
-    take: 11,
+    take: 12,
     include: { category: CAT_SELECT },
   });
+
+  // Hero + "top stories" are driven by the "Feature on homepage" flag.
+  const featured = await prisma.article.findMany({
+    where: { status: "PUBLISHED", featured: true },
+    orderBy: { publishedAt: "desc" },
+    take: 8,
+    include: { category: CAT_SELECT },
+  });
+
+  const hero = featured[0] ?? latest[0] ?? null;
+  let topStories = featured.filter((a) => a.id !== hero?.id).slice(0, 5);
+  // fall back to latest if not enough featured articles
+  if (topStories.length < 4) {
+    const extra = latest.filter(
+      (a) => a.id !== hero?.id && !topStories.some((t) => t.id === a.id),
+    );
+    topStories = [...topStories, ...extra].slice(0, 5);
+  }
 
   // Configured sections, else fall back to every visible category.
   const configs = await prisma.homepageSection.findMany({
@@ -67,7 +73,7 @@ publicRouter.get("/homepage", async (_req, res) => {
     if (sections.length >= 14) break;
   }
 
-  res.json({ hero, latest, sections });
+  res.json({ hero, topStories, latest, sections });
 });
 
 publicRouter.get("/livetv", async (_req, res) => {
@@ -107,6 +113,17 @@ publicRouter.get("/articles", async (req, res) => {
   ]);
 
   res.json({ articles, total, page: Number(page), limit: take });
+});
+
+// Increment view count (called once per reader session from the article page).
+publicRouter.post("/articles/:slug/view", async (req, res) => {
+  await prisma.article
+    .updateMany({
+      where: { slug: req.params.slug, status: "PUBLISHED" },
+      data: { viewCount: { increment: 1 } },
+    })
+    .catch(() => null);
+  res.json({ ok: true });
 });
 
 publicRouter.get("/articles/:slug", async (req, res) => {

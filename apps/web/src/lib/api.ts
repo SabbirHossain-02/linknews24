@@ -93,6 +93,7 @@ export async function getArticles(
 
 export interface HomepageData {
   hero: ApiArticle | null;
+  topStories: ApiArticle[];
   latest: ApiArticle[];
   sections: {
     category: { name: string; nameEn: string; slug: string };
@@ -102,7 +103,7 @@ export interface HomepageData {
 
 export async function getHomepage(): Promise<HomepageData> {
   const data = await apiGet<HomepageData>("/api/homepage");
-  return data ?? { hero: null, latest: [], sections: [] };
+  return data ?? { hero: null, topStories: [], latest: [], sections: [] };
 }
 
 // Sidebar: most-read (by views) and latest, derived from recent articles.

@@ -6,8 +6,10 @@ import { ReadingSidebar } from "@/components/home/ReadingSidebar";
 import { getHomepage, getSidebar, toArticle } from "@/lib/api";
 
 export default async function Home() {
-  const [{ hero: heroRaw, latest: latestRaw, sections }, sidebar] =
-    await Promise.all([getHomepage(), getSidebar()]);
+  const [
+    { hero: heroRaw, topStories: topRaw, latest: latestRaw, sections },
+    sidebar,
+  ] = await Promise.all([getHomepage(), getSidebar()]);
 
   if (!heroRaw) {
     return (
@@ -26,7 +28,10 @@ export default async function Home() {
   const latestMapped = latestRaw
     .map(toArticle)
     .filter((a) => a.slug !== hero.slug);
-  const topStories = latestMapped.slice(0, 5);
+  const topStories = (topRaw.length ? topRaw.map(toArticle) : latestMapped).slice(
+    0,
+    5,
+  );
   const latest = latestMapped.slice(0, 10);
 
   return (
