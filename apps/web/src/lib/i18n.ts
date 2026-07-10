@@ -299,6 +299,19 @@ export function toLocaleDigits(value: string | number, locale: Locale): string {
 }
 
 export function localizedPublishedAt(publishedAt: string, locale: Locale): string {
+  // API dates are ISO strings — format as a localized date (deterministic,
+  // avoids hydration mismatch).
+  if (/\d{4}-\d{2}-\d{2}T/.test(publishedAt)) {
+    const d = new Date(publishedAt);
+    if (!isNaN(d.getTime())) {
+      return d.toLocaleDateString(locale === "bn" ? "bn-BD" : "en-GB", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      });
+    }
+  }
+
   if (locale === "bn") return publishedAt;
   const arabic = publishedAt.replace(
     /[০-৯]/g,

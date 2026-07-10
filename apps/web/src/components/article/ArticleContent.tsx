@@ -11,10 +11,22 @@ import { ArticleActions } from "./ArticleActions";
 import { RecordHistory } from "./RecordHistory";
 import { ArticleSchema } from "./ArticleSchema";
 
-export function ArticleContent({ article }: { article: Article }) {
+export function ArticleContent({
+  article,
+  bodyHtmlBn,
+  bodyHtmlEn,
+  related: relatedProp,
+}: {
+  article: Article;
+  bodyHtmlBn?: string;
+  bodyHtmlEn?: string;
+  related?: Article[];
+}) {
   const { locale, t } = useLocale();
-  const body = getArticleBody(article, locale);
-  const related = getRelatedArticles(article);
+  const hasHtml = bodyHtmlBn !== undefined || bodyHtmlEn !== undefined;
+  const body = hasHtml ? [] : getArticleBody(article, locale);
+  const bodyHtml = locale === "en" ? bodyHtmlEn ?? "" : bodyHtmlBn ?? "";
+  const related = relatedProp ?? getRelatedArticles(article);
   const categoryLabel = localizedName(article.category, locale);
   const title = locale === "en" ? article.titleEn : article.title;
 
@@ -73,13 +85,20 @@ export function ArticleContent({ article }: { article: Article }) {
         )}`}
       />
 
-      <div className="flex max-w-2xl flex-col gap-5">
-        {body.map((paragraph, index) => (
-          <p key={index} className="text-[17px] leading-relaxed text-foreground">
-            {paragraph}
-          </p>
-        ))}
-      </div>
+      {hasHtml ? (
+        <div
+          className="ln-editor max-w-2xl text-[17px] leading-relaxed text-foreground"
+          dangerouslySetInnerHTML={{ __html: bodyHtml }}
+        />
+      ) : (
+        <div className="flex max-w-2xl flex-col gap-5">
+          {body.map((paragraph, index) => (
+            <p key={index} className="text-[17px] leading-relaxed text-foreground">
+              {paragraph}
+            </p>
+          ))}
+        </div>
+      )}
 
       {related.length > 0 && (
         <div className="border-t border-border pt-8">
