@@ -2,78 +2,74 @@ import { HeroStory } from "@/components/home/HeroStory";
 import { TopStoriesList } from "@/components/home/TopStoriesList";
 import { LatestHeadlines } from "@/components/home/LatestHeadlines";
 import { NewsSection } from "@/components/home/NewsSection";
-import { GalleryStrip } from "@/components/home/GalleryStrip";
 import { ReadingSidebar } from "@/components/home/ReadingSidebar";
-import {
-  heroArticle,
-  nationalArticles,
-  politicsArticles,
-  specialReportArticles,
-  nationwideArticles,
-  sportsArticles,
-  entertainmentArticles,
-  jobsArticles,
-  featuresArticles,
-  technologyArticles,
-  opinionArticles,
-  religionArticles,
-  crimeArticles,
-  environmentArticles,
-  videoArticles,
-  galleryArticles,
-  trendingArticles,
-  latestReadArticles,
-  getLatestHeadlines,
-} from "@/lib/mock-data";
+import { getArticles, getCategories, getSidebar, toArticle } from "@/lib/api";
+import type { Article } from "@/types/content";
 
-const topStories = [
-  politicsArticles[1],
-  sportsArticles[1],
-  entertainmentArticles[1],
-  specialReportArticles[0],
-  nationwideArticles[0],
-].filter(Boolean);
+export default async function Home() {
+  const [{ articles: raw }, cats, sidebar] = await Promise.all([
+    getArticles({ limit: 80 }),
+    getCategories(),
+    getSidebar(),
+  ]);
 
-export default function Home() {
+  const mapped = raw.map(toArticle);
+
+  if (mapped.length === 0) {
+    return (
+      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col items-center gap-3 px-6 py-20 text-center">
+        <h1 className="text-2xl font-bold text-heading">
+          এখনো কোনো সংবাদ প্রকাশিত হয়নি
+        </h1>
+        <p className="font-ui text-sm text-foreground-muted">
+          অ্যাডমিন প্যানেল থেকে আর্টিকেল প্রকাশ করলে এখানে দেখা যাবে।
+        </p>
+      </main>
+    );
+  }
+
+  const heroIdx = raw.findIndex((a) => a.featured);
+  const hero = toArticle(raw[heroIdx >= 0 ? heroIdx : 0]);
+  const rest = mapped.filter((a) => a.slug !== hero.slug);
+  const topStories = rest.slice(0, 5);
+  const latest = rest.slice(0, 10);
+
+  const byCat = new Map<string, Article[]>();
+  for (const a of mapped) {
+    const arr = byCat.get(a.category.slug) ?? [];
+    arr.push(a);
+    byCat.set(a.category.slug, arr);
+  }
+  const sections = cats
+    .map((c) => ({ c, items: byCat.get(c.slug) ?? [] }))
+    .filter((s) => s.items.length >= 2)
+    .slice(0, 12);
+
   return (
     <main className="mx-auto grid w-full max-w-[1600px] flex-1 gap-8 px-6 py-6 lg:grid-cols-[1fr_300px]">
       <div className="flex flex-col gap-8">
         <div className="grid gap-6 md:grid-cols-[1.6fr_1fr]">
-          <HeroStory article={heroArticle} />
+          <HeroStory article={hero} />
           <div className="rounded-lg border border-border bg-surface px-5">
             <TopStoriesList articles={topStories} />
           </div>
         </div>
 
-        <LatestHeadlines articles={getLatestHeadlines()} />
+        <LatestHeadlines articles={latest} />
 
-        <NewsSection title="জাতীয়" href="/national" articles={nationalArticles} />
-        <NewsSection title="রাজনীতি" href="/politics" articles={politicsArticles} />
-        <NewsSection
-          title="বিশেষ প্রতিবেদন"
-          href="/special-report"
-          articles={specialReportArticles}
-        />
-        <GalleryStrip articles={galleryArticles} />
-        <NewsSection title="দেশজুড়ে" href="/nationwide" articles={nationwideArticles} />
-        <NewsSection title="খেলাধুলা" href="/sports" articles={sportsArticles} />
-        <NewsSection title="ভিডিও নিউজ" href="/video" articles={videoArticles} />
-        <NewsSection
-          title="বিনোদন"
-          href="/entertainment"
-          articles={entertainmentArticles}
-        />
-        <NewsSection title="প্রযুক্তি" href="/technology" articles={technologyArticles} />
-        <NewsSection title="চাকরি" href="/jobs" articles={jobsArticles} />
-        <NewsSection title="মতামত" href="/opinion" articles={opinionArticles} />
-        <NewsSection title="ধর্ম" href="/religion" articles={religionArticles} />
-        <NewsSection title="আইন-আদালত" href="/crime" articles={crimeArticles} />
-        <NewsSection title="পরিবেশ" href="/environment" articles={environmentArticles} />
-        <NewsSection title="ফিচার" href="/features" articles={featuresArticles} />
+        {sections.map(({ c, items }) => (
+          <NewsSection
+            key={c.slug}
+            title={c.name}
+            titleEn={c.nameEn}
+            href={`/${c.slug}`}
+            articles={items}
+          />
+        ))}
       </div>
 
       <div className="hidden lg:block">
-        <ReadingSidebar mostRead={trendingArticles} latestRead={latestReadArticles} />
+        <ReadingSidebar mostRead={sidebar.mostRead} latestRead={sidebar.latest} />
       </div>
     </main>
   );

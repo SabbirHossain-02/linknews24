@@ -5,16 +5,23 @@ import { createPortal } from "react-dom";
 import { Maximize2, Play, Volume2, X } from "lucide-react";
 import { useLocale } from "@/components/providers/LocaleProvider";
 import { breakingNewsItems, breakingNewsItemsEn } from "@/lib/mock-data";
-
-// Drop the live stream embed URL here (e.g. a YouTube live embed:
-// "https://www.youtube.com/embed/XXXX?autoplay=1"). While empty, a
-// TV-style placeholder screen is shown with a "starting soon" message.
-const LIVE_STREAM_URL = "";
+import { API_BASE } from "@/lib/admin-api";
 
 export function LiveTV() {
   const { locale, t } = useLocale();
   const [open, setOpen] = useState(false);
+  const [streamUrl, setStreamUrl] = useState("");
   const overlayRef = useRef<HTMLDivElement>(null);
+
+  // Live stream config comes from the admin (Live TV settings).
+  useEffect(() => {
+    fetch(`${API_BASE}/api/livetv`)
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.live?.active && d.live?.streamUrl) setStreamUrl(d.live.streamUrl);
+      })
+      .catch(() => {});
+  }, []);
 
   const ticker = locale === "en" ? breakingNewsItemsEn : breakingNewsItems;
 
@@ -121,9 +128,9 @@ export function LiveTV() {
 
           {/* Screen */}
           <div className="relative flex min-h-0 flex-1 items-center justify-center">
-            {LIVE_STREAM_URL ? (
+            {streamUrl ? (
               <iframe
-                src={LIVE_STREAM_URL}
+                src={streamUrl}
                 title={t("liveTv")}
                 allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
                 allowFullScreen

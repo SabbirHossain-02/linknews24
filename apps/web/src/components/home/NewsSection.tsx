@@ -9,10 +9,12 @@ import { useLocale } from "@/components/providers/LocaleProvider";
 
 export function NewsSection({
   title,
+  titleEn,
   href,
   articles,
 }: {
   title: string;
+  titleEn?: string;
   href: string;
   articles: Article[];
 }) {
@@ -20,11 +22,12 @@ export function NewsSection({
   const [lead, ...rest] = articles;
   if (!lead) return null;
   const listItems = rest.slice(0, 5);
+  const heading = locale === "en" && titleEn ? titleEn : title;
 
   return (
     <section>
       <div className="flex items-center justify-between border-b-2 border-border pb-2">
-        <h2 className="text-lg font-bold text-heading">{title}</h2>
+        <h2 className="text-lg font-bold text-heading">{heading}</h2>
         <Link
           href={href}
           className="font-ui text-xs font-medium text-brand-crimson hover:underline"

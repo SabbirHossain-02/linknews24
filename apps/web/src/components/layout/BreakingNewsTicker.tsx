@@ -1,11 +1,33 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { breakingNewsItems, breakingNewsItemsEn } from "@/lib/mock-data";
+import { API_BASE } from "@/lib/admin-api";
 import { useLocale } from "@/components/providers/LocaleProvider";
+
+interface ApiBreaking {
+  text: string;
+  textEn: string;
+}
 
 export function BreakingNewsTicker() {
   const { locale, t } = useLocale();
-  const items = locale === "en" ? breakingNewsItemsEn : breakingNewsItems;
+  const [apiItems, setApiItems] = useState<ApiBreaking[] | null>(null);
+
+  useEffect(() => {
+    fetch(`${API_BASE}/api/breaking`)
+      .then((r) => r.json())
+      .then((d) => {
+        if (Array.isArray(d.items) && d.items.length) setApiItems(d.items);
+      })
+      .catch(() => {});
+  }, []);
+
+  const items = apiItems
+    ? apiItems.map((i) => (locale === "en" ? i.textEn || i.text : i.text))
+    : locale === "en"
+      ? breakingNewsItemsEn
+      : breakingNewsItems;
 
   return (
     <div className="flex items-stretch bg-brand-crimson text-white">
