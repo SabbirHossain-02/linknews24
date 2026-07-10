@@ -99,6 +99,7 @@ model Article {
   category       Category      @relation(fields: [categoryId], references: [id])
   authorId       String
   author         User          @relation("ArticleAuthor", fields: [authorId], references: [id])
+  authorName     String?
   tags           Tag[]
   viewCount      Int           @default(0)
   seoTitle       String?

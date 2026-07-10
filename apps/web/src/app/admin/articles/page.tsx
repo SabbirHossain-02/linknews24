@@ -14,6 +14,7 @@ interface AdminArticle {
   status: "DRAFT" | "SCHEDULED" | "PUBLISHED";
   isBreaking: boolean;
   featured: boolean;
+  authorName: string | null;
   category: { name: string } | null;
   author: { name: string } | null;
   updatedAt: string;
@@ -91,7 +92,7 @@ export default function AdminArticlesPage() {
                   <td className="px-4 py-3">
                     <p className="font-medium text-foreground">{a.title}</p>
                     <p className="font-ui text-xs text-foreground-muted">
-                      {a.author?.name}
+                      {a.authorName || a.author?.name}
                     </p>
                   </td>
                   <td className="px-4 py-3 text-foreground-muted">

@@ -75,6 +75,11 @@ export const adminDict = {
   draft: { bn: "খসড়া", en: "Draft" },
   preview: { bn: "প্রিভিউ দেখুন", en: "Preview" },
   category: { bn: "ক্যাটাগরি", en: "Category" },
+  byline: { bn: "লেখক / বাইলাইন", en: "Author / Byline" },
+  bylinePlaceholder: {
+    bn: "যেমন: স্টাফ করেসপন্ডেন্ট",
+    en: "e.g. Staff Correspondent",
+  },
   selectOption: { bn: "নির্বাচন করুন", en: "Select" },
   slugUrl: { bn: "স্লাগ (URL)", en: "Slug (URL)" },
   coverTone: { bn: "কভার টোন", en: "Cover Tone" },

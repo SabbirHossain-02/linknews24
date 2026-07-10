@@ -7,6 +7,7 @@ import { ArrowLeft, Eye, Upload } from "lucide-react";
 import { apiFetch, uploadFile } from "@/lib/admin-api";
 import { RichTextEditor } from "./RichTextEditor";
 import { Modal } from "./Modal";
+import { useAdminAuth } from "./AdminAuthProvider";
 import { toneGradientClass } from "@/lib/tone";
 import { useAdminT } from "@/lib/admin-i18n";
 
@@ -26,6 +27,7 @@ interface FormState {
   body: string;
   bodyEn: string;
   categoryId: string;
+  authorName: string;
   imageTone: string;
   featuredImage: string;
   isBreaking: boolean;
@@ -43,6 +45,7 @@ const EMPTY: FormState = {
   body: "",
   bodyEn: "",
   categoryId: "",
+  authorName: "",
   imageTone: "navy",
   featuredImage: "",
   isBreaking: false,
@@ -59,6 +62,7 @@ const inputCls =
 export function ArticleForm({ articleId }: { articleId?: string }) {
   const router = useRouter();
   const t = useAdminT();
+  const { user } = useAdminAuth();
   const [form, setForm] = useState<FormState>(EMPTY);
   const [categories, setCategories] = useState<Category[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -94,6 +98,13 @@ export function ArticleForm({ articleId }: { articleId?: string }) {
       .catch(() => {});
   }, []);
 
+  // Default the byline to the logged-in user's name for new articles.
+  useEffect(() => {
+    if (!articleId && user) {
+      setForm((f) => (f.authorName ? f : { ...f, authorName: user.name }));
+    }
+  }, [articleId, user]);
+
   useEffect(() => {
     if (!articleId) return;
     apiFetch<{ article: FormState & { id: string } }>(
@@ -110,6 +121,7 @@ export function ArticleForm({ articleId }: { articleId?: string }) {
           body: a.body ?? "",
           bodyEn: a.bodyEn ?? "",
           categoryId: a.categoryId ?? "",
+          authorName: a.authorName ?? "",
           imageTone: a.imageTone ?? "navy",
           featuredImage: a.featuredImage ?? "",
           isBreaking: a.isBreaking ?? false,
@@ -277,6 +289,17 @@ export function ArticleForm({ articleId }: { articleId?: string }) {
                   </option>
                 ))}
               </select>
+            </div>
+            <div>
+              <label className="font-ui text-xs font-semibold text-foreground-muted">
+                {t("byline")}
+              </label>
+              <input
+                value={form.authorName}
+                onChange={(e) => set("authorName", e.target.value)}
+                placeholder={t("bylinePlaceholder")}
+                className={`${inputCls} mt-1`}
+              />
             </div>
             <div>
               <label className="font-ui text-xs font-semibold text-foreground-muted">

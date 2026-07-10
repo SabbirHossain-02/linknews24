@@ -51,6 +51,7 @@ const articleSchema = z.object({
   body: z.string().default(""),
   bodyEn: z.string().default(""),
   categoryId: z.string().min(1),
+  authorName: z.string().optional(),
   imageTone: z.string().default("navy"),
   featuredImage: z.string().nullable().optional(),
   isBreaking: z.boolean().default(false),
@@ -137,6 +138,7 @@ adminRouter.post("/articles", requireRole(...CAN_WRITE), async (req, res) => {
       seoTitle: data.seoTitle ?? null,
       seoDescription: data.seoDescription ?? null,
       authorId: req.user!.id,
+      authorName: data.authorName?.trim() || null,
       publishedAt: status === "PUBLISHED" ? new Date() : null,
     },
   });
@@ -181,6 +183,7 @@ adminRouter.put("/articles/:id", requireRole(...CAN_WRITE), async (req, res) => 
       status,
       seoTitle: data.seoTitle ?? null,
       seoDescription: data.seoDescription ?? null,
+      authorName: data.authorName?.trim() || null,
       publishedAt:
         status === "PUBLISHED"
           ? existing.publishedAt ?? new Date()
