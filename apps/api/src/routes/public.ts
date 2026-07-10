@@ -1,7 +1,28 @@
 import { Router } from "express";
+import { z } from "zod";
 import { prisma } from "../prisma";
 
 export const publicRouter = Router();
+
+publicRouter.get("/settings", async (_req, res) => {
+  const row = await prisma.siteSetting.findUnique({ where: { key: "site" } });
+  res.json({ settings: row?.value ?? {} });
+});
+
+const subscribeSchema = z.object({ email: z.string().email() });
+
+publicRouter.post("/subscribe", async (req, res) => {
+  const parsed = subscribeSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: "সঠিক ইমেইল দিন" });
+  await prisma.subscriber
+    .upsert({
+      where: { email: parsed.data.email },
+      update: { active: true },
+      create: { email: parsed.data.email },
+    })
+    .catch(() => null);
+  res.json({ ok: true });
+});
 
 publicRouter.get("/categories", async (_req, res) => {
   const categories = await prisma.category.findMany({

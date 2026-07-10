@@ -1,14 +1,27 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowUp, Mail, MapPin, Phone } from "lucide-react";
 import { navItems } from "@/lib/mock-data";
 import { localizedName } from "@/lib/i18n";
+import { API_BASE } from "@/lib/admin-api";
 import { useLocale } from "@/components/providers/LocaleProvider";
 import type { Category } from "@/types/content";
 import { FacebookIcon, XIcon, YoutubeIcon } from "@/components/icons/SocialIcons";
 import { NewsletterForm } from "./NewsletterForm";
 import { StoreBadges } from "./StoreBadges";
+
+interface SiteConfig {
+  tagline?: string;
+  facebook?: string;
+  twitter?: string;
+  youtube?: string;
+  address?: string;
+  email?: string;
+  phone?: string;
+  editor?: string;
+}
 
 const footerCategories: Category[] = navItems.flatMap((item) =>
   item.children
@@ -25,6 +38,14 @@ const footerCategories: Category[] = navItems.flatMap((item) =>
 
 export function SiteFooter() {
   const { locale, t } = useLocale();
+  const [cfg, setCfg] = useState<SiteConfig>({});
+
+  useEffect(() => {
+    fetch(`${API_BASE}/api/settings`)
+      .then((r) => r.json())
+      .then((d) => setCfg(d.settings ?? {}))
+      .catch(() => {});
+  }, []);
 
   const companyLinks = [
     { label: t("footerAbout"), href: "/about" },
@@ -49,16 +70,16 @@ export function SiteFooter() {
             Link News<span className="text-brand-crimson">24</span>
           </span>
           <p className="mt-3 max-w-xs font-ui text-sm text-foreground-muted">
-            {t("footerTagline")}
+            {cfg.tagline || t("footerTagline")}
           </p>
           <div className="mt-4 flex gap-4">
-            <a href="#" aria-label="Facebook" className="hover:text-brand-crimson">
+            <a href={cfg.facebook || "#"} aria-label="Facebook" className="hover:text-brand-crimson">
               <FacebookIcon className="h-5 w-5" />
             </a>
-            <a href="#" aria-label="Twitter" className="hover:text-brand-crimson">
+            <a href={cfg.twitter || "#"} aria-label="Twitter" className="hover:text-brand-crimson">
               <XIcon className="h-5 w-5" />
             </a>
-            <a href="#" aria-label="YouTube" className="hover:text-brand-crimson">
+            <a href={cfg.youtube || "#"} aria-label="YouTube" className="hover:text-brand-crimson">
               <YoutubeIcon className="h-5 w-5" />
             </a>
           </div>
@@ -122,21 +143,24 @@ export function SiteFooter() {
             <ul className="mt-3 flex flex-col gap-2.5 font-ui text-sm">
               <li className="flex items-start gap-2.5">
                 <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-brand-crimson" />
-                {t("footerAddress")}
+                {cfg.address || t("footerAddress")}
               </li>
               <li className="flex items-center gap-2.5">
                 <Mail className="h-4 w-4 shrink-0 text-brand-crimson" />
                 <a
-                  href="mailto:info@linknews24.com"
+                  href={`mailto:${cfg.email || "info@linknews24.com"}`}
                   className="hover:text-brand-crimson"
                 >
-                  info@linknews24.com
+                  {cfg.email || "info@linknews24.com"}
                 </a>
               </li>
               <li className="flex items-center gap-2.5">
                 <Phone className="h-4 w-4 shrink-0 text-brand-crimson" />
-                <a href="tel:+880255000000" className="hover:text-brand-crimson">
-                  +880 255-000000
+                <a
+                  href={`tel:${(cfg.phone || "+880 255-000000").replace(/\s/g, "")}`}
+                  className="hover:text-brand-crimson"
+                >
+                  {cfg.phone || "+880 255-000000"}
                 </a>
               </li>
             </ul>
@@ -147,7 +171,7 @@ export function SiteFooter() {
       {/* Bottom bar */}
       <div className="border-t border-border">
         <div className="mx-auto flex max-w-[1600px] flex-col items-center gap-2 px-6 py-4 text-center font-ui text-xs text-foreground-muted/70 sm:flex-row sm:justify-between sm:text-left">
-          <span>{t("footerEditor")}</span>
+          <span>{cfg.editor || t("footerEditor")}</span>
           <span>
             © {new Date().getFullYear()} LinkNews24. {t("footerRights")}
           </span>

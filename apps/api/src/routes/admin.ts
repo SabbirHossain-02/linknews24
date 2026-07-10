@@ -6,6 +6,7 @@ import multer from "multer";
 import { prisma } from "../prisma";
 import { requireRole } from "../middleware/auth";
 import { CAN_MANAGE, CAN_PUBLISH, CAN_WRITE, slugify } from "../lib/roles";
+import { hashPassword } from "../lib/password";
 import { emitChange } from "../realtime";
 
 export const adminRouter = Router();
@@ -440,4 +441,127 @@ adminRouter.put("/homepage/:id", requireRole(...CAN_MANAGE), async (req, res) =>
 adminRouter.delete("/homepage/:id", requireRole(...CAN_MANAGE), async (req, res) => {
   await prisma.homepageSection.delete({ where: { id: req.params.id } }).catch(() => null);
   res.json({ ok: true });
+});
+
+// ===================== USERS & ROLES (super admin) =====================
+const ROLES = ["SUPER_ADMIN", "ADMIN", "EDITOR", "REPORTER", "MODERATOR"] as const;
+
+adminRouter.get("/users", requireRole("SUPER_ADMIN"), async (_req, res) => {
+  const users = await prisma.user.findMany({
+    orderBy: { createdAt: "asc" },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      active: true,
+      createdAt: true,
+    },
+  });
+  res.json({ users });
+});
+
+const userCreateSchema = z.object({
+  name: z.string().min(1),
+  email: z.string().email(),
+  password: z.string().min(6),
+  role: z.enum(ROLES),
+});
+
+adminRouter.post("/users", requireRole("SUPER_ADMIN"), async (req, res) => {
+  const parsed = userCreateSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: "Invalid input" });
+  const exists = await prisma.user.findUnique({
+    where: { email: parsed.data.email },
+  });
+  if (exists) return res.status(400).json({ error: "এই ইমেইল আগে থেকেই আছে" });
+  const user = await prisma.user.create({
+    data: {
+      name: parsed.data.name,
+      email: parsed.data.email,
+      password: await hashPassword(parsed.data.password),
+      role: parsed.data.role,
+    },
+    select: { id: true, name: true, email: true, role: true, active: true },
+  });
+  res.status(201).json({ user });
+});
+
+const userUpdateSchema = z.object({
+  name: z.string().min(1).optional(),
+  role: z.enum(ROLES).optional(),
+  active: z.boolean().optional(),
+  password: z.string().min(6).optional(),
+});
+
+adminRouter.put("/users/:id", requireRole("SUPER_ADMIN"), async (req, res) => {
+  const parsed = userUpdateSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: "Invalid input" });
+  const data: Record<string, unknown> = { ...parsed.data };
+  if (parsed.data.password) data.password = await hashPassword(parsed.data.password);
+  const user = await prisma.user
+    .update({
+      where: { id: req.params.id },
+      data,
+      select: { id: true, name: true, email: true, role: true, active: true },
+    })
+    .catch(() => null);
+  if (!user) return res.status(404).json({ error: "Not found" });
+  res.json({ user });
+});
+
+adminRouter.delete("/users/:id", requireRole("SUPER_ADMIN"), async (req, res) => {
+  if (req.params.id === req.user!.id)
+    return res.status(400).json({ error: "নিজেকে মুছতে পারবেন না" });
+  await prisma.user.delete({ where: { id: req.params.id } }).catch(() => null);
+  res.json({ ok: true });
+});
+
+// ===================== MEDIA LIBRARY =====================
+adminRouter.get("/media", async (_req, res) => {
+  const media = await prisma.media.findMany({
+    orderBy: { createdAt: "desc" },
+    take: 200,
+  });
+  res.json({ media });
+});
+
+adminRouter.delete("/media/:id", requireRole(...CAN_WRITE), async (req, res) => {
+  const item = await prisma.media
+    .delete({ where: { id: req.params.id } })
+    .catch(() => null);
+  if (item) {
+    const file = item.url.split("/uploads/")[1];
+    if (file) fs.promises.rm(path.join(UPLOAD_DIR, file)).catch(() => {});
+  }
+  res.json({ ok: true });
+});
+
+// ===================== SUBSCRIBERS (newsletter) =====================
+adminRouter.get("/subscribers", async (_req, res) => {
+  const subscribers = await prisma.subscriber.findMany({
+    orderBy: { createdAt: "desc" },
+  });
+  res.json({ subscribers });
+});
+
+adminRouter.delete("/subscribers/:id", requireRole(...CAN_MANAGE), async (req, res) => {
+  await prisma.subscriber.delete({ where: { id: req.params.id } }).catch(() => null);
+  res.json({ ok: true });
+});
+
+// ===================== SITE SETTINGS =====================
+adminRouter.get("/settings", async (_req, res) => {
+  const row = await prisma.siteSetting.findUnique({ where: { key: "site" } });
+  res.json({ settings: row?.value ?? {} });
+});
+
+adminRouter.put("/settings", requireRole(...CAN_MANAGE), async (req, res) => {
+  const value = req.body ?? {};
+  const row = await prisma.siteSetting.upsert({
+    where: { key: "site" },
+    update: { value },
+    create: { key: "site", value },
+  });
+  res.json({ settings: row.value });
 });

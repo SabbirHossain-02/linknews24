@@ -37,13 +37,13 @@ const NAV: NavItem[] = [
   { key: "breaking", href: "/admin/breaking", icon: Radio },
   { key: "homepageBuilder", href: "/admin/homepage", icon: LayoutTemplate },
   { key: "liveTv", href: "/admin/live-tv", icon: Tv },
-  { key: "media", href: null, icon: ImageIcon },
+  { key: "media", href: "/admin/media", icon: ImageIcon },
   { key: "lawyers", href: null, icon: Scale },
   { key: "donors", href: null, icon: Droplet },
-  { key: "newsletter", href: null, icon: Mail },
+  { key: "newsletter", href: "/admin/newsletter", icon: Mail },
   { key: "comments", href: null, icon: MessageSquare },
-  { key: "settings", href: null, icon: Settings },
-  { key: "usersRoles", href: null, icon: Users },
+  { key: "settings", href: "/admin/settings", icon: Settings },
+  { key: "usersRoles", href: "/admin/users", icon: Users },
 ];
 
 const FONT_KEY = "linknews24-font-scale";

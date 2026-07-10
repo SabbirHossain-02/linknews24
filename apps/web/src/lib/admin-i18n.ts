@@ -171,6 +171,35 @@ export const adminDict = {
     bn: "হিরো স্টোরি = যে আর্টিকেলে 'হোমপেজে ফিচার' টিক দেওয়া থাকে (সবচেয়ে সাম্প্রতিক)।",
     en: "The hero story is the most recent article marked 'Feature on homepage'.",
   },
+
+  // Users
+  addUser: { bn: "নতুন ইউজার", en: "New user" },
+  colName: { bn: "নাম", en: "Name" },
+  colEmail: { bn: "ইমেইল", en: "Email" },
+  colRole: { bn: "রোল", en: "Role" },
+  userPassword: { bn: "পাসওয়ার্ড", en: "Password" },
+
+  // Media
+  uploadImages: { bn: "ছবি আপলোড", en: "Upload images" },
+  copyUrl: { bn: "URL কপি", en: "Copy URL" },
+  copied: { bn: "কপি হয়েছে!", en: "Copied!" },
+  noMedia: { bn: "কোনো ছবি নেই। আপলোড করুন।", en: "No images yet. Upload some." },
+
+  // Settings
+  siteName: { bn: "সাইটের নাম", en: "Site name" },
+  tagline: { bn: "ট্যাগলাইন", en: "Tagline" },
+  socialLinks: { bn: "সোশ্যাল লিংক", en: "Social links" },
+  contactInfo: { bn: "যোগাযোগ", en: "Contact" },
+  addressLabel: { bn: "ঠিকানা", en: "Address" },
+  emailLabel: { bn: "ইমেইল", en: "Email" },
+  phoneLabel: { bn: "ফোন", en: "Phone" },
+  editorLabel: { bn: "সম্পাদক ও প্রকাশক", en: "Editor & Publisher" },
+  savedOk: { bn: "সংরক্ষিত হয়েছে ✓", en: "Saved ✓" },
+
+  // Newsletter
+  subscriberCount: { bn: "জন সাবস্ক্রাইবার", en: "subscribers" },
+  exportCsv: { bn: "CSV এক্সপোর্ট", en: "Export CSV" },
+  noSubscribers: { bn: "কোনো সাবস্ক্রাইবার নেই।", en: "No subscribers yet." },
 } as const;
 
 export type AdminKey = keyof typeof adminDict;
