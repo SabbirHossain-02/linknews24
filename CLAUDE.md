@@ -4,13 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-LinkNews24 — a clean, bilingual (Bengali/English) Bangla online news portal. The project is currently at the **frontend foundation** stage: a Next.js UI driven entirely by static mock data. There is no backend, database, or real authentication yet. The planned backend (Node.js + Express, PostgreSQL + Prisma, Socket.io + Redis) is documented in `docs/` (`.docx` PRD and roadmap) but not started. When a task implies "real" data, auth, or persistence, assume it must be mocked/localStorage-based unless the backend has actually been added.
+LinkNews24 — a clean, bilingual (Bengali/English) Bangla online news portal. The Next.js frontend is currently driven by static mock data (`apps/web/src/lib/mock-data.ts`), but the **backend build has started** (self-hosted on the owner's VPS: Node + Express, PostgreSQL + Prisma, Redis, PM2). The frontend is deployed and live on the VPS via PM2. As modules move to the API, the mock-data accessors are the seam being replaced. Until a given feature is API-backed, assume it is still mock/localStorage-based.
 
 ## Working agreement (read first)
 
 Two standing rules from the project owner — follow them every session:
 
-1. **Do NOT start the backend until the owner explicitly says so.** The whole `docs/` roadmap (server setup, PostgreSQL, Prisma, Express API, CMS — roadmap Phases 0–2) is planned but must not be started on your own initiative. Keep working on the frontend against mock data unless told otherwise. When the owner does say "start the backend," proceed **phase by phase**, verifying each phase's checkpoint before the next — do not scaffold the whole stack at once. Roadmap Phase 0 is VPS/server provisioning the owner runs themselves; produce the commands/configs but never run deploy/server commands against their machine.
+1. **Backend build is APPROVED and in progress (as of 2026-07-10).** The site is now **fully self-hosted on the owner's VPS** (not Vercel). Proceed **phase by phase**, verifying each phase before the next. The VPS also hosts another site, **pkgit.net** (nginx `pkgit-portfolio`) — **never touch its config/files**; keep this project isolated (own ports, own DB, own nginx block). Server/deploy specifics (IP, ports, PM2 process names, DB/secret locations) live in the private session memory, never in this repo. Admin panel spec: `docs/ADMIN_PANEL_SPEC.md`.
 2. **Push to GitHub after every change.** As soon as a new section/feature is finished or anything is updated, `git add` + `git commit` + `git push` to `origin` (`main`). Don't batch many changes into one unpushed pile — commit and push as you go so the remote stays current. Remote: `https://github.com/SabbirHossain-02/linknews24.git`.
 
 ## Commands
