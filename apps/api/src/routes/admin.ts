@@ -474,6 +474,55 @@ adminRouter.delete("/homepage/:id", requireRole(...CAN_MANAGE), async (req, res)
   res.json({ ok: true });
 });
 
+// A category's articles for homepage ordering (lead + manual order)
+adminRouter.get("/section-articles/:categoryId", async (req, res) => {
+  const articles = await prisma.article.findMany({
+    where: { status: "PUBLISHED", categoryId: req.params.categoryId },
+    orderBy: [
+      { sectionLead: "desc" },
+      { homeRank: { sort: "asc", nulls: "last" } },
+      { publishedAt: "desc" },
+    ],
+    take: 12,
+    select: { id: true, title: true, sectionLead: true },
+  });
+  res.json({ articles });
+});
+
+const sectionOrderSchema = z.object({
+  orderedIds: z.array(z.string()),
+  leadId: z.string().nullable().optional(),
+});
+
+adminRouter.put(
+  "/section-articles/:categoryId",
+  requireRole(...CAN_PUBLISH),
+  async (req, res) => {
+    const parsed = sectionOrderSchema.safeParse(req.body);
+    if (!parsed.success) return res.status(400).json({ error: "Invalid input" });
+    const categoryId = req.params.categoryId;
+
+    // reset lead in this category, then apply order + lead
+    await prisma.article.updateMany({
+      where: { categoryId },
+      data: { sectionLead: false },
+    });
+    await Promise.all(
+      parsed.data.orderedIds.map((id, i) =>
+        prisma.article
+          .update({ where: { id }, data: { homeRank: i } })
+          .catch(() => null),
+      ),
+    );
+    if (parsed.data.leadId) {
+      await prisma.article
+        .update({ where: { id: parsed.data.leadId }, data: { sectionLead: true } })
+        .catch(() => null);
+    }
+    res.json({ ok: true });
+  },
+);
+
 // ===================== USERS & ROLES (super admin) =====================
 const ROLES = ["SUPER_ADMIN", "ADMIN", "EDITOR", "REPORTER", "MODERATOR"] as const;
 

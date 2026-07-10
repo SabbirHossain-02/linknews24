@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ChevronDown, ChevronUp, Plus, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronUp, ListOrdered, Plus, Trash2 } from "lucide-react";
 import { apiFetch } from "@/lib/admin-api";
 import { ConfirmModal } from "@/components/admin/Modal";
+import { SectionArticles } from "@/components/admin/SectionArticles";
 import { useAdminT } from "@/lib/admin-i18n";
 
 interface Category {
@@ -33,6 +34,7 @@ export default function HomepageBuilderPage() {
   const [categoryId, setCategoryId] = useState("");
   const [cardCount, setCardCount] = useState(6);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState<string | null>(null);
 
   const load = () =>
     apiFetch<{ sections: Section[] }>("/api/admin/homepage")
@@ -138,10 +140,8 @@ export default function HomepageBuilderPage() {
           <p className="font-ui text-sm text-foreground-muted">{t("noItems")}</p>
         ) : (
           sections.map((s, i) => (
-            <div
-              key={s.id}
-              className="flex items-center gap-3 rounded-xl border border-border bg-background p-3"
-            >
+            <div key={s.id} className="rounded-xl border border-border bg-background">
+              <div className="flex items-center gap-3 p-3">
               <div className="flex flex-col">
                 <button
                   onClick={() => move(i, -1)}
@@ -194,12 +194,30 @@ export default function HomepageBuilderPage() {
                 />
               </button>
               <button
+                onClick={() =>
+                  s.categoryId &&
+                  setExpanded(expanded === s.categoryId ? null : s.categoryId)
+                }
+                className={`shrink-0 rounded p-1.5 hover:bg-surface hover:text-brand-crimson ${
+                  expanded === s.categoryId ? "text-brand-crimson" : "text-foreground-muted"
+                }`}
+                title={t("arrangeArticles")}
+              >
+                <ListOrdered className="h-4 w-4" />
+              </button>
+              <button
                 onClick={() => setDeleteId(s.id)}
                 className="shrink-0 rounded p-1.5 text-foreground-muted hover:bg-surface hover:text-brand-crimson"
                 title={t("delete")}
               >
                 <Trash2 className="h-4 w-4" />
               </button>
+              </div>
+              {expanded === s.categoryId && s.categoryId && (
+                <div className="px-3 pb-3">
+                  <SectionArticles categoryId={s.categoryId} />
+                </div>
+              )}
             </div>
           ))
         )}

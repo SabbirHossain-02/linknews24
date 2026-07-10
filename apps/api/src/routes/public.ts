@@ -91,7 +91,12 @@ publicRouter.get("/homepage", async (_req, res) => {
   for (const p of plan) {
     const articles = await prisma.article.findMany({
       where: { status: "PUBLISHED", categoryId: p.categoryId },
-      orderBy: { publishedAt: "desc" },
+      // lead first, then manual order (homeRank), then newest
+      orderBy: [
+        { sectionLead: "desc" },
+        { homeRank: { sort: "asc", nulls: "last" } },
+        { publishedAt: "desc" },
+      ],
       take: p.cardCount,
       include: { category: CAT_SELECT },
     });

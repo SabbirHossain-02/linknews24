@@ -94,6 +94,8 @@ model Article {
   isBreaking     Boolean       @default(false)
   featured       Boolean       @default(false)
   isHero         Boolean       @default(false)
+  sectionLead    Boolean       @default(false)
+  homeRank       Int?
   imageTone      String        @default("navy")
   featuredImage  String?
   categoryId     String

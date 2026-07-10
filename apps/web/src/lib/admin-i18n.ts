@@ -176,6 +176,12 @@ export const adminDict = {
     bn: "হিরো স্টোরি = যে আর্টিকেলে 'হোমপেজে ফিচার' টিক দেওয়া থাকে (সবচেয়ে সাম্প্রতিক)।",
     en: "The hero story is the most recent article marked 'Feature on homepage'.",
   },
+  arrangeArticles: { bn: "খবর সাজান", en: "Arrange articles" },
+  dragHint: {
+    bn: "টেনে ক্রম বদলান · ⭐ দিয়ে বড় (lead) করুন",
+    en: "Drag to reorder · ⭐ to set the big lead",
+  },
+  leadBadge: { bn: "বড়", en: "Lead" },
 
   // Users
   addUser: { bn: "নতুন ইউজার", en: "New user" },
