@@ -14,6 +14,7 @@ interface AdminArticle {
   status: "DRAFT" | "SCHEDULED" | "PUBLISHED";
   isBreaking: boolean;
   authorName: string | null;
+  featuredImage: string | null;
   category: { name: string } | null;
   author: { name: string } | null;
 }
@@ -167,10 +168,22 @@ export default function AdminArticlesPage() {
               articles.map((a) => (
                 <tr key={a.id} className="hover:bg-surface/50">
                   <td className="px-4 py-3">
-                    <p className="font-medium text-foreground">{a.title}</p>
-                    <p className="font-ui text-xs text-foreground-muted">
-                      {a.authorName || a.author?.name}
-                    </p>
+                    <div className="flex items-center gap-3">
+                      {a.featuredImage && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={a.featuredImage}
+                          alt=""
+                          className="h-10 w-14 shrink-0 rounded object-cover"
+                        />
+                      )}
+                      <div className="min-w-0">
+                        <p className="font-medium text-foreground">{a.title}</p>
+                        <p className="font-ui text-xs text-foreground-muted">
+                          {a.authorName || a.author?.name}
+                        </p>
+                      </div>
+                    </div>
                   </td>
                   <td className="px-4 py-3 text-foreground-muted">
                     {a.category?.name ?? "—"}
