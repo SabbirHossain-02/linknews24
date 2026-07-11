@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowUp, Mail, MapPin, Phone } from "lucide-react";
-import { navItems } from "@/lib/mock-data";
+import { categories } from "@/lib/mock-data";
 import { localizedName } from "@/lib/i18n";
 import { API_BASE } from "@/lib/admin-api";
 import { useLocale } from "@/components/providers/LocaleProvider";
@@ -23,18 +23,26 @@ interface SiteConfig {
   editor?: string;
 }
 
-const footerCategories: Category[] = navItems.flatMap((item) =>
-  item.children
-    ? item.children
-    : [
-        {
-          id: item.label,
-          name: item.label,
-          nameEn: item.labelEn,
-          slug: item.href!.slice(1),
-        },
-      ],
-);
+// Only the main news categories in the footer (not the 64 districts or
+// blood groups from the directory nav dropdowns).
+const FOOTER_CATEGORY_SLUGS = [
+  "national",
+  "politics",
+  "world",
+  "business",
+  "sports",
+  "entertainment",
+  "technology",
+  "nationwide",
+  "opinion",
+  "features",
+  "crime",
+  "jobs",
+];
+
+const footerCategories: Category[] = FOOTER_CATEGORY_SLUGS.map((slug) =>
+  categories.find((c) => c.slug === slug),
+).filter((c): c is Category => Boolean(c));
 
 export function SiteFooter() {
   const { locale, t } = useLocale();
