@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { apiFetch } from "@/lib/admin-api";
 import { ConfirmModal, Modal } from "@/components/admin/Modal";
@@ -39,6 +39,8 @@ export default function DonorsAdminPage() {
   const [editing, setEditing] = useState<Donor | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(EMPTY);
+  // Guards against out-of-order responses: only the newest request's result wins.
+  const reqId = useRef(0);
 
   useEffect(() => {
     apiFetch<{ districts: District[] }>("/api/districts").then((d) => setDistricts(d.districts)).catch(() => {});
@@ -49,8 +51,11 @@ export default function DonorsAdminPage() {
     const params = new URLSearchParams();
     if (filterGroup) params.set("group", filterGroup);
     if (q) params.set("q", q);
+    const id = ++reqId.current;
     apiFetch<{ donors: Donor[] }>(`/api/admin/donors?${params.toString()}`)
-      .then((d) => setDonors(d.donors))
+      .then((d) => {
+        if (id === reqId.current) setDonors(d.donors);
+      })
       .catch(() => {});
   }, [filterGroup, q]);
 

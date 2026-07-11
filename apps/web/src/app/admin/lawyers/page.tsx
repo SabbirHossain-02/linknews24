@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { apiFetch } from "@/lib/admin-api";
 import { ConfirmModal, Modal } from "@/components/admin/Modal";
@@ -36,6 +36,8 @@ export default function LawyersAdminPage() {
   const [editing, setEditing] = useState<Lawyer | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(EMPTY);
+  // Guards against out-of-order responses: only the newest request's result wins.
+  const reqId = useRef(0);
 
   useEffect(() => {
     apiFetch<{ districts: District[] }>("/api/districts")
@@ -47,8 +49,11 @@ export default function LawyersAdminPage() {
     const params = new URLSearchParams();
     if (districtId) params.set("district", districtId);
     if (q) params.set("q", q);
+    const id = ++reqId.current;
     apiFetch<{ lawyers: Lawyer[] }>(`/api/admin/lawyers?${params.toString()}`)
-      .then((d) => setLawyers(d.lawyers))
+      .then((d) => {
+        if (id === reqId.current) setLawyers(d.lawyers);
+      })
       .catch(() => {});
   }, [districtId, q]);
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { apiFetch } from "@/lib/admin-api";
@@ -40,6 +40,8 @@ export default function AdminArticlesPage() {
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(true);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  // Guards against out-of-order responses: only the newest request's result wins.
+  const reqId = useRef(0);
 
   const totalPages = Math.max(Math.ceil(total / PER_PAGE), 1);
 
@@ -48,16 +50,20 @@ export default function AdminArticlesPage() {
     if (q) params.set("q", q);
     if (category) params.set("category", category);
     if (status) params.set("status", status);
+    const id = ++reqId.current;
     setLoading(true);
     apiFetch<{ articles: AdminArticle[]; total: number }>(
       `/api/admin/articles?${params.toString()}`,
     )
       .then((d) => {
+        if (id !== reqId.current) return; // a newer request superseded this one
         setArticles(d.articles);
         setTotal(d.total);
       })
       .catch(() => {})
-      .finally(() => setLoading(false));
+      .finally(() => {
+        if (id === reqId.current) setLoading(false);
+      });
   }, [page, q, category, status]);
 
   useEffect(() => {

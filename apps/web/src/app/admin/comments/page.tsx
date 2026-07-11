@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Check, Trash2, X, Ban } from "lucide-react";
 import { apiFetch } from "@/lib/admin-api";
 import { getSocket } from "@/lib/socket";
@@ -29,10 +29,15 @@ export default function CommentsAdminPage() {
   const [tab, setTab] = useState<Comment["status"]>("PENDING");
   const [comments, setComments] = useState<Comment[]>([]);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  // Guards against out-of-order responses: only the newest request's result wins.
+  const reqId = useRef(0);
 
   const load = useCallback(() => {
+    const id = ++reqId.current;
     apiFetch<{ comments: Comment[] }>(`/api/admin/comments?status=${tab}`)
-      .then((d) => setComments(d.comments))
+      .then((d) => {
+        if (id === reqId.current) setComments(d.comments);
+      })
       .catch(() => {});
   }, [tab]);
 
@@ -66,7 +71,12 @@ export default function CommentsAdminPage() {
         {TABS.map((x) => (
           <button
             key={x.status}
-            onClick={() => setTab(x.status)}
+            onClick={() => {
+              if (x.status !== tab) {
+                setComments([]);
+                setTab(x.status);
+              }
+            }}
             className={`rounded-lg px-3.5 py-2 font-ui text-sm font-semibold transition ${
               tab === x.status
                 ? "bg-brand-crimson text-white"
