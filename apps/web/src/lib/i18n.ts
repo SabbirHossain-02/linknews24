@@ -140,6 +140,22 @@ export const translations = {
   adDescIN_ARTICLE: { bn: "খবরের লেখার ভিতরে", en: "Inside the article body" },
   adDescFOOTER: { bn: "প্রতিটি পেজের নিচে", en: "Bottom of every page" },
   adDescPOPUP: { bn: "স্ক্রিনের মাঝে পপআপ", en: "Center-screen popup" },
+  adStart: { bn: "শুরু: তারিখ ও সময়", en: "Start: date & time" },
+  adEnd: { bn: "শেষ: তারিখ ও সময়", en: "End: date & time" },
+  uploadCreative: { bn: "ব্যানার / ভিডিও আপলোড", en: "Upload banner / video" },
+  bannerLabel: { bn: "ব্যানার", en: "Banner" },
+  videoNote: {
+    bn: "ভিডিও: MP4/WebM, ১৬ঃ৯, সর্বোচ্চ ৩০MB",
+    en: "Video: MP4/WebM, 16:9, max 30MB",
+  },
+  uploadingLabel: { bn: "আপলোড হচ্ছে…", en: "Uploading…" },
+  slotFreeNote: { bn: "এই স্লটটি এখন খালি ✓", en: "This slot is currently free ✓" },
+  slotBookedNote: {
+    bn: "এই স্লটটি বুক করা আছে — খালি হবে:",
+    en: "This slot is booked — free from:",
+  },
+  bookedPeriods: { bn: "বুক করা সময়সমূহ", en: "Booked periods" },
+  rangeInvalid: { bn: "শেষ সময় অবশ্যই শুরুর পরে হতে হবে।", en: "End must be after start." },
   close: { bn: "বন্ধ করুন", en: "Close" },
 
   loginToViewDashboard: {

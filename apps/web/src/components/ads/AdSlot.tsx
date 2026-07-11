@@ -54,6 +54,8 @@ export function AdSlot({
     }).catch(() => {});
   };
 
+  const isVideo = /\.(mp4|webm|ogg|mov)(\?.*)?$/i.test(ad.imageUrl);
+
   return (
     <a
       href={ad.linkUrl}
@@ -62,8 +64,19 @@ export function AdSlot({
       onClick={onClick}
       className={`group relative block overflow-hidden ${className}`}
     >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={ad.imageUrl} alt={ad.name} className={imgClassName} />
+      {isVideo ? (
+        <video
+          src={ad.imageUrl}
+          className={imgClassName}
+          autoPlay
+          muted
+          loop
+          playsInline
+        />
+      ) : (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={ad.imageUrl} alt={ad.name} className={imgClassName} />
+      )}
       <span className="absolute right-1 top-1 rounded bg-black/45 px-1.5 py-0.5 font-ui text-[10px] text-white/90">
         বিজ্ঞাপন
       </span>

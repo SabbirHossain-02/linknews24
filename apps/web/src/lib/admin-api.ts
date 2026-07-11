@@ -18,7 +18,10 @@ export async function apiFetch<T = unknown>(
 
   const data = await res.json().catch(() => null);
   if (!res.ok) {
-    throw new Error((data && data.error) || `Error ${res.status}`);
+    const err = new Error((data && data.error) || `Error ${res.status}`);
+    // Attach the parsed body so callers can read extra fields (e.g. availableFrom).
+    (err as Error & { data?: unknown }).data = data;
+    throw err;
   }
   return data as T;
 }

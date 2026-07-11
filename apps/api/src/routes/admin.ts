@@ -971,9 +971,11 @@ adminRouter.patch("/ads/:id/status", requireRole(...CAN_MANAGE), async (req, res
   if (status === "ACTIVE") {
     data.active = true;
     data.paid = true;
-    const start = new Date();
+    // Keep the advertiser's chosen schedule; only fill gaps for house ads.
+    const start = ad.startsAt ?? new Date();
     data.startsAt = start;
-    data.endsAt = new Date(start.getTime() + (ad.days || 1) * 24 * 3600 * 1000);
+    data.endsAt =
+      ad.endsAt ?? new Date(start.getTime() + (ad.days || 1) * 24 * 3600 * 1000);
   } else {
     data.active = false;
   }

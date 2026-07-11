@@ -223,6 +223,52 @@ export function AdvertisePanel() {
   );
 }
 
+// XHR upload with progress (fetch can't report upload progress).
+function uploadWithProgress(
+  file: File,
+  onProgress: (pct: number) => void,
+): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const fd = new FormData();
+    fd.append("file", file);
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", `${API_BASE}/api/account/upload`);
+    xhr.withCredentials = true;
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100));
+    };
+    xhr.onload = () => {
+      try {
+        const data = JSON.parse(xhr.responseText);
+        if (xhr.status >= 200 && xhr.status < 300) resolve(data.url);
+        else reject(new Error(data?.error || "upload failed"));
+      } catch {
+        reject(new Error("upload failed"));
+      }
+    };
+    xhr.onerror = () => reject(new Error("upload failed"));
+    xhr.send(fd);
+  });
+}
+
+const isVideoUrl = (u: string) => /\.(mp4|webm|ogg|mov)(\?.*)?$/i.test(u);
+
+// Format a Date for a <input type="datetime-local"> (local time, no seconds).
+function toLocalInput(d: Date) {
+  const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000);
+  return local.toISOString().slice(0, 16);
+}
+
+function fmtDateTime(iso: string, locale: string) {
+  return new Date(iso).toLocaleString(locale === "bn" ? "bn-BD" : "en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 // --- Booking modal ---
 function BookingModal({
   slot,
@@ -233,48 +279,59 @@ function BookingModal({
   onClose: () => void;
   onBooked: (ad: MyAd) => void;
 }) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
+  const now = new Date();
   const [name, setName] = useState("");
   const [linkUrl, setLinkUrl] = useState("");
-  const [imageUrl, setImageUrl] = useState("");
-  const [days, setDays] = useState(7);
-  const [uploading, setUploading] = useState(false);
+  const [mediaUrl, setMediaUrl] = useState("");
+  const [start, setStart] = useState(toLocalInput(now));
+  const [end, setEnd] = useState(toLocalInput(new Date(now.getTime() + 7 * 864e5)));
+  const [progress, setProgress] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [booked, setBooked] = useState<{ startsAt: string; endsAt: string }[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const total = slot.pricePerDay * (days || 0);
+  useEffect(() => {
+    apiFetch<{ ranges: { startsAt: string; endsAt: string }[] }>(
+      `/api/account/slot-booked?placement=${slot.placement}`,
+    )
+      .then((d) => setBooked(d.ranges.filter((r) => r.startsAt && r.endsAt)))
+      .catch(() => {});
+  }, [slot.placement]);
+
+  const startDate = new Date(start);
+  const endDate = new Date(end);
+  const validRange = endDate > startDate;
+  const days = validRange
+    ? Math.max(1, Math.ceil((endDate.getTime() - startDate.getTime()) / 864e5))
+    : 0;
+  const total = slot.pricePerDay * days;
+
   const inputCls =
     "w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-brand-crimson focus:outline-none focus:ring-2 focus:ring-brand-crimson/15";
 
-  const pickImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const pick = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file) return;
-    setUploading(true);
     setError(null);
+    setProgress(0);
     try {
-      const fd = new FormData();
-      fd.append("file", file);
-      const res = await fetch(`${API_BASE}/api/account/upload`, {
-        method: "POST",
-        credentials: "include",
-        body: fd,
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || "upload failed");
-      setImageUrl(data.url);
+      const url = await uploadWithProgress(file, setProgress);
+      setMediaUrl(url);
     } catch (err) {
       setError(err instanceof Error ? err.message : "upload failed");
     } finally {
-      setUploading(false);
+      setProgress(null);
     }
   };
 
   const submit = async () => {
     setError(null);
-    if (!imageUrl) return setError(t("bannerRequired"));
-    if (!linkUrl.trim() || !days) return;
+    if (!mediaUrl) return setError(t("bannerRequired"));
+    if (!linkUrl.trim()) return;
+    if (!validRange) return setError(t("rangeInvalid"));
     setBusy(true);
     try {
       const d = await apiFetch<{ ad: MyAd }>("/api/account/ads", {
@@ -282,14 +339,21 @@ function BookingModal({
         body: JSON.stringify({
           name: name.trim() || undefined,
           placement: slot.placement,
-          imageUrl,
+          imageUrl: mediaUrl,
           linkUrl: linkUrl.trim(),
-          days,
+          startsAt: startDate.toISOString(),
+          endsAt: endDate.toISOString(),
         }),
       });
       onBooked(d.ad);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "failed");
+      // Conflict responses carry an availableFrom date in the attached body.
+      const body = (err as { data?: { availableFrom?: string } }).data;
+      if (body?.availableFrom) {
+        setError(`${t("slotBookedNote")} ${fmtDateTime(body.availableFrom, locale)}`);
+      } else {
+        setError(err instanceof Error ? err.message : "failed");
+      }
     } finally {
       setBusy(false);
     }
@@ -304,75 +368,131 @@ function BookingModal({
         </button>
       </div>
       <p className="mt-1 font-ui text-sm text-foreground-muted">
-        {t(`adPlace${slot.placement}` as TranslationKey)} · {t("recommendedSize")} {slot.size}
+        {t(`adPlace${slot.placement}` as TranslationKey)} · {slot.size}
       </p>
 
-      <div className="mt-4 flex flex-col gap-3">
-        {error && (
-          <p className="rounded-lg bg-brand-crimson/10 px-3 py-2 font-ui text-sm text-brand-crimson">
-            {error}
-          </p>
-        )}
-        <input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder={t("adCampaignName")}
-          className={inputCls}
-        />
-        <input
-          value={linkUrl}
-          onChange={(e) => setLinkUrl(e.target.value)}
-          placeholder={t("adLinkUrl")}
-          className={inputCls}
-        />
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => fileRef.current?.click()}
-            disabled={uploading}
-            className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 font-ui text-sm text-foreground hover:bg-surface disabled:opacity-50"
-          >
-            <Upload className="h-4 w-4" />
-            {t("adBannerUpload")}
-          </button>
-          {imageUrl && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={imageUrl} alt="" className="h-10 w-20 rounded object-cover" />
+      <div className="mt-3 max-h-[70vh] overflow-y-auto pr-1">
+        <div className="flex flex-col gap-3">
+          {error && (
+            <p className="rounded-lg bg-brand-crimson/10 px-3 py-2 font-ui text-sm text-brand-crimson">
+              {error}
+            </p>
           )}
+
+          {/* Availability */}
+          {booked.length === 0 ? (
+            <p className="rounded-lg bg-green-50 px-3 py-2 font-ui text-xs text-green-700">
+              {t("slotFreeNote")}
+            </p>
+          ) : (
+            <div className="rounded-lg bg-amber-50 px-3 py-2 font-ui text-xs text-amber-800">
+              <p className="font-semibold">{t("bookedPeriods")}:</p>
+              <ul className="mt-1 space-y-0.5">
+                {booked.map((r, i) => (
+                  <li key={i}>
+                    {fmtDateTime(r.startsAt, locale)} — {fmtDateTime(r.endsAt, locale)}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           <input
-            ref={fileRef}
-            type="file"
-            accept="image/*"
-            onChange={pickImage}
-            className="hidden"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder={t("adCampaignName")}
+            className={inputCls}
           />
-        </div>
-        <div>
-          <label className="font-ui text-xs font-semibold text-foreground-muted">
-            {t("adDays")}
-          </label>
           <input
-            type="number"
-            min={1}
-            max={365}
-            value={days}
-            onChange={(e) => setDays(Math.max(1, Number(e.target.value) || 1))}
-            className={`${inputCls} mt-1`}
+            value={linkUrl}
+            onChange={(e) => setLinkUrl(e.target.value)}
+            placeholder={t("adLinkUrl")}
+            className={inputCls}
           />
+
+          {/* Upload with progress */}
+          <div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                disabled={progress !== null}
+                className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 font-ui text-sm text-foreground hover:bg-surface disabled:opacity-50"
+              >
+                <Upload className="h-4 w-4" />
+                {progress !== null ? t("uploadingLabel") : t("uploadCreative")}
+              </button>
+              {mediaUrl &&
+                (isVideoUrl(mediaUrl) ? (
+                  <video src={mediaUrl} className="h-10 w-20 rounded object-cover" muted />
+                ) : (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={mediaUrl} alt="" className="h-10 w-20 rounded object-cover" />
+                ))}
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/*,video/*"
+                onChange={pick}
+                className="hidden"
+              />
+            </div>
+            <p className="mt-1 font-ui text-[11px] text-foreground-muted">
+              {t("bannerLabel")}: {slot.size} · {t("videoNote")}
+            </p>
+            {progress !== null && (
+              <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-surface">
+                <div
+                  className="h-full rounded-full bg-brand-crimson transition-all"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Date range */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="font-ui text-xs font-semibold text-foreground-muted">
+                {t("adStart")}
+              </label>
+              <input
+                type="datetime-local"
+                value={start}
+                onChange={(e) => setStart(e.target.value)}
+                className={`${inputCls} mt-1`}
+              />
+            </div>
+            <div>
+              <label className="font-ui text-xs font-semibold text-foreground-muted">
+                {t("adEnd")}
+              </label>
+              <input
+                type="datetime-local"
+                value={end}
+                min={start}
+                onChange={(e) => setEnd(e.target.value)}
+                className={`${inputCls} mt-1`}
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between rounded-lg bg-surface px-4 py-3">
+            <span className="font-ui text-sm text-foreground-muted">
+              {t("adTotal")} {days > 0 ? `(${days}d)` : ""}
+            </span>
+            <span className="text-xl font-bold text-brand-crimson">
+              ৳{total.toLocaleString("en-US")}
+            </span>
+          </div>
+          <button
+            onClick={submit}
+            disabled={busy || progress !== null || !validRange}
+            className="rounded-lg bg-brand-crimson py-2.5 font-ui text-sm font-semibold text-white hover:bg-brand-crimson-dark disabled:opacity-60"
+          >
+            {t("confirmBooking")}
+          </button>
         </div>
-        <div className="flex items-center justify-between rounded-lg bg-surface px-4 py-3">
-          <span className="font-ui text-sm text-foreground-muted">{t("adTotal")}</span>
-          <span className="text-xl font-bold text-brand-crimson">
-            ৳{total.toLocaleString("en-US")}
-          </span>
-        </div>
-        <button
-          onClick={submit}
-          disabled={busy || uploading}
-          className="rounded-lg bg-brand-crimson py-2.5 font-ui text-sm font-semibold text-white hover:bg-brand-crimson-dark disabled:opacity-60"
-        >
-          {t("confirmBooking")}
-        </button>
       </div>
     </Overlay>
   );

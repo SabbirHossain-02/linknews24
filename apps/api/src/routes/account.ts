@@ -21,8 +21,13 @@ const storage = multer.diskStorage({
 });
 const upload = multer({
   storage,
-  limits: { fileSize: 6 * 1024 * 1024 },
-  fileFilter: (_req, file, cb) => cb(null, file.mimetype.startsWith("image/")),
+  // Allow larger files for video creatives.
+  limits: { fileSize: 30 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) =>
+    cb(
+      null,
+      file.mimetype.startsWith("image/") || file.mimetype.startsWith("video/"),
+    ),
 });
 
 function publicAccount(a: Account) {
@@ -125,14 +130,33 @@ accountRouter.post("/upload", authAccount, upload.single("file"), (req, res) => 
   res.json({ url });
 });
 
-// --- Advertiser: book an ad slot (creates a PENDING order) ---
+// Booked/occupied ranges for a slot (so the UI can show when it's free).
+accountRouter.get("/slot-booked", authAccount, async (req, res) => {
+  const { placement } = req.query as Record<string, string>;
+  const now = new Date();
+  const ranges = await prisma.ad.findMany({
+    where: {
+      placement: placement as never,
+      status: { in: ["PENDING", "ACTIVE"] },
+      endsAt: { gt: now },
+    },
+    select: { startsAt: true, endsAt: true },
+    orderBy: { startsAt: "asc" },
+  });
+  res.json({ ranges });
+});
+
+// --- Advertiser: book an ad slot for a specific date-time window ---
 const bookSchema = z.object({
   name: z.string().min(1).max(120).optional(),
   placement: z.enum(["HEADER", "SIDEBAR", "IN_ARTICLE", "FOOTER", "POPUP"]),
   imageUrl: z.string().min(1),
   linkUrl: z.string().min(1),
-  days: z.number().int().min(1).max(365),
+  startsAt: z.string().min(1),
+  endsAt: z.string().min(1),
 });
+
+const MS_PER_DAY = 24 * 3600 * 1000;
 
 accountRouter.post("/ads", authAccount, async (req, res) => {
   const parsed = bookSchema.safeParse(req.body);
@@ -141,14 +165,43 @@ accountRouter.post("/ads", authAccount, async (req, res) => {
   const price = slotPrice(d.placement);
   if (price === 0) return res.status(400).json({ error: "অবৈধ স্লট" });
 
+  const start = new Date(d.startsAt);
+  const end = new Date(d.endsAt);
+  if (isNaN(start.getTime()) || isNaN(end.getTime()) || end <= start)
+    return res.status(400).json({ error: "শুরুর ও শেষের সময় ঠিক নয়" });
+  if (end.getTime() < Date.now())
+    return res.status(400).json({ error: "শেষ সময় অতীতে হতে পারে না" });
+
+  // Slot is exclusive: reject if any pending/active ad overlaps this window.
+  const conflict = await prisma.ad.findFirst({
+    where: {
+      placement: d.placement,
+      status: { in: ["PENDING", "ACTIVE"] },
+      startsAt: { lt: end },
+      endsAt: { gt: start },
+    },
+    orderBy: { endsAt: "desc" },
+    select: { endsAt: true },
+  });
+  if (conflict) {
+    return res.status(409).json({
+      error: "এই স্লটটি এই সময়ে বুক করা আছে",
+      availableFrom: conflict.endsAt,
+    });
+  }
+
+  const days = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / MS_PER_DAY));
+
   const ad = await prisma.ad.create({
     data: {
       name: d.name?.trim() || `${d.placement} বিজ্ঞাপন`,
       imageUrl: d.imageUrl,
       linkUrl: d.linkUrl,
       placement: d.placement,
-      days: d.days,
-      amount: price * d.days,
+      days,
+      amount: price * days,
+      startsAt: start,
+      endsAt: end,
       status: "PENDING",
       active: false,
       paid: false,
