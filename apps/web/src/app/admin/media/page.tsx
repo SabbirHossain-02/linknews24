@@ -77,9 +77,7 @@ export default function MediaAdminPage() {
         />
       </div>
 
-      {loading ? (
-        <p className="mt-5 font-ui text-sm text-foreground-muted">{t("loading")}</p>
-      ) : items.length === 0 ? (
+      {loading ? null : items.length === 0 ? (
         <p className="mt-5 font-ui text-sm text-foreground-muted">{t("noMedia")}</p>
       ) : (
         <div className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">

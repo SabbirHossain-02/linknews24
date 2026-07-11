@@ -99,9 +99,7 @@ export default function CategoriesAdminPage() {
       </div>
 
       <div className="mt-4 flex flex-col gap-2">
-        {loading ? (
-          <p className="font-ui text-sm text-foreground-muted">{t("loading")}</p>
-        ) : (
+        {loading ? null : (
           cats.map((c) => (
             <div
               key={c.id}

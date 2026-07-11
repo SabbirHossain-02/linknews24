@@ -47,8 +47,7 @@ export default function LiveTvAdminPage() {
     }
   };
 
-  if (loading)
-    return <p className="font-ui text-sm text-foreground-muted">{t("loading")}</p>;
+  if (loading) return null;
 
   return (
     <div className="max-w-xl">

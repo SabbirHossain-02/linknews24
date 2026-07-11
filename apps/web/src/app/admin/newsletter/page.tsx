@@ -63,9 +63,7 @@ export default function NewsletterAdminPage() {
       </p>
 
       <div className="mt-4 overflow-hidden rounded-xl border border-border bg-background">
-        {loading ? (
-          <p className="p-6 text-center font-ui text-sm text-foreground-muted">{t("loading")}</p>
-        ) : subs.length === 0 ? (
+        {loading ? null : subs.length === 0 ? (
           <p className="p-6 text-center font-ui text-sm text-foreground-muted">
             {t("noSubscribers")}
           </p>

@@ -129,13 +129,7 @@ export default function UsersAdminPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
-            {loading ? (
-              <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-foreground-muted">
-                  {t("loading")}
-                </td>
-              </tr>
-            ) : (
+            {loading ? null : (
               users.map((u) => (
                 <tr key={u.id}>
                   <td className="px-4 py-3 font-medium text-foreground">{u.name}</td>

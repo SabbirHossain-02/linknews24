@@ -134,9 +134,7 @@ export default function HomepageBuilderPage() {
 
       {/* Sections */}
       <div className="mt-4 flex flex-col gap-2">
-        {loading ? (
-          <p className="font-ui text-sm text-foreground-muted">{t("loading")}</p>
-        ) : sections.length === 0 ? (
+        {loading ? null : sections.length === 0 ? (
           <p className="font-ui text-sm text-foreground-muted">{t("noItems")}</p>
         ) : (
           sections.map((s, i) => (

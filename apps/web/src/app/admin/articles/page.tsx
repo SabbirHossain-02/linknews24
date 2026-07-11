@@ -158,13 +158,7 @@ export default function AdminArticlesPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
-            {loading ? (
-              <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-foreground-muted">
-                  {t("loading")}
-                </td>
-              </tr>
-            ) : articles.length === 0 ? (
+            {loading ? null : articles.length === 0 ? (
               <tr>
                 <td colSpan={5} className="px-4 py-8 text-center text-foreground-muted">
                   {t("noArticles")}

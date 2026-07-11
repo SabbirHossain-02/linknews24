@@ -88,9 +88,7 @@ export default function BreakingAdminPage() {
 
       {/* List */}
       <div className="mt-4 flex flex-col gap-2">
-        {loading ? (
-          <p className="font-ui text-sm text-foreground-muted">{t("loading")}</p>
-        ) : items.length === 0 ? (
+        {loading ? null : items.length === 0 ? (
           <p className="font-ui text-sm text-foreground-muted">{t("noItems")}</p>
         ) : (
           items.map((item) => (
