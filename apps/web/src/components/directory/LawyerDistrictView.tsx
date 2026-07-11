@@ -4,7 +4,8 @@ import Link from "next/link";
 import { ArrowLeft, Phone, Scale } from "lucide-react";
 import { useLocale } from "@/components/providers/LocaleProvider";
 import { toLocaleDigits } from "@/lib/i18n";
-import { formatPhone, type Lawyer } from "@/lib/directory-data";
+import { formatPhone } from "@/lib/directory-data";
+import type { ApiLawyer } from "@/lib/api";
 
 export function LawyerDistrictView({
   districtBn,
@@ -13,7 +14,7 @@ export function LawyerDistrictView({
 }: {
   districtBn: string;
   districtEn: string;
-  lawyers: Lawyer[];
+  lawyers: ApiLawyer[];
 }) {
   const { locale, t } = useLocale();
   const district = locale === "en" ? districtEn : districtBn;
@@ -51,12 +52,10 @@ export function LawyerDistrictView({
             </div>
             <div className="min-w-0 flex-1">
               <p className="truncate font-semibold text-foreground">
-                {locale === "en"
-                  ? `Adv. ${lawyer.nameEn}`
-                  : `অ্যাডভোকেট ${lawyer.nameBn}`}
+                {locale === "en" ? `Adv. ${lawyer.name}` : `অ্যাডভোকেট ${lawyer.name}`}
               </p>
               <span className="font-ui text-xs text-foreground-muted">
-                {locale === "en" ? lawyer.specEn : lawyer.specBn}
+                {locale === "en" ? lawyer.specEn || lawyer.spec : lawyer.spec}
               </span>
             </div>
             <a

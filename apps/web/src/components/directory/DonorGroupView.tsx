@@ -4,14 +4,21 @@ import Link from "next/link";
 import { ArrowLeft, Droplet, MapPin, Phone } from "lucide-react";
 import { useLocale } from "@/components/providers/LocaleProvider";
 import { toLocaleDigits } from "@/lib/i18n";
-import { formatPhone, type Donor } from "@/lib/directory-data";
+import { formatPhone } from "@/lib/directory-data";
+import type { ApiDonor } from "@/lib/api";
+
+function monthsAgo(iso: string | null): number {
+  if (!iso) return 0;
+  const diff = Date.now() - new Date(iso).getTime();
+  return Math.max(Math.floor(diff / (30 * 24 * 60 * 60 * 1000)), 0);
+}
 
 export function DonorGroupView({
   group,
   donors,
 }: {
   group: string;
-  donors: Donor[];
+  donors: ApiDonor[];
 }) {
   const { locale, t } = useLocale();
   const heading =
@@ -58,15 +65,18 @@ export function DonorGroupView({
             </div>
             <div className="min-w-0 flex-1">
               <p className="truncate font-semibold text-foreground">
-                {locale === "en" ? donor.nameEn : donor.nameBn}
+                {donor.name}
               </p>
               <div className="flex flex-wrap gap-x-3 gap-y-0.5 font-ui text-xs text-foreground-muted">
                 <span className="flex items-center gap-1">
                   <MapPin className="h-3.5 w-3.5" />
-                  {locale === "en" ? donor.districtEn : donor.districtBn}
+                  {locale === "en"
+                    ? donor.district?.nameEn
+                    : donor.district?.name}
                 </span>
                 <span>
-                  {t("lastDonationLabel")}: {toLocaleDigits(donor.months, locale)}{" "}
+                  {t("lastDonationLabel")}:{" "}
+                  {toLocaleDigits(monthsAgo(donor.lastDonation), locale)}{" "}
                   {t("monthsAgo")}
                 </span>
               </div>

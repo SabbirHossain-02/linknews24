@@ -106,6 +106,38 @@ export async function getHomepage(): Promise<HomepageData> {
   return data ?? { hero: null, topStories: [], latest: [], sections: [] };
 }
 
+// --- Directories ---
+export interface ApiLawyer {
+  id: string;
+  name: string;
+  spec: string;
+  specEn: string;
+  phone: string;
+  chamber?: string | null;
+}
+
+export interface ApiDonor {
+  id: string;
+  name: string;
+  phone: string;
+  lastDonation: string | null;
+  district: { name: string; nameEn: string } | null;
+}
+
+export async function getLawyers(district: string): Promise<ApiLawyer[]> {
+  const d = await apiGet<{ lawyers: ApiLawyer[] }>(
+    `/api/lawyers/${encodeURIComponent(district)}`,
+  );
+  return d?.lawyers ?? [];
+}
+
+export async function getDonors(group: string): Promise<ApiDonor[]> {
+  const d = await apiGet<{ donors: ApiDonor[] }>(
+    `/api/donors/${encodeURIComponent(group)}`,
+  );
+  return d?.donors ?? [];
+}
+
 // Sidebar: most-read (by views) and latest, derived from recent articles.
 export async function getSidebar(): Promise<{
   mostRead: Article[];

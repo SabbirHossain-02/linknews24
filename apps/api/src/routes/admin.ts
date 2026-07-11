@@ -5,7 +5,13 @@ import fs from "node:fs";
 import multer from "multer";
 import { prisma } from "../prisma";
 import { requireRole } from "../middleware/auth";
-import { CAN_MANAGE, CAN_PUBLISH, CAN_WRITE, slugify } from "../lib/roles";
+import {
+  CAN_DIRECTORY,
+  CAN_MANAGE,
+  CAN_PUBLISH,
+  CAN_WRITE,
+  slugify,
+} from "../lib/roles";
 import { hashPassword } from "../lib/password";
 import { emitChange } from "../realtime";
 
@@ -644,4 +650,88 @@ adminRouter.put("/settings", requireRole(...CAN_MANAGE), async (req, res) => {
     create: { key: "site", value },
   });
   res.json({ settings: row.value });
+});
+
+// ===================== LAWYERS DIRECTORY =====================
+adminRouter.get("/lawyers", async (req, res) => {
+  const { district } = req.query as Record<string, string>;
+  const lawyers = await prisma.lawyer.findMany({
+    where: district ? { districtId: district } : undefined,
+    include: { district: { select: { name: true } } },
+    orderBy: { createdAt: "desc" },
+    take: 500,
+  });
+  res.json({ lawyers });
+});
+
+const lawyerSchema = z.object({
+  name: z.string().min(1),
+  spec: z.string().default(""),
+  specEn: z.string().default(""),
+  phone: z.string().min(1),
+  chamber: z.string().optional(),
+  districtId: z.string().min(1),
+});
+
+adminRouter.post("/lawyers", requireRole(...CAN_DIRECTORY), async (req, res) => {
+  const parsed = lawyerSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: "Invalid input" });
+  const lawyer = await prisma.lawyer.create({ data: parsed.data });
+  res.status(201).json({ lawyer });
+});
+
+adminRouter.put("/lawyers/:id", requireRole(...CAN_DIRECTORY), async (req, res) => {
+  const parsed = lawyerSchema.partial().safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: "Invalid input" });
+  const lawyer = await prisma.lawyer
+    .update({ where: { id: req.params.id }, data: parsed.data })
+    .catch(() => null);
+  if (!lawyer) return res.status(404).json({ error: "Not found" });
+  res.json({ lawyer });
+});
+
+adminRouter.delete("/lawyers/:id", requireRole(...CAN_DIRECTORY), async (req, res) => {
+  await prisma.lawyer.delete({ where: { id: req.params.id } }).catch(() => null);
+  res.json({ ok: true });
+});
+
+// ===================== BLOOD DONORS DIRECTORY =====================
+adminRouter.get("/donors", async (req, res) => {
+  const { group } = req.query as Record<string, string>;
+  const donors = await prisma.bloodDonor.findMany({
+    where: group ? { group } : undefined,
+    include: { district: { select: { name: true } } },
+    orderBy: { createdAt: "desc" },
+    take: 500,
+  });
+  res.json({ donors });
+});
+
+const donorSchema = z.object({
+  name: z.string().min(1),
+  group: z.string().min(1),
+  phone: z.string().min(1),
+  districtId: z.string().min(1),
+});
+
+adminRouter.post("/donors", requireRole(...CAN_DIRECTORY), async (req, res) => {
+  const parsed = donorSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: "Invalid input" });
+  const donor = await prisma.bloodDonor.create({ data: parsed.data });
+  res.status(201).json({ donor });
+});
+
+adminRouter.put("/donors/:id", requireRole(...CAN_DIRECTORY), async (req, res) => {
+  const parsed = donorSchema.partial().safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: "Invalid input" });
+  const donor = await prisma.bloodDonor
+    .update({ where: { id: req.params.id }, data: parsed.data })
+    .catch(() => null);
+  if (!donor) return res.status(404).json({ error: "Not found" });
+  res.json({ donor });
+});
+
+adminRouter.delete("/donors/:id", requireRole(...CAN_DIRECTORY), async (req, res) => {
+  await prisma.bloodDonor.delete({ where: { id: req.params.id } }).catch(() => null);
+  res.json({ ok: true });
 });

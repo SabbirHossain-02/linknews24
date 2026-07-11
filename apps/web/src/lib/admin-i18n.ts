@@ -207,6 +207,16 @@ export const adminDict = {
   editorLabel: { bn: "সম্পাদক ও প্রকাশক", en: "Editor & Publisher" },
   savedOk: { bn: "সংরক্ষিত হয়েছে ✓", en: "Saved ✓" },
 
+  // Directories
+  addLawyer: { bn: "যোগ করুন", en: "Add" },
+  addDonor: { bn: "যোগ করুন", en: "Add" },
+  selectDistrict: { bn: "জেলা নির্বাচন করুন", en: "Select district" },
+  selectGroup: { bn: "গ্রুপ নির্বাচন করুন", en: "Select group" },
+  specLabel: { bn: "বিশেষত্ব", en: "Specialization" },
+  chamberLabel: { bn: "চেম্বার", en: "Chamber" },
+  groupLabel: { bn: "গ্রুপ", en: "Group" },
+  districtCol: { bn: "জেলা", en: "District" },
+
   // Newsletter
   subscriberCount: { bn: "জন সাবস্ক্রাইবার", en: "subscribers" },
   exportCsv: { bn: "CSV এক্সপোর্ট", en: "Export CSV" },

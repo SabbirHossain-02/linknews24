@@ -1,8 +1,42 @@
 import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../prisma";
+import { BLOOD_GROUPS } from "../lib/blood";
 
 export const publicRouter = Router();
+
+// --- Directories ---
+publicRouter.get("/districts", async (_req, res) => {
+  const districts = await prisma.district.findMany({ orderBy: { name: "asc" } });
+  res.json({ districts });
+});
+
+publicRouter.get("/lawyers/:district", async (req, res) => {
+  const district = await prisma.district.findUnique({
+    where: { slug: req.params.district },
+  });
+  if (!district) return res.status(404).json({ error: "Not found" });
+  const lawyers = await prisma.lawyer.findMany({
+    where: { districtId: district.id },
+    orderBy: { createdAt: "asc" },
+  });
+  res.json({ district, lawyers });
+});
+
+publicRouter.get("/blood-groups", (_req, res) =>
+  res.json({ groups: BLOOD_GROUPS }),
+);
+
+publicRouter.get("/donors/:group", async (req, res) => {
+  const g = BLOOD_GROUPS.find((x) => x.slug === req.params.group);
+  if (!g) return res.status(404).json({ error: "Not found" });
+  const donors = await prisma.bloodDonor.findMany({
+    where: { group: g.label },
+    include: { district: { select: { name: true, nameEn: true } } },
+    orderBy: { createdAt: "asc" },
+  });
+  res.json({ group: g, donors });
+});
 
 publicRouter.get("/settings", async (_req, res) => {
   const row = await prisma.siteSetting.findUnique({ where: { key: "site" } });

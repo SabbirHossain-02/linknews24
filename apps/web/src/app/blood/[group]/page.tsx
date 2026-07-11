@@ -1,17 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import {
-  bloodGroups,
-  getBloodGroup,
-  getDonorsByGroup,
-} from "@/lib/directory-data";
+import { getBloodGroup } from "@/lib/directory-data";
+import { getDonors } from "@/lib/api";
 import { DonorGroupView } from "@/components/directory/DonorGroupView";
 
 type Params = { group: string };
-
-export function generateStaticParams() {
-  return bloodGroups.map((g) => ({ group: g.slug }));
-}
 
 export async function generateMetadata({
   params,
@@ -36,10 +29,11 @@ export default async function BloodGroupPage({
   const { group } = await params;
   const g = getBloodGroup(group);
   if (!g) notFound();
+  const donors = await getDonors(group);
 
   return (
     <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-8">
-      <DonorGroupView group={g.label} donors={getDonorsByGroup(group)} />
+      <DonorGroupView group={g.label} donors={donors} />
     </main>
   );
 }
