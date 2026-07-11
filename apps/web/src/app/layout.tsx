@@ -1,5 +1,6 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Hind_Siliguri, Inter } from "next/font/google";
+import { SITE_URL } from "@/lib/site";
 import localFont from "next/font/local";
 import { LocaleProvider } from "@/components/providers/LocaleProvider";
 import { AuthProvider } from "@/components/providers/AuthProvider";
@@ -31,13 +32,31 @@ const siyamRupali = localFont({
   display: "swap",
 });
 
+const title = "LinkNews24 — বাংলাদেশের নির্ভরযোগ্য অনলাইন নিউজ পোর্টাল";
+const description =
+  "জাতীয়, আন্তর্জাতিক, রাজনীতি, খেলা, বিনোদন ও প্রযুক্তির সর্বশেষ খবর — LinkNews24-এ।";
+
 export const metadata: Metadata = {
-  title: {
-    default: "LinkNews24 — বাংলাদেশের নির্ভরযোগ্য অনলাইন নিউজ পোর্টাল",
-    template: "%s | LinkNews24",
+  metadataBase: new URL(SITE_URL),
+  title: { default: title, template: "%s | LinkNews24" },
+  description,
+  applicationName: "LinkNews24",
+  openGraph: {
+    type: "website",
+    siteName: "LinkNews24",
+    locale: "bn_BD",
+    title,
+    description,
+    url: SITE_URL,
   },
-  description:
-    "জাতীয়, আন্তর্জাতিক, রাজনীতি, খেলা, বিনোদন ও প্রযুক্তির সর্বশেষ খবর — LinkNews24-এ।",
+  twitter: { card: "summary_large_image", title, description },
+  robots: { index: true, follow: true },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#0f2c4d",
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({
