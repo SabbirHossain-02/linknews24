@@ -9,6 +9,7 @@ import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { HideOnAdmin } from "@/components/layout/HideOnAdmin";
 import { RealtimeRefresh } from "@/components/providers/RealtimeRefresh";
+import { TrackView } from "@/components/providers/TrackView";
 import "./globals.css";
 
 const hindSiliguri = Hind_Siliguri({
@@ -74,6 +75,7 @@ export default function RootLayout({
             <div className="flex min-h-screen flex-col">
               <HideOnAdmin>
                 <RealtimeRefresh />
+                <TrackView />
                 <ConditionalAdBanner />
                 <SiteHeader />
               </HideOnAdmin>

@@ -2,7 +2,8 @@ import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../prisma";
 import { BLOOD_GROUPS } from "../lib/blood";
-import { emitChange } from "../realtime";
+import { emitChange, emitAnalytics } from "../realtime";
+import { clientIp, geoLookup, parseUA } from "../lib/analytics";
 
 export const publicRouter = Router();
 
@@ -141,6 +142,75 @@ publicRouter.get("/homepage", async (_req, res) => {
   }
 
   res.json({ hero, topStories, latest, sections });
+});
+
+// --- Analytics: record a page view ---
+const trackSchema = z.object({
+  path: z.string().min(1).max(400),
+  referrer: z.string().max(400).optional(),
+});
+
+publicRouter.post("/track", async (req, res) => {
+  const parsed = trackSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(204).end();
+  // Ignore admin/dashboard traffic.
+  if (parsed.data.path.startsWith("/admin")) return res.status(204).end();
+
+  const ip = clientIp(req.headers as Record<string, unknown>, req.socket.remoteAddress);
+  const { device, browser, os } = parseUA(req.get("user-agent") || "");
+  const { country, city } = geoLookup(ip);
+  // Store only the referring host (e.g. "google.com") for clean breakdowns.
+  let referrer: string | null = null;
+  if (parsed.data.referrer) {
+    try {
+      referrer = new URL(parsed.data.referrer).hostname.replace(/^www\./, "") || null;
+    } catch {
+      referrer = null;
+    }
+  }
+
+  await prisma.pageView
+    .create({
+      data: { path: parsed.data.path, referrer, device, browser, os, ip, country, city },
+    })
+    .catch(() => null);
+  emitAnalytics({ type: "visit" });
+  res.status(204).end();
+});
+
+// --- Ads: serve active ads by placement + track impression/click ---
+publicRouter.get("/ads", async (req, res) => {
+  const { placement } = req.query as Record<string, string>;
+  const now = new Date();
+  const ads = await prisma.ad.findMany({
+    where: {
+      active: true,
+      placement: placement ? (placement as never) : undefined,
+      AND: [
+        { OR: [{ startsAt: null }, { startsAt: { lte: now } }] },
+        { OR: [{ endsAt: null }, { endsAt: { gte: now } }] },
+      ],
+    },
+    select: { id: true, name: true, imageUrl: true, linkUrl: true, placement: true },
+    orderBy: { createdAt: "desc" },
+  });
+  res.json({ ads });
+});
+
+publicRouter.post("/ads/:id/impression", async (req, res) => {
+  await prisma.ad
+    .update({ where: { id: req.params.id }, data: { impressions: { increment: 1 } } })
+    .catch(() => null);
+  emitAnalytics({ type: "ad" });
+  res.status(204).end();
+});
+
+publicRouter.post("/ads/:id/click", async (req, res) => {
+  await prisma.ad
+    .update({ where: { id: req.params.id }, data: { clicks: { increment: 1 } } })
+    .catch(() => null);
+  emitAnalytics({ type: "ad" });
+  res.status(204).end();
 });
 
 // --- E-Paper ---

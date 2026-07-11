@@ -14,6 +14,9 @@ import { notFound, errorHandler } from "./middleware/error";
 
 const app = express();
 
+// Trust the first proxy (e.g. nginx, when added) so client IPs resolve correctly.
+app.set("trust proxy", true);
+
 app.use(cors({ origin: env.corsOrigin, credentials: true }));
 app.use(express.json({ limit: "5mb" }));
 app.use(cookieParser());

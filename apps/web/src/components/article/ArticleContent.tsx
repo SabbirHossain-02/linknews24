@@ -13,6 +13,7 @@ import { ArticleActions } from "./ArticleActions";
 import { RecordHistory } from "./RecordHistory";
 import { ArticleSchema } from "./ArticleSchema";
 import { CommentSection } from "./CommentSection";
+import { AdSlot } from "@/components/ads/AdSlot";
 
 export function ArticleContent({
   article,
@@ -117,6 +118,11 @@ export function ArticleContent({
           ))}
         </div>
       )}
+
+      <AdSlot
+        placement="IN_ARTICLE"
+        className="max-w-2xl rounded-lg border border-border"
+      />
 
       {tags.length > 0 && (
         <div className="flex flex-wrap items-center gap-2 border-t border-border pt-6">

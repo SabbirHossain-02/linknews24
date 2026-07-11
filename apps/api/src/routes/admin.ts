@@ -812,6 +812,190 @@ adminRouter.delete("/comments/:id", requireRole(...CAN_MODERATE), async (req, re
   res.json({ ok: true });
 });
 
+// ===================== ANALYTICS (dashboard) =====================
+adminRouter.get("/analytics", async (_req, res) => {
+  const now = new Date();
+  const startOfToday = new Date(now);
+  startOfToday.setHours(0, 0, 0, 0);
+  const last24 = new Date(now.getTime() - 24 * 3600 * 1000);
+  const online5 = new Date(now.getTime() - 5 * 60 * 1000);
+
+  const [
+    totalViews,
+    todayViews,
+    hourlyRows,
+    onlineRows,
+    uniqueToday,
+    devices,
+    countries,
+    referrers,
+    browsers,
+    recent,
+    articles,
+    breaking,
+    pendingComments,
+    ads,
+  ] = await Promise.all([
+    prisma.pageView.count(),
+    prisma.pageView.count({ where: { createdAt: { gte: startOfToday } } }),
+    prisma.pageView.findMany({
+      where: { createdAt: { gte: last24 } },
+      select: { createdAt: true },
+    }),
+    prisma.pageView.findMany({
+      where: { createdAt: { gte: online5 } },
+      select: { ip: true },
+    }),
+    prisma.pageView.findMany({
+      where: { createdAt: { gte: startOfToday } },
+      select: { ip: true },
+      distinct: ["ip"],
+    }),
+    prisma.pageView.groupBy({ by: ["device"], _count: { _all: true } }),
+    prisma.pageView.groupBy({
+      by: ["country"],
+      _count: { _all: true },
+      orderBy: { _count: { country: "desc" } },
+      take: 6,
+    }),
+    prisma.pageView.groupBy({
+      by: ["referrer"],
+      _count: { _all: true },
+      orderBy: { _count: { referrer: "desc" } },
+      take: 6,
+    }),
+    prisma.pageView.groupBy({
+      by: ["browser"],
+      _count: { _all: true },
+      orderBy: { _count: { browser: "desc" } },
+      take: 6,
+    }),
+    prisma.pageView.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 15,
+      select: {
+        path: true,
+        ip: true,
+        country: true,
+        city: true,
+        device: true,
+        browser: true,
+        os: true,
+        referrer: true,
+        createdAt: true,
+      },
+    }),
+    prisma.article.count(),
+    prisma.breakingItem.count({ where: { active: true } }),
+    prisma.comment.count({ where: { status: "PENDING" } }),
+    prisma.ad.findMany({ orderBy: { createdAt: "desc" } }),
+  ]);
+
+  // 24 hourly buckets ending at the current hour.
+  const base = new Date(now);
+  base.setMinutes(0, 0, 0);
+  const firstHourMs = base.getTime() - 23 * 3600 * 1000;
+  const hourly = Array.from({ length: 24 }, (_, i) => {
+    const d = new Date(firstHourMs + i * 3600 * 1000);
+    return { hour: `${String(d.getHours()).padStart(2, "0")}`, count: 0 };
+  });
+  for (const row of hourlyRows) {
+    const idx = Math.floor((row.createdAt.getTime() - firstHourMs) / (3600 * 1000));
+    if (idx >= 0 && idx < 24) hourly[idx].count += 1;
+  }
+
+  const online = new Set(onlineRows.map((o) => o.ip).filter(Boolean)).size;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const asRows = (rows: any[], key: string) =>
+    rows.map((r) => ({ label: r[key] || "—", count: r._count._all }));
+
+  const adImpressions = ads.reduce((s, a) => s + a.impressions, 0);
+  const adClicks = ads.reduce((s, a) => s + a.clicks, 0);
+
+  res.json({
+    totals: {
+      totalViews,
+      todayViews,
+      uniqueToday: uniqueToday.length,
+      online,
+      articles,
+      breaking,
+      pendingComments,
+      adImpressions,
+      adClicks,
+    },
+    hourly,
+    devices: asRows(devices, "device"),
+    countries: asRows(countries, "country"),
+    browsers: asRows(browsers, "browser"),
+    referrers: referrers.map((r) => ({
+      label: r.referrer || "Direct",
+      count: r._count._all,
+    })),
+    recent,
+    ads,
+  });
+});
+
+// ===================== ADS =====================
+const adSchema = z.object({
+  name: z.string().min(1),
+  imageUrl: z.string().min(1),
+  linkUrl: z.string().min(1),
+  placement: z.enum(["HEADER", "SIDEBAR", "IN_ARTICLE", "FOOTER", "POPUP"]),
+  active: z.boolean().default(true),
+  startsAt: z.string().nullable().optional(),
+  endsAt: z.string().nullable().optional(),
+});
+
+adminRouter.get("/ads", async (_req, res) => {
+  const ads = await prisma.ad.findMany({ orderBy: { createdAt: "desc" } });
+  res.json({ ads });
+});
+
+adminRouter.post("/ads", requireRole(...CAN_MANAGE), async (req, res) => {
+  const parsed = adSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: "সঠিক তথ্য দিন" });
+  const d = parsed.data;
+  const ad = await prisma.ad.create({
+    data: {
+      name: d.name,
+      imageUrl: d.imageUrl,
+      linkUrl: d.linkUrl,
+      placement: d.placement,
+      active: d.active,
+      startsAt: d.startsAt ? new Date(d.startsAt) : null,
+      endsAt: d.endsAt ? new Date(d.endsAt) : null,
+    },
+  });
+  res.status(201).json({ ad });
+});
+
+adminRouter.put("/ads/:id", requireRole(...CAN_MANAGE), async (req, res) => {
+  const parsed = adSchema.partial().safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: "সঠিক তথ্য দিন" });
+  const d = parsed.data;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const data: any = {};
+  if (d.name !== undefined) data.name = d.name;
+  if (d.imageUrl !== undefined) data.imageUrl = d.imageUrl;
+  if (d.linkUrl !== undefined) data.linkUrl = d.linkUrl;
+  if (d.placement !== undefined) data.placement = d.placement;
+  if (d.active !== undefined) data.active = d.active;
+  if (d.startsAt !== undefined) data.startsAt = d.startsAt ? new Date(d.startsAt) : null;
+  if (d.endsAt !== undefined) data.endsAt = d.endsAt ? new Date(d.endsAt) : null;
+  const ad = await prisma.ad
+    .update({ where: { id: req.params.id }, data })
+    .catch(() => null);
+  if (!ad) return res.status(404).json({ error: "Not found" });
+  res.json({ ad });
+});
+
+adminRouter.delete("/ads/:id", requireRole(...CAN_MANAGE), async (req, res) => {
+  await prisma.ad.delete({ where: { id: req.params.id } }).catch(() => null);
+  res.json({ ok: true });
+});
+
 // ===================== E-PAPER EDITIONS =====================
 const epaperSchema = z.object({
   date: z.string().min(1),

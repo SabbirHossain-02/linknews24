@@ -261,3 +261,45 @@ model ActivityLog {
 
   @@index([userId])
 }
+
+// --- Analytics ---
+model PageView {
+  id        String   @id @default(cuid())
+  path      String
+  referrer  String?
+  device    String? // desktop | mobile | tablet
+  browser   String?
+  os        String?
+  ip        String?
+  country   String?
+  city      String?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([ip])
+}
+
+// --- Advertising ---
+enum AdPlacement {
+  HEADER
+  SIDEBAR
+  IN_ARTICLE
+  FOOTER
+  POPUP
+}
+
+model Ad {
+  id          String      @id @default(cuid())
+  name        String
+  imageUrl    String
+  linkUrl     String
+  placement   AdPlacement @default(SIDEBAR)
+  active      Boolean     @default(true)
+  impressions Int         @default(0)
+  clicks      Int         @default(0)
+  startsAt    DateTime?
+  endsAt      DateTime?
+  createdAt   DateTime    @default(now())
+
+  @@index([placement, active])
+}
