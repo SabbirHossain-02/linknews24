@@ -2,6 +2,7 @@ import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../prisma";
 import { BLOOD_GROUPS } from "../lib/blood";
+import { emitChange } from "../realtime";
 
 export const publicRouter = Router();
 
@@ -229,6 +230,8 @@ publicRouter.post("/articles/:slug/comments", async (req, res) => {
       body: parsed.data.body,
     },
   });
+  // Notify the admin moderation panel (and any listening browsers) in realtime.
+  emitChange({ type: "comment" });
   res.json({ ok: true });
 });
 

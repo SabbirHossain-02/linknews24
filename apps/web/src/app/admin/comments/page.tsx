@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Check, Trash2, X, Ban } from "lucide-react";
 import { apiFetch } from "@/lib/admin-api";
+import { getSocket } from "@/lib/socket";
 import { ConfirmModal } from "@/components/admin/Modal";
 import { useAdminT } from "@/lib/admin-i18n";
 
@@ -37,6 +38,11 @@ export default function CommentsAdminPage() {
 
   useEffect(() => {
     load();
+    const socket = getSocket();
+    socket.on("content:changed", load);
+    return () => {
+      socket.off("content:changed", load);
+    };
   }, [load]);
 
   const setStatus = async (id: string, status: Comment["status"]) => {
