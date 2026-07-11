@@ -24,9 +24,17 @@ export async function apiFetch<T = unknown>(
 }
 
 export async function uploadFile(file: File): Promise<string> {
+  return uploadTo("/api/admin/media/upload", file);
+}
+
+export async function uploadPdf(file: File): Promise<string> {
+  return uploadTo("/api/admin/epaper/upload", file);
+}
+
+async function uploadTo(path: string, file: File): Promise<string> {
   const fd = new FormData();
   fd.append("file", file);
-  const res = await fetch(`${API_BASE}/api/admin/media/upload`, {
+  const res = await fetch(`${API_BASE}${path}`, {
     method: "POST",
     credentials: "include",
     body: fd,

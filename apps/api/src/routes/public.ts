@@ -143,6 +143,17 @@ publicRouter.get("/homepage", async (_req, res) => {
   res.json({ hero, topStories, latest, sections });
 });
 
+// --- E-Paper ---
+publicRouter.get("/epaper", async (_req, res) => {
+  const editions = await prisma.epaperEdition.findMany({
+    where: { published: true },
+    orderBy: { date: "desc" },
+    take: 60,
+    select: { id: true, date: true, pdfUrl: true, thumbnail: true },
+  });
+  res.json({ editions });
+});
+
 publicRouter.get("/livetv", async (_req, res) => {
   const live = await prisma.liveTvSetting.findUnique({
     where: { id: "live-tv" },

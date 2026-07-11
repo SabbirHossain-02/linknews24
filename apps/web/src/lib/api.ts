@@ -141,6 +141,18 @@ export interface ApiDonor {
   district: { name: string; nameEn: string } | null;
 }
 
+export interface ApiEdition {
+  id: string;
+  date: string;
+  pdfUrl: string;
+  thumbnail: string | null;
+}
+
+export async function getEpaperEditions(): Promise<ApiEdition[]> {
+  const d = await apiGet<{ editions: ApiEdition[] }>("/api/epaper");
+  return d?.editions ?? [];
+}
+
 export async function getTag(
   slug: string,
 ): Promise<{ tag: ApiTag; articles: ApiArticle[] } | null> {

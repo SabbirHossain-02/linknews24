@@ -61,6 +61,27 @@ adminRouter.post(
   },
 );
 
+// Larger limit + PDF-only filter for e-paper editions.
+const pdfUpload = multer({
+  storage,
+  limits: { fileSize: 40 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => cb(null, file.mimetype === "application/pdf"),
+});
+
+adminRouter.post(
+  "/epaper/upload",
+  requireRole(...CAN_WRITE),
+  pdfUpload.single("file"),
+  async (req, res) => {
+    if (!req.file) return res.status(400).json({ error: "PDF পাওয়া যায়নি" });
+    const url = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
+    await prisma.media.create({
+      data: { url, type: "PDF", uploadedById: req.user!.id },
+    });
+    res.json({ url });
+  },
+);
+
 const articleSchema = z.object({
   title: z.string().min(1),
   titleEn: z.string().default(""),
@@ -788,5 +809,60 @@ adminRouter.patch("/comments/:id", requireRole(...CAN_MODERATE), async (req, res
 
 adminRouter.delete("/comments/:id", requireRole(...CAN_MODERATE), async (req, res) => {
   await prisma.comment.delete({ where: { id: req.params.id } }).catch(() => null);
+  res.json({ ok: true });
+});
+
+// ===================== E-PAPER EDITIONS =====================
+const epaperSchema = z.object({
+  date: z.string().min(1),
+  pdfUrl: z.string().min(1),
+  thumbnail: z.string().nullable().optional(),
+  published: z.boolean().default(true),
+});
+
+adminRouter.get("/epaper", async (_req, res) => {
+  const editions = await prisma.epaperEdition.findMany({
+    orderBy: { date: "desc" },
+  });
+  res.json({ editions });
+});
+
+adminRouter.post("/epaper", requireRole(...CAN_PUBLISH), async (req, res) => {
+  const parsed = epaperSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: "সঠিক তথ্য দিন" });
+  const edition = await prisma.epaperEdition.create({
+    data: {
+      date: new Date(parsed.data.date),
+      pdfUrl: parsed.data.pdfUrl,
+      thumbnail: parsed.data.thumbnail || null,
+      published: parsed.data.published,
+    },
+  });
+  res.status(201).json({ edition });
+});
+
+adminRouter.patch("/epaper/:id", requireRole(...CAN_PUBLISH), async (req, res) => {
+  const body = req.body ?? {};
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const data: any = {};
+  if (typeof body.published === "boolean") data.published = body.published;
+  if (body.date) data.date = new Date(body.date);
+  if (body.pdfUrl) data.pdfUrl = body.pdfUrl;
+  if (body.thumbnail !== undefined) data.thumbnail = body.thumbnail || null;
+  const edition = await prisma.epaperEdition
+    .update({ where: { id: req.params.id }, data })
+    .catch(() => null);
+  if (!edition) return res.status(404).json({ error: "Not found" });
+  res.json({ edition });
+});
+
+adminRouter.delete("/epaper/:id", requireRole(...CAN_PUBLISH), async (req, res) => {
+  const item = await prisma.epaperEdition
+    .delete({ where: { id: req.params.id } })
+    .catch(() => null);
+  if (item) {
+    const file = item.pdfUrl.split("/uploads/")[1];
+    if (file) fs.promises.rm(path.join(UPLOAD_DIR, file)).catch(() => {});
+  }
   res.json({ ok: true });
 });

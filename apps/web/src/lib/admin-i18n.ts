@@ -247,6 +247,18 @@ export const adminDict = {
     bn: "কমা দিয়ে আলাদা করুন (যেমন: রাজনীতি, নির্বাচন)",
     en: "Comma-separated (e.g. politics, election)",
   },
+
+  // E-Paper
+  epaper: { bn: "ই-পেপার", en: "E-Paper" },
+  addEdition: { bn: "নতুন সংস্করণ", en: "New edition" },
+  editionDate: { bn: "প্রকাশের তারিখ", en: "Publish date" },
+  uploadPdf: { bn: "PDF আপলোড", en: "Upload PDF" },
+  pdfUploaded: { bn: "PDF আপলোড হয়েছে", en: "PDF uploaded" },
+  uploadingPdf: { bn: "আপলোড হচ্ছে…", en: "Uploading…" },
+  publishedLabel: { bn: "প্রকাশিত", en: "Published" },
+  draftLabel: { bn: "খসড়া", en: "Draft" },
+  noEditions: { bn: "কোনো সংস্করণ নেই।", en: "No editions yet." },
+  epaperPdfRequired: { bn: "আগে PDF আপলোড করুন", en: "Upload a PDF first" },
 } as const;
 
 export type AdminKey = keyof typeof adminDict;

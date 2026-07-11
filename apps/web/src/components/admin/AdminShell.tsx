@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   Droplet,
+  FileText,
   FolderTree,
   Image as ImageIcon,
   LayoutDashboard,
@@ -38,6 +39,7 @@ const NAV: NavItem[] = [
   { key: "homepageBuilder", href: "/admin/homepage", icon: LayoutTemplate },
   { key: "liveTv", href: "/admin/live-tv", icon: Tv },
   { key: "media", href: "/admin/media", icon: ImageIcon },
+  { key: "epaper", href: "/admin/epaper", icon: FileText },
   { key: "lawyers", href: "/admin/lawyers", icon: Scale },
   { key: "donors", href: "/admin/donors", icon: Droplet },
   { key: "newsletter", href: "/admin/newsletter", icon: Mail },
