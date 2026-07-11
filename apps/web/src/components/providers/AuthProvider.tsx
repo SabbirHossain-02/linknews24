@@ -1,73 +1,72 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
-import {
-  clearUser,
-  getStoredUser,
-  storeUser,
-  type MockUser,
-} from "@/lib/auth-storage";
+import { apiFetch } from "@/lib/admin-api";
+
+export interface AccountUser {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string | null;
+  avatar?: string | null;
+  bio?: string | null;
+  city?: string | null;
+  joinedAt?: string;
+}
 
 interface AuthContextValue {
-  user: MockUser | null;
+  user: AccountUser | null;
   ready: boolean;
-  login: (email: string) => void;
-  register: (name: string, email: string) => void;
-  updateUser: (patch: Partial<MockUser>) => void;
+  login: (email: string, password: string) => Promise<void>;
+  register: (name: string, email: string, password: string) => Promise<void>;
+  updateUser: (patch: Partial<AccountUser>) => Promise<void>;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<MockUser | null>(null);
+  const [user, setUser] = useState<AccountUser | null>(null);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    setUser(getStoredUser());
-    setReady(true);
+    apiFetch<{ user: AccountUser }>("/api/account/me")
+      .then((d) => setUser(d.user))
+      .catch(() => setUser(null))
+      .finally(() => setReady(true));
   }, []);
 
-  const login = (email: string) => {
-    const nameFromEmail = email.split("@")[0];
-    const nextUser: MockUser = {
-      ...getStoredUser(),
-      name: nameFromEmail,
-      email,
-      joinedAt: getStoredUser()?.joinedAt ?? new Date().toISOString(),
-    };
-    storeUser(nextUser);
-    setUser(nextUser);
-  };
-
-  const register = (name: string, email: string) => {
-    const nextUser: MockUser = {
-      name,
-      email,
-      joinedAt: getStoredUser()?.joinedAt ?? new Date().toISOString(),
-    };
-    storeUser(nextUser);
-    setUser(nextUser);
-  };
-
-  const updateUser = (patch: Partial<MockUser>) => {
-    setUser((prev) => {
-      if (!prev) return prev;
-      const next = { ...prev, ...patch };
-      storeUser(next);
-      return next;
+  const login = async (email: string, password: string) => {
+    const d = await apiFetch<{ user: AccountUser }>("/api/account/login", {
+      method: "POST",
+      body: JSON.stringify({ email, password }),
     });
+    setUser(d.user);
+  };
+
+  const register = async (name: string, email: string, password: string) => {
+    const d = await apiFetch<{ user: AccountUser }>("/api/account/register", {
+      method: "POST",
+      body: JSON.stringify({ name, email, password }),
+    });
+    setUser(d.user);
+  };
+
+  const updateUser = async (patch: Partial<AccountUser>) => {
+    const d = await apiFetch<{ user: AccountUser }>("/api/account/me", {
+      method: "PATCH",
+      body: JSON.stringify(patch),
+    });
+    setUser(d.user);
   };
 
   const logout = () => {
-    clearUser();
+    apiFetch("/api/account/logout", { method: "POST" }).catch(() => {});
     setUser(null);
   };
 
   return (
-    <AuthContext.Provider
-      value={{ user, ready, login, register, updateUser, logout }}
-    >
+    <AuthContext.Provider value={{ user, ready, login, register, updateUser, logout }}>
       {children}
     </AuthContext.Provider>
   );

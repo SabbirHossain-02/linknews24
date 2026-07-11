@@ -16,6 +16,8 @@ export const env = {
   jwtSecret: required("JWT_SECRET"),
   corsOrigin: process.env.CORS_ORIGIN ?? "http://localhost:3000",
   cookieName: "ln24_token",
+  // Separate cookie for public advertiser accounts (keeps them isolated from admin).
+  accountCookieName: "ln24_acc",
   // No HTTPS yet (IP:port) — cookie cannot be Secure or it won't be set.
   cookieSecure: process.env.COOKIE_SECURE === "true",
 };

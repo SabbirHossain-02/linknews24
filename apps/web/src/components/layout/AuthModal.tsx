@@ -100,16 +100,27 @@ export function AuthModal({
     setError(null);
   };
 
-  const handleLogin = (e: React.FormEvent<HTMLFormElement>) => {
+  const [busy, setBusy] = useState(false);
+
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setError(null);
     const form = new FormData(e.currentTarget);
-    login(String(form.get("email")));
-    close();
-    router.push("/dashboard");
+    setBusy(true);
+    try {
+      await login(String(form.get("email")), String(form.get("password")));
+      close();
+      router.push("/dashboard");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t("signInFailed"));
+    } finally {
+      setBusy(false);
+    }
   };
 
-  const handleRegister = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setError(null);
     const form = new FormData(e.currentTarget);
     const password = String(form.get("password"));
     const confirmPassword = String(form.get("confirmPassword"));
@@ -119,9 +130,16 @@ export function AuthModal({
       return;
     }
 
-    register(String(form.get("name")), String(form.get("email")));
-    close();
-    router.push("/dashboard");
+    setBusy(true);
+    try {
+      await register(String(form.get("name")), String(form.get("email")), password);
+      close();
+      router.push("/dashboard");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t("signInFailed"));
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -201,7 +219,8 @@ export function AuthModal({
                   />
                   <button
                     type="submit"
-                    className="mt-1 rounded-lg bg-brand-crimson py-2.5 font-ui text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-crimson-dark"
+                    disabled={busy}
+                    className="mt-1 rounded-lg bg-brand-crimson py-2.5 font-ui text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-crimson-dark disabled:opacity-60"
                   >
                     {t("signIn")}
                   </button>
@@ -254,7 +273,8 @@ export function AuthModal({
                   </label>
                   <button
                     type="submit"
-                    className="mt-1 rounded-lg bg-brand-crimson py-2.5 font-ui text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-crimson-dark"
+                    disabled={busy}
+                    className="mt-1 rounded-lg bg-brand-crimson py-2.5 font-ui text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-crimson-dark disabled:opacity-60"
                   >
                     {t("register")}
                   </button>

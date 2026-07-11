@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { MapPin, Pencil } from "lucide-react";
-import type { MockUser } from "@/lib/auth-storage";
+import type { AccountUser } from "@/components/providers/AuthProvider";
 import { useLocale } from "@/components/providers/LocaleProvider";
 import { EditProfileModal } from "./EditProfileModal";
 
@@ -11,7 +11,7 @@ export function ProfileCard({
   user,
   onLogout,
 }: {
-  user: MockUser;
+  user: AccountUser;
   onLogout: () => void;
 }) {
   const { t, locale } = useLocale();

@@ -94,6 +94,7 @@ export const translations = {
     en: "Google sign-in isn't connected yet — coming soon.",
   },
   passwordMismatch: { bn: "পাসওয়ার্ড দুটো মিলছে না।", en: "Passwords don't match." },
+  signInFailed: { bn: "সাইন-ইন ব্যর্থ হয়েছে।", en: "Sign-in failed." },
   close: { bn: "বন্ধ করুন", en: "Close" },
 
   loginToViewDashboard: {

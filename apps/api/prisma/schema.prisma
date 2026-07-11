@@ -279,6 +279,20 @@ model PageView {
   @@index([ip])
 }
 
+// --- Public advertiser accounts (separate from admin Users) ---
+model Account {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  phone     String?
+  avatar    String?
+  bio       String?
+  city      String?
+  createdAt DateTime @default(now())
+  ads       Ad[]
+}
+
 // --- Advertising ---
 enum AdPlacement {
   HEADER
@@ -288,6 +302,13 @@ enum AdPlacement {
   POPUP
 }
 
+enum AdStatus {
+  PENDING // booked, awaiting payment/approval
+  ACTIVE // approved & running
+  REJECTED
+  EXPIRED
+}
+
 model Ad {
   id          String      @id @default(cuid())
   name        String
@@ -295,6 +316,12 @@ model Ad {
   linkUrl     String
   placement   AdPlacement @default(SIDEBAR)
   active      Boolean     @default(true)
+  status      AdStatus    @default(ACTIVE)
+  accountId   String?
+  account     Account?    @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  amount      Int         @default(0) // total price paid, in BDT
+  days        Int         @default(0)
+  paid        Boolean     @default(false)
   impressions Int         @default(0)
   clicks      Int         @default(0)
   startsAt    DateTime?
@@ -302,4 +329,6 @@ model Ad {
   createdAt   DateTime    @default(now())
 
   @@index([placement, active])
+  @@index([accountId])
+  @@index([status])
 }

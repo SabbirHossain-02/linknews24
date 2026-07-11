@@ -5,7 +5,7 @@ import Image from "next/image";
 import { Camera, X } from "lucide-react";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useLocale } from "@/components/providers/LocaleProvider";
-import type { MockUser } from "@/lib/auth-storage";
+import type { AccountUser } from "@/components/providers/AuthProvider";
 
 // Downscale an uploaded image to a small square data URL so it fits
 // comfortably in localStorage.
@@ -38,14 +38,14 @@ export function EditProfileModal({
   user,
   onClose,
 }: {
-  user: MockUser;
+  user: AccountUser;
   onClose: () => void;
 }) {
   const { updateUser } = useAuth();
   const { t } = useLocale();
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const [avatar, setAvatar] = useState<string | undefined>(user.avatar);
+  const [avatar, setAvatar] = useState<string | undefined>(user.avatar ?? undefined);
   const [name, setName] = useState(user.name);
   const [bio, setBio] = useState(user.bio ?? "");
   const [phone, setPhone] = useState(user.phone ?? "");
