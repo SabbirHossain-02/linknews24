@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import type { Article } from "@/types/content";
 import { toneGradientClass } from "@/lib/tone";
 import { getArticleBody, getRelatedArticles } from "@/lib/mock-data";
@@ -84,12 +85,16 @@ export function ArticleContent({
       </div>
 
       {article.featuredImage ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={article.featuredImage}
-          alt={title}
-          className="aspect-video w-full rounded-lg object-cover"
-        />
+        <div className="relative aspect-video w-full overflow-hidden rounded-lg">
+          <Image
+            src={article.featuredImage}
+            alt={title}
+            fill
+            priority
+            sizes="(max-width: 1024px) 100vw, 66vw"
+            className="object-cover"
+          />
+        </div>
       ) : (
         <div
           className={`aspect-video w-full overflow-hidden rounded-lg ${toneGradientClass(

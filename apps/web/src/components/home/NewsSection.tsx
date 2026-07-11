@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { Play } from "lucide-react";
 import type { Article } from "@/types/content";
 import { toneGradientClass } from "@/lib/tone";
@@ -45,11 +46,12 @@ export function NewsSection({
             )}`}
           >
             {lead.featuredImage && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
+              <Image
                 src={lead.featuredImage}
                 alt=""
-                className="absolute inset-0 h-full w-full object-cover"
+                fill
+                sizes="(max-width: 768px) 100vw, 40vw"
+                className="object-cover"
               />
             )}
             {lead.isVideo && (
@@ -88,11 +90,12 @@ export function NewsSection({
                   )}`}
                 >
                   {article.featuredImage && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
+                    <Image
                       src={article.featuredImage}
                       alt=""
-                      className="absolute inset-0 h-full w-full object-cover"
+                      fill
+                      sizes="96px"
+                      className="object-cover"
                     />
                   )}
                 </div>

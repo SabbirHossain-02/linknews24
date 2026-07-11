@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import type { Article } from "@/types/content";
 import { toneGradientClass } from "@/lib/tone";
 import { localizedAuthor, localizedName } from "@/lib/i18n";
@@ -18,11 +19,13 @@ export function HeroStory({ article }: { article: Article }) {
         )}`}
       >
         {article.featuredImage && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <Image
             src={article.featuredImage}
             alt=""
-            className="absolute inset-0 h-full w-full object-cover"
+            fill
+            priority
+            sizes="(max-width: 1024px) 100vw, 66vw"
+            className="object-cover"
           />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />

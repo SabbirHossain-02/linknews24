@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { Play } from "lucide-react";
 import type { Article } from "@/types/content";
 import { toneGradientClass } from "@/lib/tone";
@@ -19,11 +20,12 @@ export function ArticleCard({ article }: { article: Article }) {
         )}`}
       >
         {article.featuredImage && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <Image
             src={article.featuredImage}
             alt=""
-            className="absolute inset-0 h-full w-full object-cover"
+            fill
+            sizes="(max-width: 640px) 50vw, 25vw"
+            className="object-cover"
           />
         )}
         {article.isVideo && (
