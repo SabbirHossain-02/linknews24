@@ -176,6 +176,20 @@ export const translations = {
     en: "No news found. Try a different keyword.",
   },
 
+  comments: { bn: "মন্তব্য", en: "Comments" },
+  commentName: { bn: "আপনার নাম", en: "Your name" },
+  commentEmail: { bn: "ইমেইল (ঐচ্ছিক)", en: "Email (optional)" },
+  commentBody: { bn: "আপনার মন্তব্য লিখুন…", en: "Write your comment…" },
+  commentSubmit: { bn: "মন্তব্য করুন", en: "Post comment" },
+  commentPending: {
+    bn: "ধন্যবাদ! আপনার মন্তব্য মডারেশনের পর প্রকাশিত হবে।",
+    en: "Thanks! Your comment will appear after moderation.",
+  },
+  noComments: {
+    bn: "এখনো কোনো মন্তব্য নেই। প্রথম মন্তব্যটি করুন।",
+    en: "No comments yet. Be the first to comment.",
+  },
+
   lawyersTitle: { bn: "আইনজীবী তালিকা", en: "Lawyer Directory" },
   lawyersSubtitle: {
     bn: "জেলা অনুযায়ী আইনজীবীদের যোগাযোগ নম্বর।",

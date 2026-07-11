@@ -11,6 +11,7 @@ import { ThematicRow } from "@/components/home/ThematicRow";
 import { ArticleActions } from "./ArticleActions";
 import { RecordHistory } from "./RecordHistory";
 import { ArticleSchema } from "./ArticleSchema";
+import { CommentSection } from "./CommentSection";
 
 export function ArticleContent({
   article,
@@ -109,6 +110,8 @@ export function ArticleContent({
           ))}
         </div>
       )}
+
+      <CommentSection slug={article.slug} />
 
       {related.length > 0 && (
         <div className="border-t border-border pt-8">

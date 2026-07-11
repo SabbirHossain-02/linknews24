@@ -41,7 +41,7 @@ const NAV: NavItem[] = [
   { key: "lawyers", href: "/admin/lawyers", icon: Scale },
   { key: "donors", href: "/admin/donors", icon: Droplet },
   { key: "newsletter", href: "/admin/newsletter", icon: Mail },
-  { key: "comments", href: null, icon: MessageSquare },
+  { key: "comments", href: "/admin/comments", icon: MessageSquare },
   { key: "settings", href: "/admin/settings", icon: Settings },
   { key: "usersRoles", href: "/admin/users", icon: Users },
 ];

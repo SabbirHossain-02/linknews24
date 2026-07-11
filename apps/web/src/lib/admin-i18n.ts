@@ -231,6 +231,17 @@ export const adminDict = {
   prev: { bn: "আগে", en: "Prev" },
   next: { bn: "পরে", en: "Next" },
   pageOf: { bn: "পৃষ্ঠা {p} / {t}", en: "Page {p} of {t}" },
+
+  // Comments moderation
+  commentsPending: { bn: "অপেক্ষমাণ", en: "Pending" },
+  commentsApproved: { bn: "অনুমোদিত", en: "Approved" },
+  commentsRejected: { bn: "প্রত্যাখ্যাত", en: "Rejected" },
+  commentsSpam: { bn: "স্প্যাম", en: "Spam" },
+  commentApprove: { bn: "অনুমোদন", en: "Approve" },
+  commentReject: { bn: "প্রত্যাখ্যান", en: "Reject" },
+  commentMarkSpam: { bn: "স্প্যাম", en: "Spam" },
+  commentOn: { bn: "আর্টিকেল:", en: "On:" },
+  noComments: { bn: "কোনো কমেন্ট নেই।", en: "No comments." },
 } as const;
 
 export type AdminKey = keyof typeof adminDict;

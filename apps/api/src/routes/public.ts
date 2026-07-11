@@ -192,6 +192,46 @@ publicRouter.post("/articles/:slug/view", async (req, res) => {
   res.json({ ok: true });
 });
 
+// --- Comments ---
+publicRouter.get("/articles/:slug/comments", async (req, res) => {
+  const article = await prisma.article.findUnique({
+    where: { slug: req.params.slug },
+    select: { id: true },
+  });
+  if (!article) return res.json({ comments: [] });
+  const comments = await prisma.comment.findMany({
+    where: { articleId: article.id, status: "APPROVED" },
+    orderBy: { createdAt: "desc" },
+    select: { id: true, name: true, body: true, createdAt: true },
+  });
+  res.json({ comments });
+});
+
+const commentSchema = z.object({
+  name: z.string().min(1).max(80),
+  email: z.string().email().optional().or(z.literal("")),
+  body: z.string().min(1).max(2000),
+});
+
+publicRouter.post("/articles/:slug/comments", async (req, res) => {
+  const article = await prisma.article.findFirst({
+    where: { slug: req.params.slug, status: "PUBLISHED" },
+    select: { id: true },
+  });
+  if (!article) return res.status(404).json({ error: "Not found" });
+  const parsed = commentSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: "সঠিক তথ্য দিন" });
+  await prisma.comment.create({
+    data: {
+      articleId: article.id,
+      name: parsed.data.name,
+      email: parsed.data.email || null,
+      body: parsed.data.body,
+    },
+  });
+  res.json({ ok: true });
+});
+
 publicRouter.get("/articles/:slug", async (req, res) => {
   const article = await prisma.article.findFirst({
     where: { slug: req.params.slug, status: "PUBLISHED" },

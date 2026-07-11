@@ -2,6 +2,7 @@ export const CAN_WRITE = ["REPORTER", "EDITOR", "ADMIN", "SUPER_ADMIN"];
 export const CAN_PUBLISH = ["EDITOR", "ADMIN", "SUPER_ADMIN"];
 export const CAN_MANAGE = ["ADMIN", "SUPER_ADMIN"];
 export const CAN_DIRECTORY = ["MODERATOR", "ADMIN", "SUPER_ADMIN"];
+export const CAN_MODERATE = ["MODERATOR", "EDITOR", "ADMIN", "SUPER_ADMIN"];
 
 export function slugify(input: string): string {
   const base = input

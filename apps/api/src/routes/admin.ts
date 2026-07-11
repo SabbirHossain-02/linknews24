@@ -8,6 +8,7 @@ import { requireRole } from "../middleware/auth";
 import {
   CAN_DIRECTORY,
   CAN_MANAGE,
+  CAN_MODERATE,
   CAN_PUBLISH,
   CAN_WRITE,
   slugify,
@@ -739,5 +740,33 @@ adminRouter.put("/donors/:id", requireRole(...CAN_DIRECTORY), async (req, res) =
 
 adminRouter.delete("/donors/:id", requireRole(...CAN_DIRECTORY), async (req, res) => {
   await prisma.bloodDonor.delete({ where: { id: req.params.id } }).catch(() => null);
+  res.json({ ok: true });
+});
+
+// ===================== COMMENTS (moderation) =====================
+adminRouter.get("/comments", async (req, res) => {
+  const { status } = req.query as Record<string, string>;
+  const comments = await prisma.comment.findMany({
+    where: status ? { status: status as never } : undefined,
+    include: { article: { select: { title: true, slug: true } } },
+    orderBy: { createdAt: "desc" },
+    take: 200,
+  });
+  res.json({ comments });
+});
+
+adminRouter.patch("/comments/:id", requireRole(...CAN_MODERATE), async (req, res) => {
+  const status = String(req.body?.status);
+  if (!["PENDING", "APPROVED", "REJECTED", "SPAM"].includes(status))
+    return res.status(400).json({ error: "Invalid status" });
+  const comment = await prisma.comment
+    .update({ where: { id: req.params.id }, data: { status: status as never } })
+    .catch(() => null);
+  if (!comment) return res.status(404).json({ error: "Not found" });
+  res.json({ comment });
+});
+
+adminRouter.delete("/comments/:id", requireRole(...CAN_MODERATE), async (req, res) => {
+  await prisma.comment.delete({ where: { id: req.params.id } }).catch(() => null);
   res.json({ ok: true });
 });
