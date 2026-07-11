@@ -159,6 +159,15 @@ export const translations = {
     en: "There are no photo galleries right now.",
   },
   searchButton: { bn: "খুঁজুন", en: "Search" },
+  allCategoriesFilter: { bn: "সব বিভাগ", en: "All categories" },
+  dateFrom: { bn: "শুরুর তারিখ", en: "From date" },
+  dateTo: { bn: "শেষ তারিখ", en: "To date" },
+  applyFilters: { bn: "ফিল্টার প্রয়োগ", en: "Apply" },
+  clearFilters: { bn: "মুছুন", en: "Clear" },
+  searchPrompt: {
+    bn: "কীওয়ার্ড লিখুন অথবা বিভাগ ও তারিখ দিয়ে খুঁজুন।",
+    en: "Type a keyword, or filter by category and date.",
+  },
   previousEdition: { bn: "আগের সংস্করণ", en: "Previous edition" },
   nextEdition: { bn: "পরের সংস্করণ", en: "Next edition" },
   epaperComingSoon: {

@@ -159,14 +159,29 @@ publicRouter.get("/breaking", async (_req, res) => {
 });
 
 publicRouter.get("/articles", async (req, res) => {
-  const { category, page = "1", limit = "12" } = req.query as Record<string, string>;
+  const { category, q, from, to, page = "1", limit = "12" } =
+    req.query as Record<string, string>;
   const take = Math.min(Number(limit) || 12, 50);
   const skip = (Math.max(Number(page) || 1, 1) - 1) * take;
 
-  const where = {
-    status: "PUBLISHED" as const,
-    category: category ? { slug: category } : undefined,
-  };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const where: any = { status: "PUBLISHED" };
+  if (category) where.category = { slug: category };
+  if (q) {
+    where.OR = [
+      { title: { contains: q, mode: "insensitive" } },
+      { titleEn: { contains: q, mode: "insensitive" } },
+      { excerpt: { contains: q, mode: "insensitive" } },
+      { excerptEn: { contains: q, mode: "insensitive" } },
+      { body: { contains: q, mode: "insensitive" } },
+      { tags: { some: { name: { contains: q, mode: "insensitive" } } } },
+    ];
+  }
+  if (from || to) {
+    where.publishedAt = {};
+    if (from) where.publishedAt.gte = new Date(from);
+    if (to) where.publishedAt.lte = new Date(`${to}T23:59:59.999Z`);
+  }
 
   const [articles, total] = await Promise.all([
     prisma.article.findMany({

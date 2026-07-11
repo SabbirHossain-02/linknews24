@@ -79,12 +79,22 @@ export async function getArticleBySlug(slug: string): Promise<ApiArticle | null>
 }
 
 export async function getArticles(
-  params: { category?: string; limit?: number; page?: number } = {},
+  params: {
+    category?: string;
+    limit?: number;
+    page?: number;
+    q?: string;
+    from?: string;
+    to?: string;
+  } = {},
 ): Promise<{ articles: ApiArticle[]; total: number }> {
   const q = new URLSearchParams();
   if (params.category) q.set("category", params.category);
   if (params.limit) q.set("limit", String(params.limit));
   if (params.page) q.set("page", String(params.page));
+  if (params.q) q.set("q", params.q);
+  if (params.from) q.set("from", params.from);
+  if (params.to) q.set("to", params.to);
   const data = await apiGet<{ articles: ApiArticle[]; total: number }>(
     `/api/articles?${q.toString()}`,
   );
