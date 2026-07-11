@@ -654,9 +654,12 @@ adminRouter.put("/settings", requireRole(...CAN_MANAGE), async (req, res) => {
 
 // ===================== LAWYERS DIRECTORY =====================
 adminRouter.get("/lawyers", async (req, res) => {
-  const { district } = req.query as Record<string, string>;
+  const { district, q } = req.query as Record<string, string>;
   const lawyers = await prisma.lawyer.findMany({
-    where: district ? { districtId: district } : undefined,
+    where: {
+      districtId: district || undefined,
+      name: q ? { contains: q, mode: "insensitive" } : undefined,
+    },
     include: { district: { select: { name: true } } },
     orderBy: { createdAt: "desc" },
     take: 500,
@@ -697,9 +700,12 @@ adminRouter.delete("/lawyers/:id", requireRole(...CAN_DIRECTORY), async (req, re
 
 // ===================== BLOOD DONORS DIRECTORY =====================
 adminRouter.get("/donors", async (req, res) => {
-  const { group } = req.query as Record<string, string>;
+  const { group, q } = req.query as Record<string, string>;
   const donors = await prisma.bloodDonor.findMany({
-    where: group ? { group } : undefined,
+    where: {
+      group: group || undefined,
+      name: q ? { contains: q, mode: "insensitive" } : undefined,
+    },
     include: { district: { select: { name: true } } },
     orderBy: { createdAt: "desc" },
     take: 500,

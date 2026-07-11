@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Search, Trash2 } from "lucide-react";
 import { apiFetch } from "@/lib/admin-api";
 import { ConfirmModal } from "@/components/admin/Modal";
 import { useAdminT } from "@/lib/admin-i18n";
@@ -26,6 +26,7 @@ export default function LawyersAdminPage() {
   const t = useAdminT();
   const [districts, setDistricts] = useState<District[]>([]);
   const [districtId, setDistrictId] = useState("");
+  const [q, setQ] = useState("");
   const [lawyers, setLawyers] = useState<Lawyer[]>([]);
   const [form, setForm] = useState({ name: "", spec: "", phone: "", chamber: "" });
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -37,15 +38,18 @@ export default function LawyersAdminPage() {
   }, []);
 
   const load = useCallback(() => {
-    const q = districtId ? `?district=${districtId}` : "";
-    apiFetch<{ lawyers: Lawyer[] }>(`/api/admin/lawyers${q}`)
+    const params = new URLSearchParams();
+    if (districtId) params.set("district", districtId);
+    if (q) params.set("q", q);
+    apiFetch<{ lawyers: Lawyer[] }>(`/api/admin/lawyers?${params.toString()}`)
       .then((d) => setLawyers(d.lawyers))
       .catch(() => {});
-  }, [districtId]);
+  }, [districtId, q]);
 
   useEffect(() => {
-    load();
-  }, [load]);
+    const timer = setTimeout(load, q ? 350 : 0);
+    return () => clearTimeout(timer);
+  }, [load, q]);
 
   const add = async () => {
     if (!districtId || !form.name || !form.phone) return;
@@ -57,6 +61,13 @@ export default function LawyersAdminPage() {
     load();
   };
 
+  const update = async (id: string, patch: Partial<Lawyer>) => {
+    await apiFetch(`/api/admin/lawyers/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(patch),
+    });
+  };
+
   const remove = async (id: string) => {
     await apiFetch(`/api/admin/lawyers/${id}`, { method: "DELETE" });
     load();
@@ -66,11 +77,11 @@ export default function LawyersAdminPage() {
     <div className="max-w-4xl">
       <h1 className="text-2xl font-bold text-heading">{t("lawyers")}</h1>
 
-      <div className="mt-4">
+      <div className="mt-4 flex flex-wrap gap-2">
         <select
           value={districtId}
           onChange={(e) => setDistrictId(e.target.value)}
-          className={`${inputCls} w-full sm:w-64`}
+          className={`${inputCls} w-full sm:w-56`}
         >
           <option value="">{t("selectDistrict")}</option>
           {districts.map((d) => (
@@ -79,6 +90,15 @@ export default function LawyersAdminPage() {
             </option>
           ))}
         </select>
+        <div className="relative flex-1 min-w-[180px]">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground-muted" />
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder={t("searchByName")}
+            className={`${inputCls} w-full pl-9`}
+          />
+        </div>
       </div>
 
       {districtId && (
@@ -94,25 +114,23 @@ export default function LawyersAdminPage() {
         </div>
       )}
 
-      <div className="mt-4 overflow-hidden rounded-xl border border-border bg-background">
+      <div className="mt-4 flex flex-col gap-2">
         {lawyers.length === 0 ? (
-          <p className="p-6 text-center font-ui text-sm text-foreground-muted">{t("noItems")}</p>
+          <p className="rounded-xl border border-border bg-background p-6 text-center font-ui text-sm text-foreground-muted">
+            {t("noItems")}
+          </p>
         ) : (
-          <ul className="divide-y divide-border">
-            {lawyers.map((l) => (
-              <li key={l.id} className="flex items-center justify-between gap-3 px-4 py-3">
-                <div className="min-w-0">
-                  <p className="font-medium text-foreground">{l.name}</p>
-                  <p className="font-ui text-xs text-foreground-muted">
-                    {l.spec} · {l.phone} {l.district ? `· ${l.district.name}` : ""}
-                  </p>
-                </div>
-                <button onClick={() => setDeleteId(l.id)} className="text-foreground-muted hover:text-brand-crimson">
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              </li>
-            ))}
-          </ul>
+          lawyers.map((l) => (
+            <div key={l.id} className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-background p-3">
+              <input defaultValue={l.name} onBlur={(e) => e.target.value !== l.name && update(l.id, { name: e.target.value })} className={`${inputCls} flex-1 min-w-[140px]`} />
+              <input defaultValue={l.spec} onBlur={(e) => e.target.value !== l.spec && update(l.id, { spec: e.target.value })} placeholder={t("specLabel")} className={`${inputCls} w-28`} />
+              <input defaultValue={l.phone} onBlur={(e) => e.target.value !== l.phone && update(l.id, { phone: e.target.value })} placeholder={t("phoneLabel")} className={`${inputCls} w-32`} />
+              <span className="font-ui text-xs text-foreground-muted">{l.district?.name}</span>
+              <button onClick={() => setDeleteId(l.id)} className="shrink-0 text-foreground-muted hover:text-brand-crimson">
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
+          ))
         )}
       </div>
 

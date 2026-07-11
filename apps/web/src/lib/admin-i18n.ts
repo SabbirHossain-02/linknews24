@@ -212,6 +212,7 @@ export const adminDict = {
   addDonor: { bn: "যোগ করুন", en: "Add" },
   selectDistrict: { bn: "জেলা নির্বাচন করুন", en: "Select district" },
   selectGroup: { bn: "গ্রুপ নির্বাচন করুন", en: "Select group" },
+  searchByName: { bn: "নাম দিয়ে খুঁজুন…", en: "Search by name…" },
   specLabel: { bn: "বিশেষত্ব", en: "Specialization" },
   chamberLabel: { bn: "চেম্বার", en: "Chamber" },
   groupLabel: { bn: "গ্রুপ", en: "Group" },
