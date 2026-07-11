@@ -62,16 +62,50 @@ export default function AdminDashboard() {
   const [data, setData] = useState<Analytics | null>(null);
   const lastFetch = useRef(0);
   const pending = useRef(false);
+  const gotData = useRef(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  // Cache the last snapshot so the dashboard shows instantly on the next open
+  // instead of flashing "—" while the request is in flight.
+  const CACHE_KEY = "ln24-admin-analytics";
 
   const load = useCallback(() => {
-    apiFetch<Analytics>("/api/admin/analytics")
-      .then(setData)
-      .catch(() => {});
     lastFetch.current = Date.now();
+    return apiFetch<Analytics>("/api/admin/analytics")
+      .then((d) => {
+        gotData.current = true;
+        setLoadError(null);
+        setData(d);
+        try {
+          localStorage.setItem(CACHE_KEY, JSON.stringify(d));
+        } catch {
+          /* ignore quota */
+        }
+      })
+      .catch((e) => {
+        if (!gotData.current)
+          setLoadError(e instanceof Error ? e.message : "load failed");
+      });
   }, []);
 
   useEffect(() => {
+    // 1) Instant paint from cache.
+    try {
+      const cached = localStorage.getItem(CACHE_KEY);
+      if (cached) setData(JSON.parse(cached));
+    } catch {
+      /* ignore */
+    }
+    // 2) Fresh fetch, with fast retries until the first success (self-heals
+    //    transient failures right after an API restart / cold start).
     load();
+    const retries = [1500, 3500, 7000];
+    const timers = retries.map((ms) =>
+      setTimeout(() => {
+        if (!gotData.current) load();
+      }, ms),
+    );
+
     const socket = getSocket();
     // Throttle refetches so a burst of visits doesn't hammer the API.
     const onEvent = () => {
@@ -93,6 +127,7 @@ export default function AdminDashboard() {
       socket.off("analytics:changed", onEvent);
       socket.off("content:changed", onEvent);
       clearInterval(interval);
+      timers.forEach(clearTimeout);
     };
   }, [load]);
 
@@ -130,6 +165,12 @@ export default function AdminDashboard() {
           {t("dashLive")}
         </span>
       </div>
+
+      {loadError && !data && (
+        <p className="mt-4 rounded-lg bg-brand-crimson/10 px-3.5 py-2 font-ui text-sm text-brand-crimson">
+          ডেটা লোড করা যায়নি: {loadError} — কয়েক সেকেন্ডে আবার চেষ্টা হচ্ছে…
+        </p>
+      )}
 
       {/* Stat cards */}
       <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
