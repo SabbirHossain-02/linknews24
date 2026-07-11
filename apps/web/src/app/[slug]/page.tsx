@@ -79,6 +79,7 @@ export default async function SlugPage({
           bodyHtmlBn={apiArticle.body ?? ""}
           bodyHtmlEn={apiArticle.bodyEn ?? ""}
           related={related}
+          tags={apiArticle.tags ?? []}
         />
         <div className="hidden lg:block print:hidden">
           <ReadingSidebar mostRead={sidebar.mostRead} latestRead={sidebar.latest} />

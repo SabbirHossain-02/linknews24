@@ -18,11 +18,13 @@ export function ArticleContent({
   bodyHtmlBn,
   bodyHtmlEn,
   related: relatedProp,
+  tags = [],
 }: {
   article: Article;
   bodyHtmlBn?: string;
   bodyHtmlEn?: string;
   related?: Article[];
+  tags?: { name: string; nameEn: string; slug: string }[];
 }) {
   const { locale, t } = useLocale();
   const hasHtml = bodyHtmlBn !== undefined || bodyHtmlEn !== undefined;
@@ -107,6 +109,20 @@ export function ArticleContent({
             <p key={index} className="text-[17px] leading-relaxed text-foreground">
               {paragraph}
             </p>
+          ))}
+        </div>
+      )}
+
+      {tags.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2 border-t border-border pt-6">
+          {tags.map((tag) => (
+            <Link
+              key={tag.slug}
+              href={`/tag/${tag.slug}`}
+              className="rounded-full border border-border bg-surface px-3 py-1 font-ui text-xs font-medium text-foreground-muted transition-colors hover:border-brand-crimson hover:text-brand-crimson"
+            >
+              #{locale === "en" ? tag.nameEn : tag.name}
+            </Link>
           ))}
         </div>
       )}

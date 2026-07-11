@@ -35,6 +35,7 @@ interface FormState {
   isHero: boolean;
   seoTitle: string;
   seoDescription: string;
+  tags: string;
 }
 
 const EMPTY: FormState = {
@@ -54,6 +55,7 @@ const EMPTY: FormState = {
   isHero: false,
   seoTitle: "",
   seoDescription: "",
+  tags: "",
 };
 
 const TONES = ["navy", "crimson", "slate", "amber"];
@@ -109,9 +111,9 @@ export function ArticleForm({ articleId }: { articleId?: string }) {
 
   useEffect(() => {
     if (!articleId) return;
-    apiFetch<{ article: FormState & { id: string } }>(
-      `/api/admin/articles/${articleId}`,
-    )
+    apiFetch<{
+      article: Omit<FormState, "tags"> & { id: string; tags?: { name: string }[] };
+    }>(`/api/admin/articles/${articleId}`)
       .then((d) => {
         const a = d.article;
         setForm({
@@ -131,6 +133,7 @@ export function ArticleForm({ articleId }: { articleId?: string }) {
           isHero: a.isHero ?? false,
           seoTitle: a.seoTitle ?? "",
           seoDescription: a.seoDescription ?? "",
+          tags: (a.tags ?? []).map((tg) => tg.name).join(", "),
         });
       })
       .catch((e) => setError(e.message))
@@ -143,7 +146,14 @@ export function ArticleForm({ articleId }: { articleId?: string }) {
     if (!form.categoryId) return setError(t("errCategory"));
     setBusy(true);
     try {
-      const payload = { ...form, status };
+      const payload = {
+        ...form,
+        status,
+        tags: form.tags
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean),
+      };
       if (articleId) {
         await apiFetch(`/api/admin/articles/${articleId}`, {
           method: "PUT",
@@ -301,6 +311,17 @@ export function ArticleForm({ articleId }: { articleId?: string }) {
                 value={form.authorName}
                 onChange={(e) => set("authorName", e.target.value)}
                 placeholder={t("bylinePlaceholder")}
+                className={`${inputCls} mt-1`}
+              />
+            </div>
+            <div>
+              <label className="font-ui text-xs font-semibold text-foreground-muted">
+                {t("tagsLabel")}
+              </label>
+              <input
+                value={form.tags}
+                onChange={(e) => set("tags", e.target.value)}
+                placeholder={t("tagsPlaceholder")}
                 className={`${inputCls} mt-1`}
               />
             </div>

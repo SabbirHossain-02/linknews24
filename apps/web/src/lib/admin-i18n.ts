@@ -242,6 +242,11 @@ export const adminDict = {
   commentMarkSpam: { bn: "স্প্যাম", en: "Spam" },
   commentOn: { bn: "আর্টিকেল:", en: "On:" },
   noComments: { bn: "কোনো কমেন্ট নেই।", en: "No comments." },
+  tagsLabel: { bn: "ট্যাগ", en: "Tags" },
+  tagsPlaceholder: {
+    bn: "কমা দিয়ে আলাদা করুন (যেমন: রাজনীতি, নির্বাচন)",
+    en: "Comma-separated (e.g. politics, election)",
+  },
 } as const;
 
 export type AdminKey = keyof typeof adminDict;

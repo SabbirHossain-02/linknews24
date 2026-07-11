@@ -79,7 +79,24 @@ const articleSchema = z.object({
   status: z.enum(["DRAFT", "SCHEDULED", "PUBLISHED"]).default("DRAFT"),
   seoTitle: z.string().nullable().optional(),
   seoDescription: z.string().nullable().optional(),
+  tags: z.array(z.string()).optional(),
 });
+
+// Turn free-typed tag names into connectOrCreate ops (dedup by slug).
+function tagConnectOrCreate(names?: string[]) {
+  const unique = [
+    ...new Map(
+      (names ?? [])
+        .map((n) => n.trim())
+        .filter(Boolean)
+        .map((n) => [slugify(n), n]),
+    ),
+  ];
+  return unique.map(([slug, name]) => ({
+    where: { slug },
+    create: { name, nameEn: name, slug },
+  }));
+}
 
 // Only one article can be the hero — unset it on all others.
 async function clearOtherHeroes(keepId: string) {
@@ -148,6 +165,7 @@ adminRouter.get("/articles", async (req, res) => {
 adminRouter.get("/articles/:id", async (req, res) => {
   const article = await prisma.article.findUnique({
     where: { id: req.params.id },
+    include: { tags: { select: { name: true } } },
   });
   if (!article) return res.status(404).json({ error: "Not found" });
   res.json({ article });
@@ -187,6 +205,7 @@ adminRouter.post("/articles", requireRole(...CAN_WRITE), async (req, res) => {
       authorId: req.user!.id,
       authorName: data.authorName?.trim() || null,
       publishedAt: status === "PUBLISHED" ? new Date() : null,
+      tags: { connectOrCreate: tagConnectOrCreate(data.tags) },
     },
   });
   if (article.isHero) await clearOtherHeroes(article.id);
@@ -239,6 +258,7 @@ adminRouter.put("/articles/:id", requireRole(...CAN_WRITE), async (req, res) => 
           : status === "DRAFT"
             ? null
             : existing.publishedAt,
+      tags: { set: [], connectOrCreate: tagConnectOrCreate(data.tags) },
     },
   });
   if (article.isHero) await clearOtherHeroes(article.id);

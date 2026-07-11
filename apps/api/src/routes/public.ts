@@ -256,8 +256,31 @@ publicRouter.get("/articles/:slug", async (req, res) => {
     include: {
       category: { select: { name: true, nameEn: true, slug: true } },
       author: { select: { name: true } },
+      tags: { select: { name: true, nameEn: true, slug: true } },
     },
   });
   if (!article) return res.status(404).json({ error: "Not found" });
   res.json({ article });
+});
+
+// --- Tags ---
+publicRouter.get("/tags", async (_req, res) => {
+  const tags = await prisma.tag.findMany({
+    where: { articles: { some: { status: "PUBLISHED" } } },
+    orderBy: { name: "asc" },
+    select: { name: true, nameEn: true, slug: true },
+  });
+  res.json({ tags });
+});
+
+publicRouter.get("/tags/:slug", async (req, res) => {
+  const tag = await prisma.tag.findUnique({ where: { slug: req.params.slug } });
+  if (!tag) return res.status(404).json({ error: "Not found" });
+  const articles = await prisma.article.findMany({
+    where: { status: "PUBLISHED", tags: { some: { slug: req.params.slug } } },
+    include: { category: CAT_SELECT },
+    orderBy: { publishedAt: "desc" },
+    take: 48,
+  });
+  res.json({ tag, articles });
 });

@@ -23,6 +23,13 @@ export interface ApiArticle {
   publishedAt: string | null;
   category?: { name: string; nameEn: string; slug: string } | null;
   author?: { name: string } | null;
+  tags?: { name: string; nameEn: string; slug: string }[];
+}
+
+export interface ApiTag {
+  name: string;
+  nameEn: string;
+  slug: string;
 }
 
 export interface ApiCategory {
@@ -132,6 +139,14 @@ export interface ApiDonor {
   phone: string;
   lastDonation: string | null;
   district: { name: string; nameEn: string } | null;
+}
+
+export async function getTag(
+  slug: string,
+): Promise<{ tag: ApiTag; articles: ApiArticle[] } | null> {
+  return apiGet<{ tag: ApiTag; articles: ApiArticle[] }>(
+    `/api/tags/${encodeURIComponent(slug)}`,
+  );
 }
 
 export async function getLawyers(district: string): Promise<ApiLawyer[]> {
