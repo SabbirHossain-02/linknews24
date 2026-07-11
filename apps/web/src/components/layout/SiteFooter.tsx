@@ -10,6 +10,7 @@ import { useLocale } from "@/components/providers/LocaleProvider";
 import type { Category } from "@/types/content";
 import { FacebookIcon, XIcon, YoutubeIcon } from "@/components/icons/SocialIcons";
 import { NewsletterForm } from "./NewsletterForm";
+import { AdSlot } from "@/components/ads/AdSlot";
 import { StoreBadges } from "./StoreBadges";
 
 interface SiteConfig {
@@ -71,6 +72,11 @@ export function SiteFooter() {
 
   return (
     <footer className="border-t border-border bg-surface text-foreground-muted">
+      <AdSlot
+        placement="FOOTER"
+        className="mx-auto flex max-w-[1600px] justify-center px-6 pt-6"
+        imgClassName="max-h-[120px] w-auto object-contain"
+      />
       <div className="mx-auto grid max-w-[1600px] gap-10 px-6 py-12 md:grid-cols-2 lg:grid-cols-4">
         {/* Brand + social + app */}
         <div>

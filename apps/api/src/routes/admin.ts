@@ -14,7 +14,7 @@ import {
   slugify,
 } from "../lib/roles";
 import { hashPassword } from "../lib/password";
-import { emitChange } from "../realtime";
+import { emitChange, emitAnalytics } from "../realtime";
 
 export const adminRouter = Router();
 
@@ -949,8 +949,37 @@ const adSchema = z.object({
 });
 
 adminRouter.get("/ads", async (_req, res) => {
-  const ads = await prisma.ad.findMany({ orderBy: { createdAt: "desc" } });
+  const ads = await prisma.ad.findMany({
+    orderBy: { createdAt: "desc" },
+    include: { account: { select: { name: true, email: true } } },
+  });
   res.json({ ads });
+});
+
+// Approve / reject an advertiser-booked ad. Approving = payment confirmed →
+// the ad goes live for `days` from now.
+adminRouter.patch("/ads/:id/status", requireRole(...CAN_MANAGE), async (req, res) => {
+  const status = String(req.body?.status);
+  if (!["PENDING", "ACTIVE", "REJECTED", "EXPIRED"].includes(status))
+    return res.status(400).json({ error: "Invalid status" });
+
+  const ad = await prisma.ad.findUnique({ where: { id: req.params.id } });
+  if (!ad) return res.status(404).json({ error: "Not found" });
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const data: any = { status };
+  if (status === "ACTIVE") {
+    data.active = true;
+    data.paid = true;
+    const start = new Date();
+    data.startsAt = start;
+    data.endsAt = new Date(start.getTime() + (ad.days || 1) * 24 * 3600 * 1000);
+  } else {
+    data.active = false;
+  }
+  const updated = await prisma.ad.update({ where: { id: ad.id }, data });
+  emitAnalytics({ type: "ad" });
+  res.json({ ad: updated });
 });
 
 adminRouter.post("/ads", requireRole(...CAN_MANAGE), async (req, res) => {

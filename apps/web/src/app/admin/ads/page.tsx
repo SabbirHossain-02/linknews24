@@ -15,10 +15,14 @@ interface Ad {
   linkUrl: string;
   placement: Placement;
   active: boolean;
+  status: "PENDING" | "ACTIVE" | "REJECTED" | "EXPIRED";
+  amount: number;
+  days: number;
   impressions: number;
   clicks: number;
   startsAt: string | null;
   endsAt: string | null;
+  account: { name: string; email: string } | null;
 }
 
 const PLACEMENTS: Placement[] = ["HEADER", "SIDEBAR", "IN_ARTICLE", "FOOTER", "POPUP"];
@@ -107,6 +111,14 @@ export default function AdsAdminPage() {
     load();
   };
 
+  const setStatus = async (ad: Ad, status: "ACTIVE" | "REJECTED") => {
+    await apiFetch(`/api/admin/ads/${ad.id}/status`, {
+      method: "PATCH",
+      body: JSON.stringify({ status }),
+    });
+    load();
+  };
+
   const remove = async (id: string) => {
     await apiFetch(`/api/admin/ads/${id}`, { method: "DELETE" });
     load();
@@ -156,25 +168,55 @@ export default function AdsAdminPage() {
                     % {t("dashCtr")}
                   </span>
                 </div>
-                <div className="mt-3 flex items-center justify-between">
-                  <button
-                    onClick={() => toggleActive(ad)}
-                    className={`rounded-full px-2.5 py-1 font-ui text-xs font-semibold ${
-                      ad.active
-                        ? "bg-green-100 text-green-700"
-                        : "bg-surface text-foreground-muted"
-                    }`}
-                  >
-                    {ad.active ? t("adActive") : t("draftLabel")}
-                  </button>
-                  <button
-                    onClick={() => setDeleteId(ad.id)}
-                    title={t("delete")}
-                    className="rounded p-1.5 text-foreground-muted hover:bg-surface hover:text-brand-crimson"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
+                {ad.account && (
+                  <p className="mt-2 font-ui text-xs text-foreground-muted">
+                    {t("adAdvertiser")}: {ad.account.name} · ৳
+                    {ad.amount.toLocaleString("en-US")} / {ad.days}d
+                  </p>
+                )}
+                {ad.status === "PENDING" ? (
+                  <div className="mt-3 flex items-center gap-2">
+                    <span className="rounded-full bg-amber-100 px-2.5 py-1 font-ui text-xs font-semibold text-amber-700">
+                      {t("adPending")}
+                    </span>
+                    <button
+                      onClick={() => setStatus(ad, "ACTIVE")}
+                      className="ml-auto rounded-lg bg-green-600 px-3 py-1.5 font-ui text-xs font-semibold text-white hover:bg-green-700"
+                    >
+                      {t("adApprove")}
+                    </button>
+                    <button
+                      onClick={() => setStatus(ad, "REJECTED")}
+                      className="rounded-lg border border-border px-3 py-1.5 font-ui text-xs font-semibold text-foreground hover:bg-surface"
+                    >
+                      {t("adReject")}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="mt-3 flex items-center justify-between">
+                    <button
+                      onClick={() => toggleActive(ad)}
+                      className={`rounded-full px-2.5 py-1 font-ui text-xs font-semibold ${
+                        ad.active && ad.status === "ACTIVE"
+                          ? "bg-green-100 text-green-700"
+                          : "bg-surface text-foreground-muted"
+                      }`}
+                    >
+                      {ad.status === "REJECTED"
+                        ? t("adReject")
+                        : ad.active
+                          ? t("adActive")
+                          : t("draftLabel")}
+                    </button>
+                    <button
+                      onClick={() => setDeleteId(ad.id)}
+                      title={t("delete")}
+                      className="rounded p-1.5 text-foreground-muted hover:bg-surface hover:text-brand-crimson"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           ))

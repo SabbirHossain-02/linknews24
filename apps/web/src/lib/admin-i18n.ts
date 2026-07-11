@@ -301,6 +301,10 @@ export const adminDict = {
   placeIN_ARTICLE: { bn: "আর্টিকেলের ভিতরে", en: "In-article" },
   placeFOOTER: { bn: "ফুটার (নিচে)", en: "Footer" },
   placePOPUP: { bn: "পপআপ", en: "Popup" },
+  adAdvertiser: { bn: "বিজ্ঞাপনদাতা", en: "Advertiser" },
+  adPending: { bn: "অপেক্ষমাণ", en: "Pending" },
+  adApprove: { bn: "অনুমোদন", en: "Approve" },
+  adReject: { bn: "বাতিল", en: "Reject" },
 } as const;
 
 export type AdminKey = keyof typeof adminDict;

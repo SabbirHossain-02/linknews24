@@ -4,6 +4,7 @@ import { prisma } from "../prisma";
 import { BLOOD_GROUPS } from "../lib/blood";
 import { emitChange, emitAnalytics } from "../realtime";
 import { clientIp, geoLookup, parseUA } from "../lib/analytics";
+import { AD_SLOTS } from "../lib/adSlots";
 
 export const publicRouter = Router();
 
@@ -178,6 +179,11 @@ publicRouter.post("/track", async (req, res) => {
   res.status(204).end();
 });
 
+// --- Ad slot catalogue + pricing ---
+publicRouter.get("/ad-slots", (_req, res) => {
+  res.json({ slots: AD_SLOTS });
+});
+
 // --- Ads: serve active ads by placement + track impression/click ---
 publicRouter.get("/ads", async (req, res) => {
   const { placement } = req.query as Record<string, string>;
@@ -185,6 +191,7 @@ publicRouter.get("/ads", async (req, res) => {
   const ads = await prisma.ad.findMany({
     where: {
       active: true,
+      status: "ACTIVE",
       placement: placement ? (placement as never) : undefined,
       AND: [
         { OR: [{ startsAt: null }, { startsAt: { lte: now } }] },

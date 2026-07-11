@@ -1,12 +1,29 @@
 import { Router } from "express";
 import { z } from "zod";
+import path from "node:path";
+import multer from "multer";
 import type { Account } from "@prisma/client";
 import { prisma } from "../prisma";
 import { hashPassword, verifyPassword } from "../lib/password";
 import { env } from "../env";
 import { authAccount, signAccountToken } from "../middleware/account";
+import { slotPrice } from "../lib/adSlots";
+import { UPLOAD_DIR } from "./admin";
 
 export const accountRouter = Router();
+
+const storage = multer.diskStorage({
+  destination: UPLOAD_DIR,
+  filename: (_req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    cb(null, `${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`);
+  },
+});
+const upload = multer({
+  storage,
+  limits: { fileSize: 6 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => cb(null, file.mimetype.startsWith("image/")),
+});
 
 function publicAccount(a: Account) {
   return {
@@ -99,4 +116,79 @@ accountRouter.patch("/me", authAccount, async (req, res) => {
     data: parsed.data,
   });
   res.json({ user: publicAccount(account) });
+});
+
+// --- Advertiser: image upload for ad creatives ---
+accountRouter.post("/upload", authAccount, upload.single("file"), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: "ছবি পাওয়া যায়নি" });
+  const url = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
+  res.json({ url });
+});
+
+// --- Advertiser: book an ad slot (creates a PENDING order) ---
+const bookSchema = z.object({
+  name: z.string().min(1).max(120).optional(),
+  placement: z.enum(["HEADER", "SIDEBAR", "IN_ARTICLE", "FOOTER", "POPUP"]),
+  imageUrl: z.string().min(1),
+  linkUrl: z.string().min(1),
+  days: z.number().int().min(1).max(365),
+});
+
+accountRouter.post("/ads", authAccount, async (req, res) => {
+  const parsed = bookSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: "সঠিক তথ্য দিন" });
+  const d = parsed.data;
+  const price = slotPrice(d.placement);
+  if (price === 0) return res.status(400).json({ error: "অবৈধ স্লট" });
+
+  const ad = await prisma.ad.create({
+    data: {
+      name: d.name?.trim() || `${d.placement} বিজ্ঞাপন`,
+      imageUrl: d.imageUrl,
+      linkUrl: d.linkUrl,
+      placement: d.placement,
+      days: d.days,
+      amount: price * d.days,
+      status: "PENDING",
+      active: false,
+      paid: false,
+      accountId: req.accountId,
+    },
+  });
+  res.status(201).json({ ad });
+});
+
+// --- Advertiser: my ads with live stats ---
+accountRouter.get("/ads", authAccount, async (req, res) => {
+  const ads = await prisma.ad.findMany({
+    where: { accountId: req.accountId },
+    orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      name: true,
+      imageUrl: true,
+      linkUrl: true,
+      placement: true,
+      status: true,
+      amount: true,
+      days: true,
+      paid: true,
+      impressions: true,
+      clicks: true,
+      startsAt: true,
+      endsAt: true,
+      createdAt: true,
+    },
+  });
+  res.json({ ads });
+});
+
+// --- Advertiser: cancel a still-pending order ---
+accountRouter.delete("/ads/:id", authAccount, async (req, res) => {
+  await prisma.ad
+    .deleteMany({
+      where: { id: req.params.id, accountId: req.accountId, status: "PENDING" },
+    })
+    .catch(() => null);
+  res.json({ ok: true });
 });

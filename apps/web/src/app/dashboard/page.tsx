@@ -6,6 +6,7 @@ import {
   Clock,
   Hash,
   LayoutDashboard,
+  Megaphone,
   Settings,
 } from "lucide-react";
 import { useAuth } from "@/components/providers/AuthProvider";
@@ -20,11 +21,13 @@ import { SavedArticlesList } from "@/components/dashboard/SavedArticlesList";
 import { HistoryList } from "@/components/dashboard/HistoryList";
 import { PreferencesPanel } from "@/components/dashboard/PreferencesPanel";
 import { AccountSettings } from "@/components/dashboard/AccountSettings";
+import { AdvertisePanel } from "@/components/dashboard/AdvertisePanel";
 
-type TabKey = "overview" | "saved" | "history" | "following" | "settings";
+type TabKey = "overview" | "advertise" | "saved" | "history" | "following" | "settings";
 
 const TABS: { key: TabKey; label: TranslationKey; icon: typeof Bookmark }[] = [
   { key: "overview", label: "overview", icon: LayoutDashboard },
+  { key: "advertise", label: "advertise", icon: Megaphone },
   { key: "saved", label: "savedNews", icon: Bookmark },
   { key: "history", label: "readingHistory", icon: Clock },
   { key: "following", label: "followingTab", icon: Hash },
@@ -89,6 +92,7 @@ export default function DashboardPage() {
               <ForYouFeed limit={5} />
             </>
           )}
+          {tab === "advertise" && <AdvertisePanel />}
           {tab === "saved" && <SavedArticlesList />}
           {tab === "history" && <HistoryList />}
           {tab === "following" && <FollowedTopics />}
