@@ -27,6 +27,16 @@ interface Ad {
 
 const PLACEMENTS: Placement[] = ["HEADER", "SIDEBAR", "IN_ARTICLE", "FOOTER", "POPUP"];
 
+// Public API only serves an ad while now ∈ [startsAt, endsAt]. Mirror that here
+// so the admin card doesn't show an expired/not-yet-started ad as plainly "Active".
+type LiveState = "live" | "expired" | "scheduled";
+function liveState(ad: { startsAt: string | null; endsAt: string | null }): LiveState {
+  const now = Date.now();
+  if (ad.endsAt && new Date(ad.endsAt).getTime() < now) return "expired";
+  if (ad.startsAt && new Date(ad.startsAt).getTime() > now) return "scheduled";
+  return "live";
+}
+
 const inputCls =
   "w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-brand-crimson focus:outline-none focus:ring-2 focus:ring-brand-crimson/15";
 
@@ -226,20 +236,36 @@ export default function AdsAdminPage() {
                   </div>
                 ) : (
                   <div className="mt-3 flex items-center justify-between">
-                    <button
-                      onClick={() => toggleActive(ad)}
-                      className={`rounded-full px-2.5 py-1 font-ui text-xs font-semibold ${
-                        ad.active && ad.status === "ACTIVE"
-                          ? "bg-green-100 text-green-700"
-                          : "bg-surface text-foreground-muted"
-                      }`}
-                    >
-                      {ad.status === "REJECTED"
-                        ? t("adReject")
-                        : ad.active
-                          ? t("adActive")
-                          : t("draftLabel")}
-                    </button>
+                    {(() => {
+                      const state = liveState(ad);
+                      const showsPublicly =
+                        ad.active && ad.status === "ACTIVE" && state === "live";
+                      const label =
+                        ad.status === "REJECTED"
+                          ? t("adReject")
+                          : !ad.active
+                            ? t("draftLabel")
+                            : state === "expired"
+                              ? t("adExpired")
+                              : state === "scheduled"
+                                ? t("adScheduled")
+                                : t("adActive");
+                      return (
+                        <button
+                          onClick={() => toggleActive(ad)}
+                          title={state === "expired" ? t("adNotShowing") : undefined}
+                          className={`rounded-full px-2.5 py-1 font-ui text-xs font-semibold ${
+                            showsPublicly
+                              ? "bg-green-100 text-green-700"
+                              : state === "expired"
+                                ? "bg-amber-100 text-amber-700"
+                                : "bg-surface text-foreground-muted"
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      );
+                    })()}
                     <div className="flex items-center gap-1">
                       <button
                         onClick={() => openEdit(ad)}
@@ -357,6 +383,9 @@ export default function AdsAdminPage() {
                 />
               </div>
             </div>
+            <p className="-mt-1 font-ui text-xs text-foreground-muted">
+              {t("adRunsForever")}
+            </p>
             <label className="flex items-center gap-2 font-ui text-sm text-foreground">
               <input
                 type="checkbox"

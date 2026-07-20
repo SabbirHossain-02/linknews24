@@ -305,6 +305,13 @@ export const adminDict = {
   adPending: { bn: "অপেক্ষমাণ", en: "Pending" },
   adApprove: { bn: "অনুমোদন", en: "Approve" },
   adReject: { bn: "বাতিল", en: "Reject" },
+  adExpired: { bn: "মেয়াদ শেষ", en: "Expired" },
+  adScheduled: { bn: "আসন্ন", en: "Scheduled" },
+  adNotShowing: {
+    bn: "সাইটে দেখাচ্ছে না — মেয়াদ শেষ",
+    en: "Not live — expired",
+  },
+  adRunsForever: { bn: "মেয়াদহীন (সবসময় চলবে)", en: "No end date (always on)" },
 } as const;
 
 export type AdminKey = keyof typeof adminDict;
