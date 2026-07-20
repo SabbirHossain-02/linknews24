@@ -4,7 +4,7 @@ import { SITE_URL } from "@/lib/site";
 import localFont from "next/font/local";
 import { LocaleProvider } from "@/components/providers/LocaleProvider";
 import { AuthProvider } from "@/components/providers/AuthProvider";
-import { ConditionalAdBanner } from "@/components/layout/ConditionalAdBanner";
+import { AdBanner } from "@/components/layout/AdBanner";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { HideOnAdmin } from "@/components/layout/HideOnAdmin";
@@ -76,7 +76,7 @@ export default function RootLayout({
               <HideOnAdmin>
                 <RealtimeRefresh />
                 <TrackView />
-                <ConditionalAdBanner />
+                <AdBanner />
                 <SiteHeader />
               </HideOnAdmin>
               {children}

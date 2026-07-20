@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { MousePointerClick, Eye, Plus, Trash2, Upload } from "lucide-react";
+import { MousePointerClick, Eye, Pencil, Plus, Trash2, Upload } from "lucide-react";
 import { apiFetch, uploadFile } from "@/lib/admin-api";
 import { ConfirmModal, Modal } from "@/components/admin/Modal";
 import { useAdminT, type AdminKey } from "@/lib/admin-i18n";
@@ -44,6 +44,7 @@ export default function AdsAdminPage() {
   const t = useAdminT();
   const [ads, setAds] = useState<Ad[]>([]);
   const [showForm, setShowForm] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [form, setForm] = useState(EMPTY);
   const [uploading, setUploading] = useState(false);
@@ -69,7 +70,25 @@ export default function AdsAdminPage() {
 
   const openAdd = () => {
     setError(null);
+    setEditId(null);
     setForm(EMPTY);
+    setShowForm(true);
+  };
+
+  // Edit an existing ad — same form, prefilled. Dates come back as ISO, but the
+  // <input type="date"> only accepts YYYY-MM-DD.
+  const openEdit = (ad: Ad) => {
+    setError(null);
+    setEditId(ad.id);
+    setForm({
+      name: ad.name,
+      imageUrl: ad.imageUrl,
+      linkUrl: ad.linkUrl,
+      placement: ad.placement,
+      active: ad.active,
+      startsAt: ad.startsAt ? ad.startsAt.slice(0, 10) : "",
+      endsAt: ad.endsAt ? ad.endsAt.slice(0, 10) : "",
+    });
     setShowForm(true);
   };
 
@@ -91,15 +110,21 @@ export default function AdsAdminPage() {
   const submit = async () => {
     if (!form.name.trim() || !form.linkUrl.trim()) return setError(t("errSave"));
     if (!form.imageUrl) return setError(t("adImageRequired"));
-    await apiFetch("/api/admin/ads", {
-      method: "POST",
-      body: JSON.stringify({
-        ...form,
-        startsAt: form.startsAt || null,
-        endsAt: form.endsAt || null,
-      }),
+    const body = JSON.stringify({
+      ...form,
+      startsAt: form.startsAt || null,
+      endsAt: form.endsAt || null,
     });
+    try {
+      await apiFetch(editId ? `/api/admin/ads/${editId}` : "/api/admin/ads", {
+        method: editId ? "PUT" : "POST",
+        body,
+      });
+    } catch (err) {
+      return setError(err instanceof Error ? err.message : t("errSave"));
+    }
     setShowForm(false);
+    setEditId(null);
     load();
   };
 
@@ -191,6 +216,13 @@ export default function AdsAdminPage() {
                     >
                       {t("adReject")}
                     </button>
+                    <button
+                      onClick={() => openEdit(ad)}
+                      title={t("edit")}
+                      className="rounded p-1.5 text-foreground-muted hover:bg-surface hover:text-brand-navy"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </button>
                   </div>
                 ) : (
                   <div className="mt-3 flex items-center justify-between">
@@ -208,13 +240,22 @@ export default function AdsAdminPage() {
                           ? t("adActive")
                           : t("draftLabel")}
                     </button>
-                    <button
-                      onClick={() => setDeleteId(ad.id)}
-                      title={t("delete")}
-                      className="rounded p-1.5 text-foreground-muted hover:bg-surface hover:text-brand-crimson"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => openEdit(ad)}
+                        title={t("edit")}
+                        className="rounded p-1.5 text-foreground-muted hover:bg-surface hover:text-brand-navy"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => setDeleteId(ad.id)}
+                        title={t("delete")}
+                        className="rounded p-1.5 text-foreground-muted hover:bg-surface hover:text-brand-crimson"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
@@ -224,7 +265,13 @@ export default function AdsAdminPage() {
       </div>
 
       {showForm && (
-        <Modal title={t("addAd")} onClose={() => setShowForm(false)}>
+        <Modal
+          title={editId ? t("edit") : t("addAd")}
+          onClose={() => {
+            setShowForm(false);
+            setEditId(null);
+          }}
+        >
           <div className="flex flex-col gap-3">
             {error && (
               <p className="rounded-lg bg-brand-crimson/10 px-3 py-2 font-ui text-sm text-brand-crimson">
@@ -321,7 +368,10 @@ export default function AdsAdminPage() {
             </label>
             <div className="mt-1 flex justify-end gap-2">
               <button
-                onClick={() => setShowForm(false)}
+                onClick={() => {
+                  setShowForm(false);
+                  setEditId(null);
+                }}
                 className="rounded-lg border border-border px-4 py-2 font-ui text-sm text-foreground hover:bg-surface"
               >
                 {t("cancel")}

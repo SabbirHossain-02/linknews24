@@ -8,7 +8,7 @@ import { navItems } from "@/lib/mock-data";
 import { localizedName } from "@/lib/i18n";
 import { useLocale } from "@/components/providers/LocaleProvider";
 
-export function MainNav() {
+export function MainNav({ compact = false }: { compact?: boolean }) {
   const { locale, t } = useLocale();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [openDesktopDropdown, setOpenDesktopDropdown] = useState<
@@ -35,7 +35,11 @@ export function MainNav() {
       className="border-b border-border bg-background"
       onMouseLeave={() => setOpenDesktopDropdown(null)}
     >
-      <div className="mx-auto flex max-w-[1600px] items-center justify-between gap-6 px-6 py-3">
+      <div
+        className={`mx-auto flex max-w-[1600px] items-center justify-between gap-6 px-6 transition-[padding] duration-300 ${
+          compact ? "py-1.5" : "py-3"
+        }`}
+      >
         <Link href="/" className="flex shrink-0 items-center">
           <Image
             src="/logo.png"
@@ -43,7 +47,9 @@ export function MainNav() {
             width={169}
             height={54}
             priority
-            className="h-14 w-auto"
+            className={`w-auto transition-[height] duration-300 ${
+              compact ? "h-9" : "h-14"
+            }`}
           />
         </Link>
 
