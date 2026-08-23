@@ -1,205 +1,188 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import Image from "next/image";
+import { Scale, Search, Trash2 } from "lucide-react";
 import { apiFetch } from "@/lib/admin-api";
-import { ConfirmModal, Modal } from "@/components/admin/Modal";
-import { useAdminT } from "@/lib/admin-i18n";
+import {
+  ReviewActions,
+  StatusFilter,
+  StatusPill,
+  Submitter,
+  type ListingStatus,
+} from "@/components/admin/ListingReview";
+import { bnDate } from "@/lib/services-api";
 
-interface District {
-  id: string;
-  name: string;
-}
 interface Lawyer {
   id: string;
   name: string;
   spec: string;
-  specEn: string;
   phone: string;
   chamber: string | null;
-  districtId: string;
+  photo: string | null;
+  barEnrollNo: string | null;
+  enrolledOn: string | null;
+  sanadUrl: string | null;
+  barAssociation: string | null;
+  barMemberId: string | null;
+  status: ListingStatus;
+  reviewNote: string | null;
   district: { name: string } | null;
+  account?: { name: string; email: string; avatar?: string | null } | null;
 }
 
-const inputCls =
-  "w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-brand-crimson focus:outline-none focus:ring-2 focus:ring-brand-crimson/15";
-
-const EMPTY = { name: "", spec: "", specEn: "", phone: "", chamber: "", districtId: "" };
-
+/**
+ * Legal-service review desk.
+ *
+ * The Bar Council fields are the whole point of the review, so they sit on the
+ * row rather than behind a click — an editor approving a listing has to be
+ * able to check the enrolment number against the uploaded sanad.
+ */
 export default function LawyersAdminPage() {
-  const t = useAdminT();
-  const [districts, setDistricts] = useState<District[]>([]);
-  const [districtId, setDistrictId] = useState("");
+  const [rows, setRows] = useState<Lawyer[]>([]);
+  const [status, setStatus] = useState<ListingStatus | "">("PENDING");
   const [q, setQ] = useState("");
-  const [lawyers, setLawyers] = useState<Lawyer[]>([]);
-  const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [editing, setEditing] = useState<Lawyer | null>(null);
-  const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState(EMPTY);
-  // Guards against out-of-order responses: only the newest request's result wins.
-  const reqId = useRef(0);
-
-  useEffect(() => {
-    apiFetch<{ districts: District[] }>("/api/districts")
-      .then((d) => setDistricts(d.districts))
-      .catch(() => {});
-  }, []);
+  const [loading, setLoading] = useState(true);
 
   const load = useCallback(() => {
     const params = new URLSearchParams();
-    if (districtId) params.set("district", districtId);
-    if (q) params.set("q", q);
-    const id = ++reqId.current;
-    apiFetch<{ lawyers: Lawyer[] }>(`/api/admin/lawyers?${params.toString()}`)
-      .then((d) => {
-        if (id === reqId.current) setLawyers(d.lawyers);
-      })
-      .catch(() => {});
-  }, [districtId, q]);
+    if (status) params.set("status", status);
+    if (q.trim()) params.set("q", q.trim());
+
+    apiFetch<{ lawyers: Lawyer[] }>(`/api/admin/lawyers?${params}`)
+      .then((d) => setRows(d.lawyers))
+      .catch(() => setRows([]))
+      .finally(() => setLoading(false));
+  }, [status, q]);
 
   useEffect(() => {
-    const timer = setTimeout(load, q ? 350 : 0);
+    const timer = setTimeout(load, 250);
     return () => clearTimeout(timer);
-  }, [load, q]);
-
-  const openAdd = () => {
-    setEditing(null);
-    setForm({ ...EMPTY, districtId: districtId || "" });
-    setShowForm(true);
-  };
-  const openEdit = (l: Lawyer) => {
-    setEditing(l);
-    setForm({
-      name: l.name,
-      spec: l.spec,
-      specEn: l.specEn ?? "",
-      phone: l.phone,
-      chamber: l.chamber ?? "",
-      districtId: l.districtId,
-    });
-    setShowForm(true);
-  };
-
-  const submit = async () => {
-    if (!form.name || !form.phone || !form.districtId) return;
-    if (editing) {
-      await apiFetch(`/api/admin/lawyers/${editing.id}`, {
-        method: "PUT",
-        body: JSON.stringify(form),
-      });
-    } else {
-      await apiFetch("/api/admin/lawyers", {
-        method: "POST",
-        body: JSON.stringify(form),
-      });
-    }
-    setShowForm(false);
-    load();
-  };
-
-  const remove = async (id: string) => {
-    await apiFetch(`/api/admin/lawyers/${id}`, { method: "DELETE" });
-    load();
-  };
-
-  const set = (k: keyof typeof form, v: string) => setForm((f) => ({ ...f, [k]: v }));
+  }, [load]);
 
   return (
     <div className="max-w-4xl">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-heading">{t("lawyers")}</h1>
-        <button
-          onClick={openAdd}
-          className="flex items-center gap-1.5 rounded-lg bg-brand-crimson px-4 py-2.5 font-ui text-sm font-semibold text-white hover:bg-brand-crimson-dark"
-        >
-          <Plus className="h-4 w-4" />
-          {t("addLawyer")}
-        </button>
-      </div>
+      <h1 className="text-2xl font-bold text-heading">আইন সেবা</h1>
+      <p className="mt-1 font-ui text-sm text-foreground-muted">
+        পাঠকদের জমা দেওয়া আইনজীবীর তথ্য। বার কাউন্সিলের সনদ মিলিয়ে দেখে অনুমোদন
+        দিন।
+      </p>
 
-      <div className="mt-4 flex flex-wrap gap-2">
-        <select
-          value={districtId}
-          onChange={(e) => setDistrictId(e.target.value)}
-          className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-brand-crimson focus:outline-none sm:w-56"
-        >
-          <option value="">{t("selectDistrict")}</option>
-          {districts.map((d) => (
-            <option key={d.id} value={d.id}>
-              {d.name}
-            </option>
-          ))}
-        </select>
-        <div className="relative flex-1 min-w-[180px]">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground-muted" />
+      <div className="mt-5 flex flex-wrap items-center gap-3">
+        <StatusFilter value={status} onChange={setStatus} />
+        <div className="relative min-w-[200px] flex-1">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground-muted" />
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder={t("searchByName")}
+            placeholder="নাম দিয়ে খুঁজুন"
             className="w-full rounded-lg border border-border bg-background py-2 pl-9 pr-3 text-sm text-foreground focus:border-brand-crimson focus:outline-none"
           />
         </div>
       </div>
 
-      <div className="mt-4 overflow-hidden rounded-xl border border-border bg-background">
-        {lawyers.length === 0 ? (
-          <p className="p-6 text-center font-ui text-sm text-foreground-muted">
-            {t("noItems")}
+      <div className="mt-4 flex flex-col gap-2">
+        {loading ? null : rows.length === 0 ? (
+          <p className="rounded-xl border border-border bg-background p-8 text-center font-ui text-sm text-foreground-muted">
+            {status === "PENDING" ? "অপেক্ষমাণ কিছু নেই।" : "কোনো তথ্য নেই।"}
           </p>
         ) : (
-          <ul className="divide-y divide-border">
-            {lawyers.map((l) => (
-              <li key={l.id} className="flex items-center justify-between gap-3 px-4 py-3">
-                <div className="min-w-0">
-                  <p className="font-medium text-foreground">{l.name}</p>
-                  <p className="font-ui text-xs text-foreground-muted">
-                    {l.spec} · {l.phone} {l.district ? `· ${l.district.name}` : ""}
+          rows.map((l) => (
+            <div
+              key={l.id}
+              className="rounded-xl border border-border bg-background p-4"
+            >
+              <div className="flex flex-wrap items-start gap-3">
+                {l.photo ? (
+                  <Image
+                    src={l.photo}
+                    alt=""
+                    width={40}
+                    height={40}
+                    className="h-10 w-10 shrink-0 rounded-full object-cover"
+                  />
+                ) : (
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-surface text-foreground-muted">
+                    <Scale className="h-4 w-4" />
+                  </span>
+                )}
+
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-semibold text-heading">{l.name}</span>
+                    <StatusPill status={l.status} />
+                  </div>
+
+                  <p className="mt-1 font-ui text-xs text-foreground-muted">
+                    {l.spec}
+                    {l.district ? ` · ${l.district.name}` : ""} · {l.phone}
                   </p>
+
+                  {/* Credentials — what the reviewer is actually checking. */}
+                  <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 font-ui text-[11px] text-foreground">
+                    {l.barEnrollNo && (
+                      <span className="rounded bg-surface px-2 py-0.5">
+                        এনরোলমেন্ট: <b>{l.barEnrollNo}</b>
+                      </span>
+                    )}
+                    {l.enrolledOn && <span>তারিখ: {bnDate(l.enrolledOn)}</span>}
+                    {l.barAssociation && <span>{l.barAssociation}</span>}
+                    {l.barMemberId && <span>আইডি: {l.barMemberId}</span>}
+                    {l.sanadUrl ? (
+                      <a
+                        href={l.sanadUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="font-semibold text-brand-crimson underline"
+                      >
+                        সনদ দেখুন
+                      </a>
+                    ) : (
+                      <span className="text-amber-700">সনদ দেওয়া হয়নি</span>
+                    )}
+                  </div>
+
+                  {l.chamber && (
+                    <p className="mt-1 font-ui text-xs text-foreground-muted">
+                      চেম্বার: {l.chamber}
+                    </p>
+                  )}
+                  {l.reviewNote && (
+                    <p className="mt-1 font-ui text-[11px] text-brand-crimson">
+                      ফেরতের কারণ: {l.reviewNote}
+                    </p>
+                  )}
                 </div>
-                <div className="flex shrink-0 items-center gap-1">
-                  <button onClick={() => openEdit(l)} title={t("edit")} className="rounded p-1.5 text-foreground-muted hover:bg-surface hover:text-brand-crimson">
-                    <Pencil className="h-4 w-4" />
-                  </button>
-                  <button onClick={() => setDeleteId(l.id)} title={t("delete")} className="rounded p-1.5 text-foreground-muted hover:bg-surface hover:text-brand-crimson">
+              </div>
+
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-2">
+                <Submitter account={l.account} />
+                <div className="flex items-center gap-2">
+                  <ReviewActions
+                    service="lawyer"
+                    id={l.id}
+                    status={l.status}
+                    onDone={load}
+                  />
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      await apiFetch(`/api/admin/lawyers/${l.id}`, {
+                        method: "DELETE",
+                      });
+                      load();
+                    }}
+                    title="মুছে ফেলুন"
+                    className="rounded p-1.5 text-foreground-muted hover:bg-surface hover:text-brand-crimson"
+                  >
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
-              </li>
-            ))}
-          </ul>
+              </div>
+            </div>
+          ))
         )}
       </div>
-
-      {showForm && (
-        <Modal title={editing ? t("edit") : t("addLawyer")} onClose={() => setShowForm(false)}>
-          <div className="flex flex-col gap-3">
-            <input value={form.name} onChange={(e) => set("name", e.target.value)} placeholder={t("colName")} className={inputCls} />
-            <div className="flex gap-3">
-              <input value={form.spec} onChange={(e) => set("spec", e.target.value)} placeholder={t("specLabel")} className={inputCls} />
-              <input value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder={t("phoneLabel")} className={inputCls} />
-            </div>
-            <input value={form.chamber} onChange={(e) => set("chamber", e.target.value)} placeholder={t("chamberLabel")} className={inputCls} />
-            <select value={form.districtId} onChange={(e) => set("districtId", e.target.value)} className={inputCls}>
-              <option value="">{t("selectDistrict")}</option>
-              {districts.map((d) => (
-                <option key={d.id} value={d.id}>{d.name}</option>
-              ))}
-            </select>
-            <div className="mt-1 flex justify-end gap-2">
-              <button onClick={() => setShowForm(false)} className="rounded-lg border border-border px-4 py-2 font-ui text-sm text-foreground hover:bg-surface">
-                {t("cancel")}
-              </button>
-              <button onClick={submit} className="rounded-lg bg-brand-crimson px-4 py-2 font-ui text-sm font-semibold text-white hover:bg-brand-crimson-dark">
-                {t("save")}
-              </button>
-            </div>
-          </div>
-        </Modal>
-      )}
-
-      {deleteId && (
-        <ConfirmModal title={t("deleteTitle")} message={t("deleteMessage")} onConfirm={() => remove(deleteId)} onClose={() => setDeleteId(null)} />
-      )}
     </div>
   );
 }

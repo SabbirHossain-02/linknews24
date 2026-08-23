@@ -1,175 +1,193 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import Image from "next/image";
+import { Droplet, Heart, Search, Trash2 } from "lucide-react";
 import { apiFetch } from "@/lib/admin-api";
-import { ConfirmModal, Modal } from "@/components/admin/Modal";
-import { useAdminT } from "@/lib/admin-i18n";
+import {
+  ReviewActions,
+  StatusFilter,
+  StatusPill,
+  Submitter,
+  type ListingStatus,
+} from "@/components/admin/ListingReview";
+import { bnDate } from "@/lib/services-api";
 
-interface District {
+interface Donation {
   id: string;
-  name: string;
+  donatedOn: string;
+  place: string | null;
+  verified: boolean;
 }
-interface Group {
-  slug: string;
-  label: string;
-}
+
 interface Donor {
   id: string;
   name: string;
+  donorNo: string | null;
   group: string;
   phone: string;
-  districtId: string;
+  gender: string | null;
+  dob: string | null;
+  address: string | null;
+  photo: string | null;
+  lastDonation: string | null;
+  status: ListingStatus;
+  reviewNote: string | null;
   district: { name: string } | null;
+  account?: { name: string; email: string; avatar?: string | null } | null;
+  donations?: Donation[];
+  _count?: { likes: number };
 }
 
-const inputCls =
-  "w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-brand-crimson focus:outline-none focus:ring-2 focus:ring-brand-crimson/15";
-
-const EMPTY = { name: "", group: "", phone: "", districtId: "" };
-
+/**
+ * Blood-service review desk.
+ *
+ * A list, not a feed: an editor is working through a queue here, so the rows
+ * stay compact and the donation dates — the evidence the public badge rests on
+ * — are visible without opening anything.
+ */
 export default function DonorsAdminPage() {
-  const t = useAdminT();
-  const [districts, setDistricts] = useState<District[]>([]);
-  const [groups, setGroups] = useState<Group[]>([]);
-  const [filterGroup, setFilterGroup] = useState("");
+  const [rows, setRows] = useState<Donor[]>([]);
+  const [status, setStatus] = useState<ListingStatus | "">("PENDING");
   const [q, setQ] = useState("");
-  const [donors, setDonors] = useState<Donor[]>([]);
-  const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [editing, setEditing] = useState<Donor | null>(null);
-  const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState(EMPTY);
-  // Guards against out-of-order responses: only the newest request's result wins.
-  const reqId = useRef(0);
-
-  useEffect(() => {
-    apiFetch<{ districts: District[] }>("/api/districts").then((d) => setDistricts(d.districts)).catch(() => {});
-    apiFetch<{ groups: Group[] }>("/api/blood-groups").then((d) => setGroups(d.groups)).catch(() => {});
-  }, []);
+  const [loading, setLoading] = useState(true);
 
   const load = useCallback(() => {
     const params = new URLSearchParams();
-    if (filterGroup) params.set("group", filterGroup);
-    if (q) params.set("q", q);
-    const id = ++reqId.current;
-    apiFetch<{ donors: Donor[] }>(`/api/admin/donors?${params.toString()}`)
-      .then((d) => {
-        if (id === reqId.current) setDonors(d.donors);
-      })
-      .catch(() => {});
-  }, [filterGroup, q]);
+    if (status) params.set("status", status);
+    if (q.trim()) params.set("q", q.trim());
+
+    apiFetch<{ donors: Donor[] }>(`/api/admin/donors?${params}`)
+      .then((d) => setRows(d.donors))
+      .catch(() => setRows([]))
+      .finally(() => setLoading(false));
+  }, [status, q]);
 
   useEffect(() => {
-    const timer = setTimeout(load, q ? 350 : 0);
+    const timer = setTimeout(load, 250);
     return () => clearTimeout(timer);
-  }, [load, q]);
-
-  const openAdd = () => {
-    setEditing(null);
-    setForm({ ...EMPTY, group: filterGroup || "" });
-    setShowForm(true);
-  };
-  const openEdit = (d: Donor) => {
-    setEditing(d);
-    setForm({ name: d.name, group: d.group, phone: d.phone, districtId: d.districtId });
-    setShowForm(true);
-  };
-
-  const submit = async () => {
-    if (!form.name || !form.group || !form.phone || !form.districtId) return;
-    if (editing) {
-      await apiFetch(`/api/admin/donors/${editing.id}`, { method: "PUT", body: JSON.stringify(form) });
-    } else {
-      await apiFetch("/api/admin/donors", { method: "POST", body: JSON.stringify(form) });
-    }
-    setShowForm(false);
-    load();
-  };
-
-  const remove = async (id: string) => {
-    await apiFetch(`/api/admin/donors/${id}`, { method: "DELETE" });
-    load();
-  };
-
-  const set = (k: keyof typeof form, v: string) => setForm((f) => ({ ...f, [k]: v }));
+  }, [load]);
 
   return (
     <div className="max-w-4xl">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-heading">{t("donors")}</h1>
-        <button onClick={openAdd} className="flex items-center gap-1.5 rounded-lg bg-brand-crimson px-4 py-2.5 font-ui text-sm font-semibold text-white hover:bg-brand-crimson-dark">
-          <Plus className="h-4 w-4" />
-          {t("addDonor")}
-        </button>
-      </div>
+      <h1 className="text-2xl font-bold text-heading">রক্ত সেবা</h1>
+      <p className="mt-1 font-ui text-sm text-foreground-muted">
+        পাঠকদের জমা দেওয়া রক্তদাতার তথ্য। অনুমোদন দিলে রক্ত সেবার পাতায় দেখা
+        যাবে।
+      </p>
 
-      <div className="mt-4 flex flex-wrap gap-2">
-        <select value={filterGroup} onChange={(e) => setFilterGroup(e.target.value)} className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-brand-crimson focus:outline-none sm:w-40">
-          <option value="">{t("selectGroup")}</option>
-          {groups.map((g) => (<option key={g.slug} value={g.label}>{g.label}</option>))}
-        </select>
-        <div className="relative flex-1 min-w-[180px]">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground-muted" />
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("searchByName")} className="w-full rounded-lg border border-border bg-background py-2 pl-9 pr-3 text-sm text-foreground focus:border-brand-crimson focus:outline-none" />
+      <div className="mt-5 flex flex-wrap items-center gap-3">
+        <StatusFilter value={status} onChange={setStatus} />
+        <div className="relative min-w-[200px] flex-1">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground-muted" />
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="নাম দিয়ে খুঁজুন"
+            className="w-full rounded-lg border border-border bg-background py-2 pl-9 pr-3 text-sm text-foreground focus:border-brand-crimson focus:outline-none"
+          />
         </div>
       </div>
 
-      <div className="mt-4 overflow-hidden rounded-xl border border-border bg-background">
-        {donors.length === 0 ? (
-          <p className="p-6 text-center font-ui text-sm text-foreground-muted">{t("noItems")}</p>
+      <div className="mt-4 flex flex-col gap-2">
+        {loading ? null : rows.length === 0 ? (
+          <p className="rounded-xl border border-border bg-background p-8 text-center font-ui text-sm text-foreground-muted">
+            {status === "PENDING" ? "অপেক্ষমাণ কিছু নেই।" : "কোনো তথ্য নেই।"}
+          </p>
         ) : (
-          <ul className="divide-y divide-border">
-            {donors.map((d) => (
-              <li key={d.id} className="flex items-center justify-between gap-3 px-4 py-3">
-                <div className="min-w-0">
-                  <p className="font-medium text-foreground">
-                    {d.name}{" "}
-                    <span className="ml-1 rounded bg-brand-crimson/10 px-1.5 py-0.5 font-ui text-xs font-semibold text-brand-crimson">{d.group}</span>
+          rows.map((d) => (
+            <div
+              key={d.id}
+              className="rounded-xl border border-border bg-background p-4"
+            >
+              <div className="flex flex-wrap items-start gap-3">
+                {d.photo ? (
+                  <Image
+                    src={d.photo}
+                    alt=""
+                    width={40}
+                    height={40}
+                    className="h-10 w-10 shrink-0 rounded-full object-cover"
+                  />
+                ) : (
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-surface text-foreground-muted">
+                    <Droplet className="h-4 w-4" />
+                  </span>
+                )}
+
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-semibold text-heading">{d.name}</span>
+                    <span className="rounded bg-brand-crimson px-2 py-0.5 font-ui text-[11px] font-bold text-white">
+                      {d.group}
+                    </span>
+                    <StatusPill status={d.status} />
+                    {(d._count?.likes ?? 0) > 0 && (
+                      <span className="flex items-center gap-1 font-ui text-[11px] text-foreground-muted">
+                        <Heart className="h-3 w-3" />
+                        {d._count?.likes}
+                      </span>
+                    )}
+                  </div>
+
+                  <p className="mt-1 font-ui text-xs text-foreground-muted">
+                    {d.phone}
+                    {d.district ? ` · ${d.district.name}` : ""}
+                    {d.donorNo ? ` · ডোনার আইডি ${d.donorNo}` : ""}
+                    {d.dob ? ` · জন্ম ${bnDate(d.dob)}` : ""}
                   </p>
-                  <p className="font-ui text-xs text-foreground-muted">
-                    {d.phone} {d.district ? `· ${d.district.name}` : ""}
-                  </p>
+                  {d.address && (
+                    <p className="mt-0.5 font-ui text-xs text-foreground-muted">
+                      {d.address}
+                    </p>
+                  )}
+
+                  {/* The dated entries the public badge is computed from. */}
+                  {(d.donations ?? []).length > 0 && (
+                    <p className="mt-1.5 font-ui text-[11px] text-foreground-muted">
+                      রক্তদান:{" "}
+                      {(d.donations ?? [])
+                        .map((x) => bnDate(x.donatedOn))
+                        .join(" · ")}
+                    </p>
+                  )}
+
+                  {d.reviewNote && (
+                    <p className="mt-1 font-ui text-[11px] text-brand-crimson">
+                      ফেরতের কারণ: {d.reviewNote}
+                    </p>
+                  )}
                 </div>
-                <div className="flex shrink-0 items-center gap-1">
-                  <button onClick={() => openEdit(d)} title={t("edit")} className="rounded p-1.5 text-foreground-muted hover:bg-surface hover:text-brand-crimson">
-                    <Pencil className="h-4 w-4" />
-                  </button>
-                  <button onClick={() => setDeleteId(d.id)} title={t("delete")} className="rounded p-1.5 text-foreground-muted hover:bg-surface hover:text-brand-crimson">
+              </div>
+
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-2">
+                <Submitter account={d.account} />
+                <div className="flex items-center gap-2">
+                  <ReviewActions
+                    service="donor"
+                    id={d.id}
+                    status={d.status}
+                    onDone={load}
+                  />
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      await apiFetch(`/api/admin/donors/${d.id}`, {
+                        method: "DELETE",
+                      });
+                      load();
+                    }}
+                    title="মুছে ফেলুন"
+                    className="rounded p-1.5 text-foreground-muted hover:bg-surface hover:text-brand-crimson"
+                  >
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
-              </li>
-            ))}
-          </ul>
+              </div>
+            </div>
+          ))
         )}
       </div>
-
-      {showForm && (
-        <Modal title={editing ? t("edit") : t("addDonor")} onClose={() => setShowForm(false)}>
-          <div className="flex flex-col gap-3">
-            <input value={form.name} onChange={(e) => set("name", e.target.value)} placeholder={t("colName")} className={inputCls} />
-            <div className="flex gap-3">
-              <select value={form.group} onChange={(e) => set("group", e.target.value)} className={inputCls}>
-                <option value="">{t("groupLabel")}</option>
-                {groups.map((g) => (<option key={g.slug} value={g.label}>{g.label}</option>))}
-              </select>
-              <input value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder={t("phoneLabel")} className={inputCls} />
-            </div>
-            <select value={form.districtId} onChange={(e) => set("districtId", e.target.value)} className={inputCls}>
-              <option value="">{t("selectDistrict")}</option>
-              {districts.map((d) => (<option key={d.id} value={d.id}>{d.name}</option>))}
-            </select>
-            <div className="mt-1 flex justify-end gap-2">
-              <button onClick={() => setShowForm(false)} className="rounded-lg border border-border px-4 py-2 font-ui text-sm text-foreground hover:bg-surface">{t("cancel")}</button>
-              <button onClick={submit} className="rounded-lg bg-brand-crimson px-4 py-2 font-ui text-sm font-semibold text-white hover:bg-brand-crimson-dark">{t("save")}</button>
-            </div>
-          </div>
-        </Modal>
-      )}
-
-      {deleteId && (
-        <ConfirmModal title={t("deleteTitle")} message={t("deleteMessage")} onConfirm={() => remove(deleteId)} onClose={() => setDeleteId(null)} />
-      )}
     </div>
   );
 }

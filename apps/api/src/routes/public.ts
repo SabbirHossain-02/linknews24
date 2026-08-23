@@ -16,6 +16,16 @@ publicRouter.get("/districts", async (_req, res) => {
   res.json({ districts });
 });
 
+/** Every approved lawyer, for the "all districts" view. */
+publicRouter.get("/lawyers", async (_req, res) => {
+  const lawyers = await prisma.lawyer.findMany({
+    where: { status: "APPROVED" },
+    include: { district: { select: { name: true, nameEn: true, slug: true } } },
+    orderBy: { createdAt: "desc" },
+  });
+  res.json({ lawyers });
+});
+
 publicRouter.get("/lawyers/:district", async (req, res) => {
   const district = await prisma.district.findUnique({
     where: { slug: req.params.district },
@@ -24,7 +34,8 @@ publicRouter.get("/lawyers/:district", async (req, res) => {
   const lawyers = await prisma.lawyer.findMany({
     // Reader submissions only appear once an admin has approved them.
     where: { districtId: district.id, status: "APPROVED" },
-    orderBy: { createdAt: "asc" },
+    include: { district: { select: { name: true, nameEn: true, slug: true } } },
+    orderBy: { createdAt: "desc" },
   });
   res.json({ district, lawyers });
 });

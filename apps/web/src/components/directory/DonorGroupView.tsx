@@ -50,9 +50,6 @@ export function DonorGroupView({
         </div>
       </div>
 
-      <p className="mt-3 rounded-lg bg-surface px-3.5 py-2 font-ui text-xs text-foreground-muted">
-        {t("directoryDisclaimer")}
-      </p>
 
       <ul className="mt-5 flex flex-col gap-3">
         {donors.map((donor, i) => (

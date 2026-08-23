@@ -1,4 +1,4 @@
-import { districts, bloodGroups } from "@/lib/directory-data";
+
 import type { ApiCategory } from "@/lib/api";
 
 export interface NavChild {
@@ -28,32 +28,17 @@ export interface NavEntry {
  */
 const MAX_TOP_LEVEL = 12;
 
-/** Routes that are pages, not categories — they have no row in the database. */
+/**
+ * The three services. Pages, not categories — they have no row in the
+ * database.
+ *
+ * Plain links, no dropdowns: a menu of 64 districts or 8 blood groups made the
+ * reader choose before seeing anybody, and hid the service page itself behind
+ * its own menu. Each page now opens on the full list with the filters on it.
+ */
 const DIRECTORY_ENTRIES: NavEntry[] = [
-  {
-    key: "lawyers",
-    label: "আইন সেবা",
-    labelEn: "Legal Service",
-    href: "/lawyers",
-    children: districts.map((d) => ({
-      key: `lawyers-${d.slug}`,
-      label: d.name,
-      labelEn: d.nameEn,
-      href: `/lawyers/${d.slug}`,
-    })),
-  },
-  {
-    key: "blood",
-    label: "রক্ত সেবা",
-    labelEn: "Blood Service",
-    href: "/blood",
-    children: bloodGroups.map((g) => ({
-      key: `blood-${g.slug}`,
-      label: g.label,
-      labelEn: g.label,
-      href: `/blood/${g.slug}`,
-    })),
-  },
+  { key: "lawyers", label: "আইন সেবা", labelEn: "Legal Service", href: "/lawyers" },
+  { key: "blood", label: "রক্ত সেবা", labelEn: "Blood Service", href: "/blood" },
   {
     key: "hospitals",
     label: "হাসপাতাল সেবা",
