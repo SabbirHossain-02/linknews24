@@ -12,7 +12,11 @@ export interface NavEntry {
   key: string;
   label: string;
   labelEn: string;
-  /** Present on plain links; `children` is present instead on dropdowns. */
+  /**
+   * The entry's own page. A dropdown parent keeps this too — a category with
+   * sub-categories is still a real section front, and the nav must not swallow
+   * the only way to reach it.
+   */
   href?: string;
   children?: NavChild[];
 }
@@ -82,19 +86,13 @@ export function buildNav(categories: ApiCategory[]): NavEntry[] {
     .filter((category) => !category.parentId)
     .map((category): NavEntry => {
       const children = byParent.get(category.id);
-      return children?.length
-        ? {
-            key: category.id,
-            label: category.name,
-            labelEn: category.nameEn,
-            children: children.map(toChild),
-          }
-        : {
-            key: category.id,
-            label: category.name,
-            labelEn: category.nameEn,
-            href: `/${category.slug}`,
-          };
+      return {
+        key: category.id,
+        label: category.name,
+        labelEn: category.nameEn,
+        href: `/${category.slug}`,
+        children: children?.length ? children.map(toChild) : undefined,
+      };
     });
 
   const visible = roots.slice(0, MAX_TOP_LEVEL);
