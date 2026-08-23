@@ -16,6 +16,18 @@ import { BLOOD_GROUPS } from "../lib/blood";
  */
 export const servicesRouter = Router();
 
+/**
+ * Turns a Zod failure into a message naming the field that failed.
+ * A blanket "fill everything in correctly" left the submitter guessing which
+ * box was wrong — and the first real one was a valid 999 hotline.
+ */
+function fieldError(error: z.ZodError): string {
+  const field = error.issues[0]?.path?.join(".") ?? "";
+  return field
+    ? `“${field}” ঘরটি ঠিকভাবে পূরণ করুন`
+    : "সব ঘর ঠিকভাবে পূরণ করুন";
+}
+
 /** Listings carry the account's own avatar rather than a separate upload. */
 async function accountPhoto(accountId: string): Promise<string | null> {
   const account = await prisma.account.findUnique({
@@ -85,7 +97,8 @@ const lawyerSchema = z.object({
 
 servicesRouter.post("/lawyer", authAccount, async (req, res) => {
   const parsed = lawyerSchema.safeParse(req.body);
-  if (!parsed.success) return res.status(400).json({ error: "সব ঘর ঠিকভাবে পূরণ করুন" });
+  if (!parsed.success)
+    return res.status(400).json({ error: fieldError(parsed.error) });
   const d = parsed.data;
 
   const districtId = await districtIdFor(d.district);
@@ -138,7 +151,8 @@ const donorSchema = z.object({
 
 servicesRouter.post("/donor", authAccount, async (req, res) => {
   const parsed = donorSchema.safeParse(req.body);
-  if (!parsed.success) return res.status(400).json({ error: "সব ঘর ঠিকভাবে পূরণ করুন" });
+  if (!parsed.success)
+    return res.status(400).json({ error: fieldError(parsed.error) });
   const d = parsed.data;
 
   const group = BLOOD_GROUPS.find((g) => g.label === d.group || g.slug === d.group);
@@ -246,13 +260,15 @@ const hospitalSchema = z.object({
   address: z.string().min(3).max(300),
   district: z.string().min(1),
   thana: z.string().max(120).optional(),
-  hotline: z.string().min(4).max(60),
+  // 999 and 333 are real Bangladeshi hotlines — a four-digit floor rejected them.
+  hotline: z.string().min(3).max(60),
   emergency24: z.boolean().default(false),
 });
 
 servicesRouter.post("/hospital", authAccount, async (req, res) => {
   const parsed = hospitalSchema.safeParse(req.body);
-  if (!parsed.success) return res.status(400).json({ error: "সব ঘর ঠিকভাবে পূরণ করুন" });
+  if (!parsed.success)
+    return res.status(400).json({ error: fieldError(parsed.error) });
   const d = parsed.data;
 
   const districtId = await districtIdFor(d.district);
