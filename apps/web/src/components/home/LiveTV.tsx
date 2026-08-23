@@ -22,6 +22,10 @@ export function LiveTV() {
   // The player URL is built once per stream. Rebuilding it on unmute would
   // reload the iframe and start the video over.
   const embedUrl = streamUrl ? liveEmbedUrl(streamUrl) : null;
+  // Full screen is a deliberate click, so it may start with sound and controls.
+  const fullscreenUrl = streamUrl
+    ? liveEmbedUrl(streamUrl, { muted: false, controls: true })
+    : null;
 
   const toggleSound = () => {
     youtubeCommand(cardFrame.current, muted ? "unMute" : "mute");
@@ -205,9 +209,9 @@ export function LiveTV() {
 
           {/* Screen */}
           <div className="relative flex min-h-0 flex-1 items-center justify-center">
-            {embedUrl ? (
+            {fullscreenUrl ? (
               <iframe
-                src={`${embedUrl}&controls=1&mute=0`}
+                src={fullscreenUrl}
                 title={t("liveTv")}
                 allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
                 allowFullScreen

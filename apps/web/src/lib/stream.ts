@@ -29,17 +29,20 @@ export function youtubeId(url: string): string | null {
  * over when it ends. YouTube only loops a single video when it is handed a
  * playlist of that one video, hence `playlist` repeating the id.
  */
-export function liveEmbedUrl(url: string): string | null {
+export function liveEmbedUrl(
+  url: string,
+  { muted = true, controls = false } = {},
+): string | null {
   const id = youtubeId(url);
   if (!id) return url.trim() || null;
 
   const params = new URLSearchParams({
     autoplay: "1",
     // Browsers only allow autoplay without a click when the video is muted.
-    mute: "1",
+    mute: muted ? "1" : "0",
     loop: "1",
     playlist: id,
-    controls: "0",
+    controls: controls ? "1" : "0",
     modestbranding: "1",
     playsinline: "1",
     rel: "0",
