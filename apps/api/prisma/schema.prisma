@@ -177,6 +177,14 @@ model District {
   donors   BloodDonor[]
 }
 
+/// Where a reader-submitted directory listing sits in the review queue.
+/// Rows the admin entered directly are created APPROVED.
+enum ListingStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 model Lawyer {
   id         String   @id @default(cuid())
   name       String
@@ -187,6 +195,25 @@ model Lawyer {
   districtId String
   district   District @relation(fields: [districtId], references: [id])
   createdAt  DateTime @default(now())
+
+  // --- Bar Council credentials, collected so a listing can be verified ---
+  barEnrollNo    String?
+  enrolledOn     DateTime?
+  /// Uploaded enrollment sanad / certificate.
+  sanadUrl       String?
+  barAssociation String?
+  barMemberId    String?
+  photo          String?
+
+  // --- Reader submission + review ---
+  accountId  String?
+  account    Account?      @relation(fields: [accountId], references: [id], onDelete: SetNull)
+  status     ListingStatus @default(APPROVED)
+  reviewNote String?
+  updatedAt  DateTime      @updatedAt
+
+  @@index([status])
+  @@index([accountId])
 }
 
 model BloodDonor {
@@ -198,6 +225,77 @@ model BloodDonor {
   district     District  @relation(fields: [districtId], references: [id])
   lastDonation DateTime?
   createdAt    DateTime  @default(now())
+
+  donorNo String?
+  dob     DateTime?
+  gender  String?
+  address String?
+  photo   String?
+
+  // --- Reader submission + review ---
+  accountId  String?
+  account    Account?      @relation(fields: [accountId], references: [id], onDelete: SetNull)
+  status     ListingStatus @default(APPROVED)
+  reviewNote String?
+  updatedAt  DateTime      @updatedAt
+
+  /// Every recorded donation is one point of the donor's score, so the number
+  /// stands on dated entries rather than on a figure someone typed in.
+  donations BloodDonation[]
+  likes     DonorLike[]
+
+  @@index([status])
+  @@index([group])
+  @@index([accountId])
+}
+
+model BloodDonation {
+  id        String     @id @default(cuid())
+  donorId   String
+  donor     BloodDonor @relation(fields: [donorId], references: [id], onDelete: Cascade)
+  donatedOn DateTime
+  place     String?
+  /// Set once an admin has checked the entry.
+  verified  Boolean    @default(false)
+  createdAt DateTime   @default(now())
+
+  @@index([donorId])
+}
+
+model DonorLike {
+  id        String     @id @default(cuid())
+  donorId   String
+  donor     BloodDonor @relation(fields: [donorId], references: [id], onDelete: Cascade)
+  accountId String
+  account   Account    @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  createdAt DateTime   @default(now())
+
+  /// One like per reader per donor.
+  @@unique([donorId, accountId])
+}
+
+model Hospital {
+  id          String   @id @default(cuid())
+  name        String
+  /// GOVERNMENT | PRIVATE | SPECIALIZED | NGO
+  type        String
+  address     String
+  districtId  String
+  district    District @relation(fields: [districtId], references: [id])
+  thana       String?
+  hotline     String
+  emergency24 Boolean  @default(false)
+  photo       String?
+
+  accountId  String?
+  account    Account?      @relation(fields: [accountId], references: [id], onDelete: SetNull)
+  status     ListingStatus @default(PENDING)
+  reviewNote String?
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  @@index([status])
+  @@index([districtId])
 }
 
 model Subscriber {
