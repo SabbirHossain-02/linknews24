@@ -211,7 +211,7 @@ model Lawyer {
   account    Account?      @relation(fields: [accountId], references: [id], onDelete: SetNull)
   status     ListingStatus @default(APPROVED)
   reviewNote String?
-  updatedAt  DateTime      @updatedAt
+  updatedAt  DateTime      @default(now()) @updatedAt
 
   @@index([status])
   @@index([accountId])
@@ -238,7 +238,7 @@ model BloodDonor {
   account    Account?      @relation(fields: [accountId], references: [id], onDelete: SetNull)
   status     ListingStatus @default(APPROVED)
   reviewNote String?
-  updatedAt  DateTime      @updatedAt
+  updatedAt  DateTime      @default(now()) @updatedAt
 
   /// Every recorded donation is one point of the donor's score, so the number
   /// stands on dated entries rather than on a figure someone typed in.
@@ -293,7 +293,7 @@ model Hospital {
   status     ListingStatus @default(PENDING)
   reviewNote String?
   createdAt  DateTime      @default(now())
-  updatedAt  DateTime      @updatedAt
+  updatedAt  DateTime      @default(now()) @updatedAt
 
   @@index([status])
   @@index([districtId])
