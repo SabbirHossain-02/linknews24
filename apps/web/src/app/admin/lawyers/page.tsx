@@ -12,6 +12,7 @@ import {
   type ListingStatus,
 } from "@/components/admin/ListingReview";
 import { bnDate } from "@/lib/services-api";
+import { useAdminT } from "@/lib/admin-i18n";
 
 interface Lawyer {
   id: string;
@@ -39,6 +40,7 @@ interface Lawyer {
  * able to check the enrolment number against the uploaded sanad.
  */
 export default function LawyersAdminPage() {
+  const t = useAdminT();
   const [rows, setRows] = useState<Lawyer[]>([]);
   const [status, setStatus] = useState<ListingStatus | "">("PENDING");
   const [q, setQ] = useState("");
@@ -62,10 +64,9 @@ export default function LawyersAdminPage() {
 
   return (
     <div className="max-w-4xl">
-      <h1 className="text-2xl font-bold text-heading">আইন সেবা</h1>
+      <h1 className="text-2xl font-bold text-heading">{t("lawyers")}</h1>
       <p className="mt-1 font-ui text-sm text-foreground-muted">
-        পাঠকদের জমা দেওয়া আইনজীবীর তথ্য। বার কাউন্সিলের সনদ মিলিয়ে দেখে অনুমোদন
-        দিন।
+        {t("svcLegalDesk")}
       </p>
 
       <div className="mt-5 flex flex-wrap items-center gap-3">
@@ -75,7 +76,7 @@ export default function LawyersAdminPage() {
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="নাম দিয়ে খুঁজুন"
+            placeholder={t("svcSearchName")}
             className="w-full rounded-lg border border-border bg-background py-2 pl-9 pr-3 text-sm text-foreground focus:border-brand-crimson focus:outline-none"
           />
         </div>
@@ -84,7 +85,7 @@ export default function LawyersAdminPage() {
       <div className="mt-4 flex flex-col gap-2">
         {loading ? null : rows.length === 0 ? (
           <p className="rounded-xl border border-border bg-background p-8 text-center font-ui text-sm text-foreground-muted">
-            {status === "PENDING" ? "অপেক্ষমাণ কিছু নেই।" : "কোনো তথ্য নেই।"}
+            {status === "PENDING" ? t("svcNothingPending") : t("svcNoRecords")}
           </p>
         ) : (
           rows.map((l) => (
@@ -122,12 +123,12 @@ export default function LawyersAdminPage() {
                   <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 font-ui text-[11px] text-foreground">
                     {l.barEnrollNo && (
                       <span className="rounded bg-surface px-2 py-0.5">
-                        এনরোলমেন্ট: <b>{l.barEnrollNo}</b>
+                        {t("svcEnrolment")}: <b>{l.barEnrollNo}</b>
                       </span>
                     )}
-                    {l.enrolledOn && <span>তারিখ: {bnDate(l.enrolledOn)}</span>}
+                    {l.enrolledOn && <span>{t("svcDate")}: {bnDate(l.enrolledOn)}</span>}
                     {l.barAssociation && <span>{l.barAssociation}</span>}
-                    {l.barMemberId && <span>আইডি: {l.barMemberId}</span>}
+                    {l.barMemberId && <span>{t("svcMemberId")}: {l.barMemberId}</span>}
                     {l.sanadUrl ? (
                       <a
                         href={l.sanadUrl}
@@ -135,21 +136,21 @@ export default function LawyersAdminPage() {
                         rel="noreferrer"
                         className="font-semibold text-brand-crimson underline"
                       >
-                        সনদ দেখুন
+                        {t("svcViewSanad")}
                       </a>
                     ) : (
-                      <span className="text-amber-700">সনদ দেওয়া হয়নি</span>
+                      <span className="text-amber-700">{t("svcNoSanad")}</span>
                     )}
                   </div>
 
                   {l.chamber && (
                     <p className="mt-1 font-ui text-xs text-foreground-muted">
-                      চেম্বার: {l.chamber}
+                      {t("svcChamberLbl")}: {l.chamber}
                     </p>
                   )}
                   {l.reviewNote && (
                     <p className="mt-1 font-ui text-[11px] text-brand-crimson">
-                      ফেরতের কারণ: {l.reviewNote}
+                      {t("svcReturnReason")}: {l.reviewNote}
                     </p>
                   )}
                 </div>
@@ -172,7 +173,7 @@ export default function LawyersAdminPage() {
                       });
                       load();
                     }}
-                    title="মুছে ফেলুন"
+                    title={t("delete")}
                     className="rounded p-1.5 text-foreground-muted hover:bg-surface hover:text-brand-crimson"
                   >
                     <Trash2 className="h-4 w-4" />

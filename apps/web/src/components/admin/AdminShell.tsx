@@ -227,7 +227,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               onClick={() => setLocale(locale === "bn" ? "en" : "bn")}
               className="rounded border border-border px-2.5 py-1 font-ui text-xs font-semibold text-foreground hover:bg-surface"
             >
-              {locale === "bn" ? "EN" : "বাং"}
+              {locale === "bn" ? "English" : "বাংলা"}
             </button>
           </div>
           <div className="flex items-center gap-3">

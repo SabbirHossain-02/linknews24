@@ -7,7 +7,6 @@ import { districts, bloodGroups } from "@/lib/directory-data";
 import { uploadFile } from "@/lib/admin-api";
 import {
   HOSPITAL_TYPES,
-  STATUS_LABEL,
   addDonation,
   bnDate,
   getMyListings,
@@ -21,12 +20,20 @@ import {
   type ListingStatus,
   type MyListings,
 } from "@/lib/services-api";
+import { useLocale } from "@/components/providers/LocaleProvider";
+import { localizedName, type TranslationKey } from "@/lib/i18n";
 
 const input =
   "w-full rounded-lg border border-border bg-background px-3.5 py-2.5 text-sm text-foreground placeholder:text-foreground-muted focus:border-brand-crimson focus:outline-none";
 const label = "font-ui text-xs font-semibold text-foreground-muted";
 
 /** Where the listing stands with the review desk. */
+const STATUS_KEY: Record<ListingStatus, TranslationKey> = {
+  PENDING: "fStatusPending",
+  APPROVED: "fStatusApproved",
+  REJECTED: "fStatusRejected",
+};
+
 function StatusBanner({
   status,
   note,
@@ -34,6 +41,7 @@ function StatusBanner({
   status: ListingStatus;
   note?: string | null;
 }) {
+  const { t } = useLocale();
   const tone =
     status === "APPROVED"
       ? { bg: "bg-green-50", border: "border-green-300", text: "text-green-800", Icon: CheckCircle2 }
@@ -46,16 +54,16 @@ function StatusBanner({
       <tone.Icon className={`mt-0.5 h-4 w-4 shrink-0 ${tone.text}`} />
       <div>
         <p className={`font-ui text-xs font-semibold ${tone.text}`}>
-          {STATUS_LABEL[status]}
+          {t(STATUS_KEY[status])}
         </p>
         {status === "PENDING" && (
           <p className="mt-0.5 font-ui text-[11px] text-foreground-muted">
-            সম্পাদকের অনুমোদনের পর সাইটে দেখা যাবে।
+            {t("fPendingNote")}
           </p>
         )}
         {note && (
           <p className="mt-0.5 font-ui text-[11px] text-foreground-muted">
-            সম্পাদকের মন্তব্য: {note}
+            {t("fEditorNote")}: {note}
           </p>
         )}
       </div>
@@ -94,6 +102,7 @@ function SubmitBar({
   saved: boolean;
   label: string;
 }) {
+  const { t } = useLocale();
   return (
     <div className="flex flex-wrap items-center gap-3">
       <button
@@ -101,11 +110,11 @@ function SubmitBar({
         disabled={busy}
         className="rounded-lg bg-brand-crimson px-5 py-2.5 font-ui text-sm font-semibold text-white hover:bg-brand-crimson-dark disabled:opacity-60"
       >
-        {busy ? "পাঠানো হচ্ছে…" : text}
+        {busy ? t("fSubmitting") : text}
       </button>
       {saved && (
         <span className="font-ui text-xs text-green-700">
-          জমা হয়েছে — অনুমোদনের অপেক্ষায়
+          {t("fSubmitted")}
         </span>
       )}
       {error && (
@@ -130,7 +139,7 @@ function useSubmit(reload: () => void) {
       setSaved(true);
       reload();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "ব্যর্থ হয়েছে");
+      setError(e instanceof Error ? e.message : "Failed");
     } finally {
       setBusy(false);
     }
@@ -148,6 +157,7 @@ export function LawyerServiceForm({
   listing: LawyerListing | null;
   reload: () => void;
 }) {
+  const { t, locale } = useLocale();
   const { busy, error, saved, run } = useSubmit(reload);
   const [sanad, setSanad] = useState(listing?.sanadUrl ?? "");
   const [uploading, setUploading] = useState(false);
@@ -175,23 +185,22 @@ export function LawyerServiceForm({
       }}
     >
       <div>
-        <h2 className="text-lg font-bold text-heading">আইন সেবা</h2>
+        <h2 className="text-lg font-bold text-heading">{t("dashLegal")}</h2>
         <p className="mt-1 font-ui text-sm text-foreground-muted">
-          আপনি তালিকাভুক্ত আইনজীবী হলে তথ্য জমা দিন। বার কাউন্সিলের তথ্য যাচাই
-          করে সম্পাদক অনুমোদন দিলে আপনার প্রোফাইল সাইটে দেখা যাবে।
+          {t("fLegalIntro")}
         </p>
       </div>
 
       {listing && <StatusBanner status={listing.status} note={listing.reviewNote} />}
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="পূর্ণ নাম">
+        <Field label={t("fFullName")}>
           <input name="name" required defaultValue={listing?.name} className={input} />
         </Field>
-        <Field label="মোবাইল নম্বর">
+        <Field label={t("fMobile")}>
           <input name="phone" required defaultValue={listing?.phone} className={input} />
         </Field>
-        <Field label="বার কাউন্সিল এনরোলমেন্ট নম্বর">
+        <Field label={t("fBarEnrolNo")}>
           <input
             name="barEnrollMissing"
             hidden
@@ -206,7 +215,7 @@ export function LawyerServiceForm({
             className={input}
           />
         </Field>
-        <Field label="এনরোলমেন্টের তারিখ / সাল">
+        <Field label={t("fEnrolDate")}>
           <input
             name="enrolledOn"
             type="date"
@@ -214,53 +223,53 @@ export function LawyerServiceForm({
             className={input}
           />
         </Field>
-        <Field label="বার অ্যাসোসিয়েশনের নাম">
+        <Field label={t("fBarAssoc")}>
           <input
             name="barAssociation"
             defaultValue={listing?.barAssociation ?? ""}
             className={input}
           />
         </Field>
-        <Field label="অ্যাসোসিয়েশন মেম্বারশিপ / আইডি">
+        <Field label={t("fBarMemberId")}>
           <input
             name="barMemberId"
             defaultValue={listing?.barMemberId ?? ""}
             className={input}
           />
         </Field>
-        <Field label="বিশেষত্ব (যে বিষয়ে মামলা করেন)">
+        <Field label={t("fSpeciality")}>
           <input
             name="spec"
             required
             defaultValue={listing?.spec}
-            placeholder="যেমন: ফৌজদারি, পারিবারিক"
+            placeholder={t("fSpecialityPh")}
             className={input}
           />
         </Field>
-        <Field label="জেলা">
+        <Field label={t("fDistrict")}>
           <select
             name="district"
             required
             defaultValue={listing?.district?.slug ?? ""}
             className={input}
           >
-            <option value="">জেলা বাছুন…</option>
+            <option value="">{t("fPickDistrict")}</option>
             {districts.map((d) => (
               <option key={d.slug} value={d.slug}>
-                {d.name}
+                {localizedName(d, locale)}
               </option>
             ))}
           </select>
         </Field>
       </div>
 
-      <Field label="চেম্বারের ঠিকানা">
+      <Field label={t("fChamberAddr")}>
         <input name="chamber" defaultValue={listing?.chamber ?? ""} className={input} />
       </Field>
 
       <Field
-        label="এনরোলমেন্ট সনদ / সার্টিফিকেট"
-        hint="ছবি বা স্ক্যান আপলোড করুন — শুধু সম্পাদক যাচাইয়ের জন্য দেখবেন।"
+        label={t("fSanad")}
+        hint={t("fSanadHint")}
       >
         <div className="flex flex-wrap items-center gap-3">
           <label
@@ -269,7 +278,7 @@ export function LawyerServiceForm({
             }`}
           >
             <Upload className="h-4 w-4" />
-            {uploading ? "আপলোড হচ্ছে…" : "সনদ আপলোড"}
+            {uploading ? t("fUploading") : t("fUploadSanad")}
             <input
               type="file"
               accept="image/*"
@@ -294,13 +303,13 @@ export function LawyerServiceForm({
               rel="noreferrer"
               className="font-ui text-xs text-brand-crimson underline"
             >
-              আপলোড করা সনদ দেখুন
+              {t("fViewSanad")}
             </a>
           )}
         </div>
       </Field>
 
-      <SubmitBar busy={busy} error={error} saved={saved} label="জমা দিন" />
+      <SubmitBar busy={busy} error={error} saved={saved} label={t("fSubmit")} />
     </form>
   );
 }
@@ -314,6 +323,7 @@ export function DonorServiceForm({
   listing: DonorListing | null;
   reload: () => void;
 }) {
+  const { t, locale } = useLocale();
   const { busy, error, saved, run } = useSubmit(reload);
   const [donationDate, setDonationDate] = useState("");
   const [donationPlace, setDonationPlace] = useState("");
@@ -342,11 +352,9 @@ export function DonorServiceForm({
         }}
       >
         <div>
-          <h2 className="text-lg font-bold text-heading">রক্ত সেবা</h2>
+          <h2 className="text-lg font-bold text-heading">{t("dashBlood")}</h2>
           <p className="mt-1 font-ui text-sm text-foreground-muted">
-            রক্তদাতা হিসেবে নাম লেখান। সম্পাদক অনুমোদন দিলে আপনার প্রোফাইল রক্ত
-            সেবার পাতায় দেখা যাবে, আর যাঁদের রক্ত দরকার তাঁরা যোগাযোগ করতে
-            পারবেন।
+            {t("fBloodIntro")}
           </p>
         </div>
 
@@ -360,24 +368,24 @@ export function DonorServiceForm({
               className="rounded-full px-3 py-1 font-ui text-xs font-bold text-white"
               style={{ background: listing.badge.color }}
             >
-              {listing.badge.label}
+              {locale === "en" ? listing.badge.labelEn : listing.badge.label}
             </span>
             <span className="font-ui text-xs text-foreground-muted">
               {listing.eligibleNow
-                ? "আপনি এখন রক্ত দিতে পারবেন"
-                : `পরবর্তী রক্তদান: ${bnDate(listing.nextEligible)}`}
+                ? t("svcEligibleNow")
+                : `${t("svcNextDonation")}: ${bnDate(listing.nextEligible)}`}
             </span>
           </div>
         )}
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="পূর্ণ নাম">
+          <Field label={t("fFullName")}>
             <input name="name" required defaultValue={listing?.name} className={input} />
           </Field>
-          <Field label="ডোনার আইডি / রেজিস্ট্রেশন নম্বর">
+          <Field label={t("fDonorNo")}>
             <input name="donorNo" defaultValue={listing?.donorNo ?? ""} className={input} />
           </Field>
-          <Field label="জন্মতারিখ">
+          <Field label={t("fDob")}>
             <input
               name="dob"
               type="date"
@@ -385,22 +393,22 @@ export function DonorServiceForm({
               className={input}
             />
           </Field>
-          <Field label="লিঙ্গ">
+          <Field label={t("fGender")}>
             <select name="gender" defaultValue={listing?.gender ?? ""} className={input}>
-              <option value="">বাছুন…</option>
-              <option value="male">পুরুষ</option>
-              <option value="female">নারী</option>
-              <option value="other">অন্যান্য</option>
+              <option value="">{t("fPick")}</option>
+              <option value="male">{t("svcMale")}</option>
+              <option value="female">{t("svcFemale")}</option>
+              <option value="other">{t("svcOther")}</option>
             </select>
           </Field>
-          <Field label="রক্তের গ্রুপ">
+          <Field label={t("fBloodGroup")}>
             <select
               name="group"
               required
               defaultValue={listing?.group ?? ""}
               className={input}
             >
-              <option value="">বাছুন…</option>
+              <option value="">{t("fPick")}</option>
               {bloodGroups.map((g) => (
                 <option key={g.slug} value={g.label}>
                   {g.label}
@@ -408,17 +416,17 @@ export function DonorServiceForm({
               ))}
             </select>
           </Field>
-          <Field label="মোবাইল নম্বর">
+          <Field label={t("fMobile")}>
             <input name="phone" required defaultValue={listing?.phone} className={input} />
           </Field>
-          <Field label="জেলা">
+          <Field label={t("fDistrict")}>
             <select
               name="district"
               required
               defaultValue={listing?.district?.slug ?? ""}
               className={input}
             >
-              <option value="">জেলা বাছুন…</option>
+              <option value="">{t("fPickDistrict")}</option>
               {districts.map((d) => (
                 <option key={d.slug} value={d.slug}>
                   {d.name}
@@ -426,7 +434,7 @@ export function DonorServiceForm({
               ))}
             </select>
           </Field>
-          <Field label="শেষ রক্তদানের তারিখ">
+          <Field label={t("fLastDonation")}>
             <input
               name="lastDonation"
               type="date"
@@ -436,22 +444,21 @@ export function DonorServiceForm({
           </Field>
         </div>
 
-        <Field label="বর্তমান ঠিকানা">
+        <Field label={t("fAddress")}>
           <input name="address" defaultValue={listing?.address ?? ""} className={input} />
         </Field>
 
-        <SubmitBar busy={busy} error={error} saved={saved} label="জমা দিন" />
+        <SubmitBar busy={busy} error={error} saved={saved} label={t("fSubmit")} />
       </form>
 
       {/* Donation log — the badge is built from these dated entries. */}
       {listing && (
         <div className="rounded-xl border border-border bg-background p-4">
           <h3 className="font-ui text-sm font-bold text-heading">
-            রক্তদানের রেকর্ড
+            {t("fDonationLog")}
           </h3>
           <p className="mt-1 font-ui text-xs text-foreground-muted">
-            প্রতিবার রক্ত দেওয়ার পর তারিখটি এখানে যোগ করুন। এই তারিখগুলো থেকেই
-            আপনার ব্যাজ ঠিক হয় — কোনো সংখ্যা কেউ হাতে লেখে না।
+            {t("fDonationLogHint")}
           </p>
 
           <div className="mt-3 flex flex-col gap-2 sm:flex-row">
@@ -464,7 +471,7 @@ export function DonorServiceForm({
             <input
               value={donationPlace}
               onChange={(e) => setDonationPlace(e.target.value)}
-              placeholder="কোথায় দিয়েছেন (ঐচ্ছিক)"
+              placeholder={t("fWherePh")}
               className={input}
             />
             <button
@@ -478,13 +485,13 @@ export function DonorServiceForm({
                   setDonationPlace("");
                   reload();
                 } catch (e) {
-                  setLogError(e instanceof Error ? e.message : "যোগ করা গেল না");
+                  setLogError(e instanceof Error ? e.message : t("fCannotAdd"));
                 }
               }}
               className="flex shrink-0 items-center justify-center gap-1.5 rounded-lg border border-brand-crimson px-4 py-2.5 font-ui text-sm font-semibold text-brand-crimson hover:bg-brand-crimson hover:text-white disabled:opacity-40"
             >
               <Plus className="h-4 w-4" />
-              যোগ করুন
+              {t("fAdd")}
             </button>
           </div>
           {logError && (
@@ -494,7 +501,7 @@ export function DonorServiceForm({
           <ul className="mt-3 flex flex-col divide-y divide-border">
             {(listing.donations ?? []).length === 0 ? (
               <li className="py-2 font-ui text-xs text-foreground-muted">
-                এখনো কোনো রেকর্ড নেই।
+                {t("fNoRecords")}
               </li>
             ) : (
               (listing.donations ?? []).map((d) => (
@@ -509,7 +516,7 @@ export function DonorServiceForm({
                   )}
                   {d.verified && (
                     <span className="rounded-full bg-green-100 px-2 py-0.5 font-ui text-[10px] font-semibold text-green-800">
-                      যাচাইকৃত
+                      {t("fVerified")}
                     </span>
                   )}
                   <button
@@ -542,6 +549,7 @@ export function HospitalServiceForm({
   listing: HospitalListing | null;
   reload: () => void;
 }) {
+  const { t, locale } = useLocale();
   const { busy, error, saved, run } = useSubmit(reload);
 
   return (
@@ -564,22 +572,21 @@ export function HospitalServiceForm({
       }}
     >
       <div>
-        <h2 className="text-lg font-bold text-heading">হাসপাতাল সেবা</h2>
+        <h2 className="text-lg font-bold text-heading">{t("dashHospital")}</h2>
         <p className="mt-1 font-ui text-sm text-foreground-muted">
-          হাসপাতাল বা ক্লিনিকের তথ্য জমা দিন। অনুমোদনের পর হটলাইন নম্বরসহ
-          তালিকায় যুক্ত হবে।
+          {t("fHospitalIntro")}
         </p>
       </div>
 
       {listing && <StatusBanner status={listing.status} note={listing.reviewNote} />}
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="হাসপাতালের নাম">
+        <Field label={t("fHospitalName")}>
           <input name="name" required defaultValue={listing?.name} className={input} />
         </Field>
-        <Field label="ধরন">
+        <Field label={t("fHospitalType")}>
           <select name="type" required defaultValue={listing?.type ?? ""} className={input}>
-            <option value="">বাছুন…</option>
+            <option value="">{t("fPick")}</option>
             {HOSPITAL_TYPES.map((t) => (
               <option key={t.value} value={t.value}>
                 {t.label}
@@ -587,30 +594,30 @@ export function HospitalServiceForm({
             ))}
           </select>
         </Field>
-        <Field label="জেলা">
+        <Field label={t("fDistrict")}>
           <select
             name="district"
             required
             defaultValue={listing?.district?.slug ?? ""}
             className={input}
           >
-            <option value="">জেলা বাছুন…</option>
+            <option value="">{t("fPickDistrict")}</option>
             {districts.map((d) => (
               <option key={d.slug} value={d.slug}>
-                {d.name}
+                {localizedName(d, locale)}
               </option>
             ))}
           </select>
         </Field>
-        <Field label="এলাকা / থানা">
+        <Field label={t("fThana")}>
           <input name="thana" defaultValue={listing?.thana ?? ""} className={input} />
         </Field>
-        <Field label="হটলাইন নম্বর">
+        <Field label={t("fHotline")}>
           <input name="hotline" required defaultValue={listing?.hotline} className={input} />
         </Field>
       </div>
 
-      <Field label="সম্পূর্ণ ঠিকানা">
+      <Field label={t("fFullAddress")}>
         <input name="address" required defaultValue={listing?.address} className={input} />
       </Field>
 
@@ -621,10 +628,10 @@ export function HospitalServiceForm({
           defaultChecked={listing?.emergency24}
           className="accent-brand-crimson"
         />
-        ২৪/৭ জরুরি সেবা চালু আছে
+        {t("fEmergency24")}
       </label>
 
-      <SubmitBar busy={busy} error={error} saved={saved} label="জমা দিন" />
+      <SubmitBar busy={busy} error={error} saved={saved} label={t("fSubmit")} />
     </form>
   );
 }
@@ -641,6 +648,7 @@ export function ServicePanel({
 }: {
   service: "lawyer" | "donor" | "hospital";
 }) {
+  const { t } = useLocale();
   const [data, setData] = useState<MyListings | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -655,7 +663,7 @@ export function ServicePanel({
 
   if (loading)
     return (
-      <p className="font-ui text-sm text-foreground-muted">লোড হচ্ছে…</p>
+      <p className="font-ui text-sm text-foreground-muted">{t("svcLoading")}</p>
     );
 
   const photo =
@@ -673,8 +681,7 @@ export function ServicePanel({
             className="h-11 w-11 rounded-full object-cover"
           />
           <p className="font-ui text-xs text-foreground-muted">
-            আপনার অ্যাকাউন্টের ছবিই প্রোফাইল ছবি হিসেবে ব্যবহার হবে। বদলাতে
-            চাইলে সেটিংস থেকে ছবি বদলান।
+            {t("fPhotoNote")}
           </p>
         </div>
       )}

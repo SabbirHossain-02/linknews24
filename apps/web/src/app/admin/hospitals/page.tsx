@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Phone, Trash2 } from "lucide-react";
 import { apiFetch } from "@/lib/admin-api";
+import { useAdminT, type AdminKey } from "@/lib/admin-i18n";
 import {
   ReviewActions,
   StatusFilter,
@@ -25,14 +26,8 @@ interface Hospital {
   account?: { name: string; email: string; avatar?: string | null } | null;
 }
 
-const TYPE_LABEL: Record<Hospital["type"], string> = {
-  GOVERNMENT: "সরকারি",
-  PRIVATE: "বেসরকারি",
-  SPECIALIZED: "বিশেষায়িত",
-  NGO: "এনজিও",
-};
-
 export default function AdminHospitalsPage() {
+  const t = useAdminT();
   const [rows, setRows] = useState<Hospital[]>([]);
   const [status, setStatus] = useState<ListingStatus | "">("PENDING");
   const [loading, setLoading] = useState(true);
@@ -49,10 +44,9 @@ export default function AdminHospitalsPage() {
 
   return (
     <div className="max-w-4xl">
-      <h1 className="text-2xl font-bold text-heading">হাসপাতাল সেবা</h1>
+      <h1 className="text-2xl font-bold text-heading">{t("hospitals")}</h1>
       <p className="mt-1 font-ui text-sm text-foreground-muted">
-        পাঠকদের জমা দেওয়া হাসপাতালের তথ্য। অনুমোদন দিলে সাইটের হাসপাতাল সেবার
-        পাতায় দেখা যাবে।
+        {t("svcHospitalDesk")}
       </p>
 
       <div className="mt-5">
@@ -63,8 +57,8 @@ export default function AdminHospitalsPage() {
         {loading ? null : rows.length === 0 ? (
           <p className="rounded-xl border border-border bg-background p-6 text-center font-ui text-sm text-foreground-muted">
             {status === "PENDING"
-              ? "অপেক্ষমাণ কিছু নেই।"
-              : "কোনো তথ্য নেই।"}
+              ? t("svcNothingPending")
+              : t("svcNoRecords")}
           </p>
         ) : (
           rows.map((h) => (
@@ -75,11 +69,11 @@ export default function AdminHospitalsPage() {
               <div className="flex flex-wrap items-center gap-2">
                 <span className="font-semibold text-heading">{h.name}</span>
                 <span className="rounded bg-surface px-2 py-0.5 font-ui text-[11px] text-foreground-muted">
-                  {TYPE_LABEL[h.type]}
+                  {t(("svcType" + h.type) as AdminKey)}
                 </span>
                 {h.emergency24 && (
                   <span className="rounded bg-brand-crimson/10 px-2 py-0.5 font-ui text-[11px] font-semibold text-brand-crimson">
-                    ২৪/৭ জরুরি
+                    {t("svcEmergency")}
                   </span>
                 )}
                 <StatusPill status={h.status} />
@@ -98,7 +92,7 @@ export default function AdminHospitalsPage() {
 
               {h.reviewNote && (
                 <p className="font-ui text-[11px] text-brand-crimson">
-                  ফেরতের কারণ: {h.reviewNote}
+                  {t("svcReturnReason")}: {h.reviewNote}
                 </p>
               )}
 
@@ -119,7 +113,7 @@ export default function AdminHospitalsPage() {
                       });
                       load();
                     }}
-                    title="মুছে ফেলুন"
+                    title={t("delete")}
                     className="rounded p-1.5 text-foreground-muted hover:bg-surface hover:text-brand-crimson"
                   >
                     <Trash2 className="h-4 w-4" />

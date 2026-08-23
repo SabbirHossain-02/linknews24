@@ -11,7 +11,7 @@ export function LanguageToggle() {
       className="font-ui text-xs font-semibold transition-colors hover:text-white"
       aria-label="ভাষা পরিবর্তন করুন"
     >
-      {locale === "bn" ? "EN" : "বাং"}
+      {locale === "bn" ? "English" : "বাংলা"}
     </button>
   );
 }

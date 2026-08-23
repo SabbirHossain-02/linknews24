@@ -12,6 +12,7 @@ import {
   type ListingStatus,
 } from "@/components/admin/ListingReview";
 import { bnDate } from "@/lib/services-api";
+import { useAdminT } from "@/lib/admin-i18n";
 
 interface Donation {
   id: string;
@@ -47,6 +48,7 @@ interface Donor {
  * — are visible without opening anything.
  */
 export default function DonorsAdminPage() {
+  const t = useAdminT();
   const [rows, setRows] = useState<Donor[]>([]);
   const [status, setStatus] = useState<ListingStatus | "">("PENDING");
   const [q, setQ] = useState("");
@@ -70,10 +72,9 @@ export default function DonorsAdminPage() {
 
   return (
     <div className="max-w-4xl">
-      <h1 className="text-2xl font-bold text-heading">রক্ত সেবা</h1>
+      <h1 className="text-2xl font-bold text-heading">{t("donors")}</h1>
       <p className="mt-1 font-ui text-sm text-foreground-muted">
-        পাঠকদের জমা দেওয়া রক্তদাতার তথ্য। অনুমোদন দিলে রক্ত সেবার পাতায় দেখা
-        যাবে।
+        {t("svcBloodDesk")}
       </p>
 
       <div className="mt-5 flex flex-wrap items-center gap-3">
@@ -83,7 +84,7 @@ export default function DonorsAdminPage() {
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="নাম দিয়ে খুঁজুন"
+            placeholder={t("svcSearchName")}
             className="w-full rounded-lg border border-border bg-background py-2 pl-9 pr-3 text-sm text-foreground focus:border-brand-crimson focus:outline-none"
           />
         </div>
@@ -92,7 +93,7 @@ export default function DonorsAdminPage() {
       <div className="mt-4 flex flex-col gap-2">
         {loading ? null : rows.length === 0 ? (
           <p className="rounded-xl border border-border bg-background p-8 text-center font-ui text-sm text-foreground-muted">
-            {status === "PENDING" ? "অপেক্ষমাণ কিছু নেই।" : "কোনো তথ্য নেই।"}
+            {status === "PENDING" ? t("svcNothingPending") : t("svcNoRecords")}
           </p>
         ) : (
           rows.map((d) => (
@@ -133,8 +134,8 @@ export default function DonorsAdminPage() {
                   <p className="mt-1 font-ui text-xs text-foreground-muted">
                     {d.phone}
                     {d.district ? ` · ${d.district.name}` : ""}
-                    {d.donorNo ? ` · ডোনার আইডি ${d.donorNo}` : ""}
-                    {d.dob ? ` · জন্ম ${bnDate(d.dob)}` : ""}
+                    {d.donorNo ? ` · ${t("svcDonorId")} ${d.donorNo}` : ""}
+                    {d.dob ? ` · ${t("svcBorn")} ${bnDate(d.dob)}` : ""}
                   </p>
                   {d.address && (
                     <p className="mt-0.5 font-ui text-xs text-foreground-muted">
@@ -145,7 +146,7 @@ export default function DonorsAdminPage() {
                   {/* The dated entries the public badge is computed from. */}
                   {(d.donations ?? []).length > 0 && (
                     <p className="mt-1.5 font-ui text-[11px] text-foreground-muted">
-                      রক্তদান:{" "}
+                      {t("svcDonations")}:{" "}
                       {(d.donations ?? [])
                         .map((x) => bnDate(x.donatedOn))
                         .join(" · ")}
@@ -154,7 +155,7 @@ export default function DonorsAdminPage() {
 
                   {d.reviewNote && (
                     <p className="mt-1 font-ui text-[11px] text-brand-crimson">
-                      ফেরতের কারণ: {d.reviewNote}
+                      {t("svcReturnReason")}: {d.reviewNote}
                     </p>
                   )}
                 </div>
@@ -177,7 +178,7 @@ export default function DonorsAdminPage() {
                       });
                       load();
                     }}
-                    title="মুছে ফেলুন"
+                    title={t("delete")}
                     className="rounded p-1.5 text-foreground-muted hover:bg-surface hover:text-brand-crimson"
                   >
                     <Trash2 className="h-4 w-4" />

@@ -6,6 +6,8 @@ import { BadgeCheck, MapPin, Phone, Scale, User } from "lucide-react";
 import { API_BASE } from "@/lib/admin-api";
 import { districts, formatPhone } from "@/lib/directory-data";
 import { bnDate, type LawyerListing } from "@/lib/services-api";
+import { useLocale } from "@/components/providers/LocaleProvider";
+import { localizedName } from "@/lib/i18n";
 
 /**
  * Legal-service directory.
@@ -16,6 +18,7 @@ import { bnDate, type LawyerListing } from "@/lib/services-api";
  * it is the thing that makes the listing checkable.
  */
 export function LawyerFeed() {
+  const { locale, t } = useLocale();
   const [rows, setRows] = useState<LawyerListing[]>([]);
   const [district, setDistrict] = useState("");
   const [q, setQ] = useState("");
@@ -53,39 +56,39 @@ export function LawyerFeed() {
           onChange={(e) => setDistrict(e.target.value)}
           className="rounded-lg border border-border bg-background px-3 py-2 font-ui text-sm text-foreground"
         >
-          <option value="">সব জেলা</option>
+          <option value="">{t("svcAllDistricts")}</option>
           {districts.map((d) => (
             <option key={d.slug} value={d.slug}>
-              {d.name}
+              {localizedName(d, locale)}
             </option>
           ))}
         </select>
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="নাম বা বিষয় দিয়ে খুঁজুন"
+          placeholder={t("svcSearchName")}
           className="min-w-[200px] flex-1 rounded-lg border border-border bg-background px-3 py-2 font-ui text-sm text-foreground"
         />
       </div>
 
       {loading ? (
-        <p className="font-ui text-sm text-foreground-muted">লোড হচ্ছে…</p>
+        <p className="font-ui text-sm text-foreground-muted">{t("svcLoading")}</p>
       ) : shown.length === 0 ? (
         <div className="rounded-xl border border-border bg-background p-10 text-center">
           <Scale className="mx-auto h-8 w-8 text-foreground-muted/40" />
           <p className="mt-3 font-ui text-sm text-foreground-muted">
-            কোনো ফল পাওয়া যায়নি।
+            {t("svcNoResults")}
           </p>
           <p className="mt-1 font-ui text-xs text-foreground-muted">
-            আপনি তালিকাভুক্ত আইনজীবী হলে ড্যাশবোর্ডের “আইন সেবা” থেকে তথ্য জমা
-            দিন।
+            {t("svcNoLawyersHint")}
           </p>
         </div>
       ) : (
-        shown.map((l) => (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {shown.map((l) => (
           <article
             key={l.id}
-            className="flex flex-wrap items-start gap-4 rounded-xl border border-border bg-background p-4 shadow-sm"
+            className="flex flex-col gap-3 rounded-xl border border-border bg-background p-4 shadow-sm"
           >
             {l.photo ? (
               <Image
@@ -107,7 +110,7 @@ export function LawyerFeed() {
                 {l.barEnrollNo && (
                   <span className="flex items-center gap-1 rounded-full bg-green-50 px-2.5 py-0.5 font-ui text-[11px] font-semibold text-green-800">
                     <BadgeCheck className="h-3 w-3" />
-                    বার এনরোলমেন্ট {l.barEnrollNo}
+                    {t("svcBarEnrolment")} {l.barEnrollNo}
                   </span>
                 )}
               </div>
@@ -120,14 +123,21 @@ export function LawyerFeed() {
               <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 font-ui text-xs text-foreground-muted">
                 <span className="flex items-center gap-1">
                   <MapPin className="h-3.5 w-3.5" />
-                  {l.district?.name ?? "—"}
+                  {l.district
+                    ? localizedName(
+                        { name: l.district.name, nameEn: l.district.nameEn ?? l.district.name },
+                        locale,
+                      )
+                    : "—"}
                 </span>
-                {l.enrolledOn && <span>এনরোলমেন্ট: {bnDate(l.enrolledOn)}</span>}
+                {l.enrolledOn && (
+                  <span>{t("svcEnrolledOn")}: {bnDate(l.enrolledOn)}</span>
+                )}
               </p>
 
               {l.chamber && (
                 <p className="mt-1 font-ui text-sm text-foreground-muted">
-                  চেম্বার: {l.chamber}
+                  {t("svcChamber")}: {l.chamber}
                 </p>
               )}
             </div>
@@ -140,7 +150,8 @@ export function LawyerFeed() {
               {formatPhone(l.phone)}
             </a>
           </article>
-        ))
+          ))}
+        </div>
       )}
     </div>
   );

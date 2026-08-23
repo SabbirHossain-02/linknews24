@@ -4,7 +4,11 @@ import { useCallback, useEffect, useState } from "react";
 import { Building2, MapPin, Phone, Siren } from "lucide-react";
 import { API_BASE } from "@/lib/admin-api";
 import { districts, formatPhone } from "@/lib/directory-data";
-import { HOSPITAL_TYPES, type HospitalListing } from "@/lib/services-api";
+import { type HospitalListing } from "@/lib/services-api";
+import { useLocale } from "@/components/providers/LocaleProvider";
+import { localizedName, type TranslationKey } from "@/lib/i18n";
+
+const TYPES = ["GOVERNMENT", "PRIVATE", "SPECIALIZED", "NGO"] as const;
 
 /**
  * Hospital directory.
@@ -14,6 +18,8 @@ import { HOSPITAL_TYPES, type HospitalListing } from "@/lib/services-api";
  * them that way.
  */
 export function HospitalList() {
+  const { locale, t } = useLocale();
+  const typeLabel = (v: string) => t(("svcType" + v) as TranslationKey);
   const [rows, setRows] = useState<HospitalListing[]>([]);
   const [district, setDistrict] = useState("");
   const [type, setType] = useState("");
@@ -42,10 +48,10 @@ export function HospitalList() {
           onChange={(e) => setDistrict(e.target.value)}
           className="rounded-lg border border-border bg-background px-3 py-2 font-ui text-sm text-foreground"
         >
-          <option value="">সব জেলা</option>
+          <option value="">{t("svcAllDistricts")}</option>
           {districts.map((d) => (
             <option key={d.slug} value={d.slug}>
-              {d.name}
+              {localizedName(d, locale)}
             </option>
           ))}
         </select>
@@ -54,26 +60,29 @@ export function HospitalList() {
           onChange={(e) => setType(e.target.value)}
           className="rounded-lg border border-border bg-background px-3 py-2 font-ui text-sm text-foreground"
         >
-          <option value="">সব ধরন</option>
-          {HOSPITAL_TYPES.map((t) => (
-            <option key={t.value} value={t.value}>
-              {t.label}
+          <option value="">{t("svcAllTypes")}</option>
+          {TYPES.map((v) => (
+            <option key={v} value={v}>
+              {typeLabel(v)}
             </option>
           ))}
         </select>
       </div>
 
       {loading ? (
-        <p className="font-ui text-sm text-foreground-muted">লোড হচ্ছে…</p>
+        <p className="font-ui text-sm text-foreground-muted">{t("svcLoading")}</p>
       ) : rows.length === 0 ? (
-        <p className="rounded-xl border border-border bg-background p-8 text-center font-ui text-sm text-foreground-muted">
-          এই শর্তে কোনো হাসপাতাল পাওয়া যায়নি।
-        </p>
+        <div className="rounded-xl border border-border bg-background p-10 text-center">
+          <Building2 className="mx-auto h-8 w-8 text-foreground-muted/40" />
+          <p className="mt-3 font-ui text-sm text-foreground-muted">{t("svcNoResults")}</p>
+          <p className="mt-1 font-ui text-xs text-foreground-muted">{t("svcNoHospitalsHint")}</p>
+        </div>
       ) : (
-        rows.map((h) => (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {rows.map((h) => (
           <article
             key={h.id}
-            className="flex flex-wrap items-start gap-4 rounded-xl border border-border bg-background p-4 shadow-sm"
+            className="flex flex-col gap-3 rounded-xl border border-border bg-background p-4 shadow-sm"
           >
             <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-surface text-brand-crimson">
               <Building2 className="h-5 w-5" />
@@ -83,12 +92,12 @@ export function HospitalList() {
               <div className="flex flex-wrap items-center gap-2">
                 <h2 className="font-bold text-heading">{h.name}</h2>
                 <span className="rounded bg-surface px-2 py-0.5 font-ui text-[11px] text-foreground-muted">
-                  {HOSPITAL_TYPES.find((t) => t.value === h.type)?.label ?? h.type}
+                  {typeLabel(h.type)}
                 </span>
                 {h.emergency24 && (
                   <span className="flex items-center gap-1 rounded bg-brand-crimson/10 px-2 py-0.5 font-ui text-[11px] font-semibold text-brand-crimson">
                     <Siren className="h-3 w-3" />
-                    ২৪/৭ জরুরি
+                    {t("svcEmergency24")}
                   </span>
                 )}
               </div>
@@ -98,7 +107,7 @@ export function HospitalList() {
                 <span>
                   {h.address}
                   {h.thana ? `, ${h.thana}` : ""}
-                  {h.district ? ` — ${h.district.name}` : ""}
+                  {h.district ? ` — ${localizedName({ name: h.district.name, nameEn: h.district.nameEn ?? h.district.name }, locale)}` : ""}
                 </span>
               </p>
             </div>
@@ -111,7 +120,8 @@ export function HospitalList() {
               {formatPhone(h.hotline)}
             </a>
           </article>
-        ))
+          ))}
+        </div>
       )}
     </div>
   );
