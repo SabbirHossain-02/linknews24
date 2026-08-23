@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import type { Editor } from "@tiptap/react";
 import {
   AlignCenter,
@@ -49,6 +49,7 @@ import { FONT_SIZES, LINE_HEIGHTS } from "./extensions";
 import { FontPicker } from "./FontPicker";
 import { StyleGallery } from "./StyleGallery";
 import { useFormatPainter } from "./use-format-painter";
+import { copySelection, pasteIntoEditor } from "./clipboard";
 
 /**
  * Rewrites the selected text through `fn` one text node at a time, so the
@@ -110,62 +111,21 @@ export function HomeTab({
   onOpenFontDialog: () => void;
   onOpenParagraphDialog: () => void;
 }) {
-  const { armed, copyFormat, paint } = useFormatPainter(editor);
+  const { armed, copyFormat } = useFormatPainter(editor);
   const [note, setNote] = useState<string | null>(null);
-  const painterRef = useRef(paint);
-  painterRef.current = paint;
 
   const flash = (message: string) => {
     setNote(message);
-    setTimeout(() => setNote(null), 2500);
-  };
-
-  const selectedHTML = () => {
-    const { from, to } = editor.state.selection;
-    const slice = editor.state.doc.slice(from, to);
-    const div = document.createElement("div");
-    div.appendChild(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (editor.view as any).someProp("clipboardSerializer")?.serializeFragment(
-        slice.content,
-      ) ?? document.createTextNode(editor.state.doc.textBetween(from, to, "\n")),
-    );
-    return div.innerHTML;
+    setTimeout(() => setNote(null), 3500);
   };
 
   const doCopy = async (cut: boolean) => {
-    const { from, to } = editor.state.selection;
-    if (from === to) return flash("আগে লেখা সিলেক্ট করুন");
-    const text = editor.state.doc.textBetween(from, to, "\n");
-    try {
-      await navigator.clipboard.write([
-        new ClipboardItem({
-          "text/html": new Blob([selectedHTML()], { type: "text/html" }),
-          "text/plain": new Blob([text], { type: "text/plain" }),
-        }),
-      ]);
-      if (cut) editor.chain().focus().deleteSelection().run();
-      flash(cut ? "কাট হয়েছে" : "কপি হয়েছে");
-    } catch {
-      flash(`ব্রাউজার আটকে দিয়েছে — Ctrl+${cut ? "X" : "C"} চাপুন`);
-    }
+    flash((await copySelection(editor, cut)).message);
   };
 
   const doPaste = async (plainText: boolean) => {
-    try {
-      const items = await navigator.clipboard.read();
-      for (const item of items) {
-        if (!plainText && item.types.includes("text/html")) {
-          const html = await (await item.getType("text/html")).text();
-          editor.chain().focus().insertContent(html).run();
-          return;
-        }
-      }
-      const text = await navigator.clipboard.readText();
-      editor.chain().focus().insertContent(text).run();
-    } catch {
-      flash("ব্রাউজার আটকে দিয়েছে — Ctrl+V চাপুন");
-    }
+    const result = await pasteIntoEditor(editor, plainText);
+    if (!result.ok) flash(result.message);
   };
 
   const stepFontSize = (direction: 1 | -1) => {
@@ -184,16 +144,11 @@ export function HomeTab({
     | undefined;
 
   return (
-    <div
-      className="relative flex h-[92px] items-stretch overflow-x-auto bg-white"
-      onMouseUp={() => armed && painterRef.current()}
-    >
+    <div className="relative flex h-[92px] items-stretch overflow-x-auto bg-white">
       {/* ---------------- Clipboard ---------------- */}
-      <Group
-        label="Clipboard"
-        launchTitle="ক্লিপবোর্ড"
-        onLaunch={() => doPaste(false)}
-      >
+      {/* No dialog launcher here — Word's opens a clipboard history pane we
+          don't have, and pointing it at Paste would just duplicate the button. */}
+      <Group label="Clipboard">
         <BigBtn
           title="পেস্ট (Ctrl+V)"
           label="Paste"

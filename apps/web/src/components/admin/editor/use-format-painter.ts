@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { Editor } from "@tiptap/react";
 import type { Mark } from "@tiptap/pm/model";
 
@@ -82,5 +82,32 @@ export function useFormatPainter(editor: Editor | null) {
     return true;
   }, [editor]);
 
-  return { armed, copyFormat, paint };
+  /**
+   * Fire the brush as soon as the user finishes selecting.
+   *
+   * The listener has to sit on the document, not on the ribbon: the selection
+   * is made inside the editor, so that is where the mouse is released. Watching
+   * the ribbon meant the brush armed and then never applied.
+   */
+  useEffect(() => {
+    if (!armed || !editor) return;
+
+    const tryPaint = () => {
+      // Let ProseMirror commit the new selection before reading it.
+      requestAnimationFrame(() => {
+        if (!copied.current) return;
+        if (editor.state.selection.empty) return;
+        paint();
+      });
+    };
+
+    document.addEventListener("mouseup", tryPaint);
+    document.addEventListener("keyup", tryPaint);
+    return () => {
+      document.removeEventListener("mouseup", tryPaint);
+      document.removeEventListener("keyup", tryPaint);
+    };
+  }, [armed, editor, paint]);
+
+  return { armed, copyFormat };
 }
