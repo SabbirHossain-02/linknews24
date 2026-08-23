@@ -22,6 +22,24 @@ export function signAccountToken(accountId: string): string {
   });
 }
 
+/**
+ * Reads the signed-in reader's account id, or undefined when signed out.
+ *
+ * Unlike `authAccount` this never rejects — public endpoints use it to
+ * personalise a response (whether *you* liked a donor) while staying open to
+ * everyone else.
+ */
+export function readViewerAccount(req: Request): string | undefined {
+  const token = req.cookies?.[env.accountCookieName];
+  if (!token) return undefined;
+  try {
+    const payload = jwt.verify(token, env.jwtSecret) as AccountToken;
+    return payload.kind === "account" ? payload.sub : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 // Requires a valid advertiser-account cookie. Distinct from admin `authenticate`.
 export function authAccount(req: Request, res: Response, next: NextFunction) {
   const token = req.cookies?.[env.accountCookieName];

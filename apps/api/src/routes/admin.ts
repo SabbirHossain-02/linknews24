@@ -849,14 +849,23 @@ adminRouter.delete("/lawyers/:id", requireRole(...CAN_DIRECTORY), async (req, re
 
 // ===================== BLOOD DONORS DIRECTORY =====================
 adminRouter.get("/donors", async (req, res) => {
-  const { group, q } = req.query as Record<string, string>;
+  const { group, q, status } = req.query as Record<string, string>;
   const donors = await prisma.bloodDonor.findMany({
     where: {
       group: group || undefined,
       name: q ? { contains: q, mode: "insensitive" } : undefined,
+      status: status ? (status as never) : undefined,
     },
-    include: { district: { select: { name: true } } },
-    orderBy: { createdAt: "desc" },
+    include: {
+      district: { select: { name: true } },
+      account: { select: { name: true, email: true, avatar: true } },
+      // Donation entries are what the badge is built from, so a reviewer can
+      // check the dates rather than trust a number.
+      donations: { orderBy: { donatedOn: "desc" } },
+      _count: { select: { likes: true } },
+    },
+    // Pending first — the queue is the reason to open this page.
+    orderBy: [{ status: "asc" }, { createdAt: "desc" }],
     take: 500,
   });
   res.json({ donors });
@@ -918,6 +927,119 @@ adminRouter.delete("/comments/:id", requireRole(...CAN_MODERATE), async (req, re
   await prisma.comment.delete({ where: { id: req.params.id } }).catch(() => null);
   res.json({ ok: true });
 });
+
+// ===================== SERVICE LISTINGS (review queue) =====================
+
+/**
+ * How many reader submissions are waiting — drives the badge in the admin nav.
+ * Kept as one call so the sidebar does not fan out three requests per page.
+ */
+adminRouter.get("/pending-counts", async (_req, res) => {
+  const [lawyers, donors, hospitals, comments] = await Promise.all([
+    prisma.lawyer.count({ where: { status: "PENDING" } }),
+    prisma.bloodDonor.count({ where: { status: "PENDING" } }),
+    prisma.hospital.count({ where: { status: "PENDING" } }),
+    prisma.comment.count({ where: { status: "PENDING" } }),
+  ]);
+  res.json({
+    lawyers,
+    donors,
+    hospitals,
+    comments,
+    total: lawyers + donors + hospitals,
+  });
+});
+
+const reviewSchema = z.object({
+  status: z.enum(["PENDING", "APPROVED", "REJECTED"]),
+  reviewNote: z.string().max(500).nullable().optional(),
+});
+
+/** Approve or reject one listing. `service` picks which table to touch. */
+adminRouter.put(
+  "/listings/:service/:id/review",
+  requireRole(...CAN_DIRECTORY),
+  async (req, res) => {
+    const parsed = reviewSchema.safeParse(req.body);
+    if (!parsed.success) return res.status(400).json({ error: "Invalid input" });
+
+    const { service, id } = req.params;
+    const data = {
+      status: parsed.data.status,
+      reviewNote: parsed.data.reviewNote ?? null,
+    };
+
+    try {
+      if (service === "lawyer")
+        await prisma.lawyer.update({ where: { id }, data });
+      else if (service === "donor")
+        await prisma.bloodDonor.update({ where: { id }, data });
+      else if (service === "hospital")
+        await prisma.hospital.update({ where: { id }, data });
+      else return res.status(400).json({ error: "অজানা সেবা" });
+    } catch {
+      return res.status(404).json({ error: "Not found" });
+    }
+
+    res.json({ ok: true });
+  },
+);
+
+// ===================== HOSPITALS =====================
+adminRouter.get("/hospitals", async (req, res) => {
+  const { status, q } = req.query as Record<string, string>;
+  const hospitals = await prisma.hospital.findMany({
+    where: {
+      ...(status ? { status: status as never } : {}),
+      ...(q ? { name: { contains: q, mode: "insensitive" } } : {}),
+    },
+    include: {
+      district: { select: { name: true, nameEn: true, slug: true } },
+      account: { select: { name: true, email: true } },
+    },
+    orderBy: [{ status: "asc" }, { createdAt: "desc" }],
+  });
+  res.json({ hospitals });
+});
+
+const hospitalAdminSchema = z.object({
+  name: z.string().min(2).max(160),
+  type: z.enum(["GOVERNMENT", "PRIVATE", "SPECIALIZED", "NGO"]),
+  address: z.string().min(3).max(300),
+  districtId: z.string().min(1),
+  thana: z.string().max(120).nullable().optional(),
+  hotline: z.string().min(4).max(60),
+  emergency24: z.boolean().default(false),
+});
+
+adminRouter.post("/hospitals", requireRole(...CAN_DIRECTORY), async (req, res) => {
+  const parsed = hospitalAdminSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: "Invalid input" });
+  // Staff-entered rows skip the queue — the person adding it is the reviewer.
+  const hospital = await prisma.hospital.create({
+    data: { ...parsed.data, status: "APPROVED" },
+  });
+  res.status(201).json({ hospital });
+});
+
+adminRouter.put("/hospitals/:id", requireRole(...CAN_DIRECTORY), async (req, res) => {
+  const parsed = hospitalAdminSchema.partial().safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: "Invalid input" });
+  const hospital = await prisma.hospital
+    .update({ where: { id: req.params.id }, data: parsed.data })
+    .catch(() => null);
+  if (!hospital) return res.status(404).json({ error: "Not found" });
+  res.json({ hospital });
+});
+
+adminRouter.delete(
+  "/hospitals/:id",
+  requireRole(...CAN_DIRECTORY),
+  async (req, res) => {
+    await prisma.hospital.delete({ where: { id: req.params.id } }).catch(() => null);
+    res.json({ ok: true });
+  },
+);
 
 // ===================== ANALYTICS (dashboard) =====================
 adminRouter.get("/analytics", async (_req, res) => {

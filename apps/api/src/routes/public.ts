@@ -5,6 +5,8 @@ import { BLOOD_GROUPS } from "../lib/blood";
 import { emitChange, emitAnalytics } from "../realtime";
 import { clientIp, geoLookup, parseUA } from "../lib/analytics";
 import { AD_SLOTS } from "../lib/adSlots";
+import { readViewerAccount } from "../middleware/account";
+import { donorBadge, nextEligibleDate, isEligibleNow } from "../lib/donorBadge";
 
 export const publicRouter = Router();
 
@@ -20,25 +22,107 @@ publicRouter.get("/lawyers/:district", async (req, res) => {
   });
   if (!district) return res.status(404).json({ error: "Not found" });
   const lawyers = await prisma.lawyer.findMany({
-    where: { districtId: district.id },
+    // Reader submissions only appear once an admin has approved them.
+    where: { districtId: district.id, status: "APPROVED" },
     orderBy: { createdAt: "asc" },
   });
   res.json({ district, lawyers });
+});
+
+/* ------------------------------------------------------------- hospitals */
+
+publicRouter.get("/hospitals", async (req, res) => {
+  const { district, type } = req.query as Record<string, string>;
+
+  const hospitals = await prisma.hospital.findMany({
+    where: {
+      status: "APPROVED",
+      ...(district ? { district: { slug: district } } : {}),
+      ...(type ? { type } : {}),
+    },
+    include: { district: { select: { name: true, nameEn: true, slug: true } } },
+    // Emergency lines first — that is what someone searching at 3am needs.
+    orderBy: [{ emergency24: "desc" }, { name: "asc" }],
+  });
+
+  res.json({ hospitals });
 });
 
 publicRouter.get("/blood-groups", (_req, res) =>
   res.json({ groups: BLOOD_GROUPS }),
 );
 
+/**
+ * The blood-donor feed.
+ *
+ * Returns each approved donor as a post-shaped record: their badge (never a
+ * raw donation count — see lib/donorBadge), their like tally, whether they can
+ * give again yet and the date they next can. `viewer` is the reader's account
+ * id when signed in, so the feed can show their own like state.
+ */
+async function donorFeed(where: Record<string, unknown>, viewer?: string) {
+  const donors = await prisma.bloodDonor.findMany({
+    where: { ...where, status: "APPROVED" },
+    include: {
+      district: { select: { name: true, nameEn: true, slug: true } },
+      _count: { select: { donations: true, likes: true } },
+      ...(viewer
+        ? { likes: { where: { accountId: viewer }, select: { id: true } } }
+        : {}),
+    },
+    orderBy: [{ donations: { _count: "desc" } }, { createdAt: "desc" }],
+  });
+
+  return donors.map((donor) => {
+    const { _count, likes, ...rest } = donor as typeof donor & {
+      likes?: { id: string }[];
+    };
+    return {
+      ...rest,
+      badge: donorBadge(_count.donations),
+      likes: _count.likes,
+      likedByMe: Boolean(likes?.length),
+      nextEligible: nextEligibleDate(donor.lastDonation),
+      eligibleNow: isEligibleNow(donor.lastDonation),
+    };
+  });
+}
+
 publicRouter.get("/donors/:group", async (req, res) => {
   const g = BLOOD_GROUPS.find((x) => x.slug === req.params.group);
   if (!g) return res.status(404).json({ error: "Not found" });
-  const donors = await prisma.bloodDonor.findMany({
-    where: { group: g.label },
-    include: { district: { select: { name: true, nameEn: true } } },
-    orderBy: { createdAt: "asc" },
-  });
+
+  const viewer = readViewerAccount(req);
+  const { district } = req.query as Record<string, string>;
+
+  const donors = await donorFeed(
+    {
+      group: g.label,
+      ...(district ? { district: { slug: district } } : {}),
+    },
+    viewer,
+  );
+
   res.json({ group: g, donors });
+});
+
+/** The whole feed, for the "রক্ত সেবা" landing page. */
+publicRouter.get("/donors", async (req, res) => {
+  const viewer = readViewerAccount(req);
+  const { district, group } = req.query as Record<string, string>;
+  const matched = group
+    ? BLOOD_GROUPS.find((x) => x.slug === group || x.label === group)
+    : null;
+
+  const donors = await donorFeed(
+    {
+      ...(matched ? { group: matched.label } : {}),
+      ...(district ? { district: { slug: district } } : {}),
+    },
+    viewer,
+  );
+
+  res.json({ donors });
 });
 
 publicRouter.get("/settings", async (_req, res) => {

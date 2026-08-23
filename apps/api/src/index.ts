@@ -8,6 +8,7 @@ import { UPLOAD_DIR } from "./routes/admin";
 import { authRouter } from "./routes/auth";
 import { accountRouter } from "./routes/account";
 import { publicRouter } from "./routes/public";
+import { servicesRouter } from "./routes/services";
 import { adminRouter } from "./routes/admin";
 import { authenticate } from "./middleware/auth";
 import { setIo } from "./realtime";
@@ -38,6 +39,7 @@ app.get("/api/health", (_req, res) =>
 
 app.use("/api/auth", authRouter);
 app.use("/api/account", accountRouter);
+app.use("/api/services", servicesRouter);
 app.use("/api", publicRouter);
 app.use("/api/admin", authenticate, adminRouter);
 
