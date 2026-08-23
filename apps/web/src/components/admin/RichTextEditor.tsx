@@ -191,17 +191,21 @@ export function RichTextEditor({
             view.pageMode ? "bg-[#e6e6e6] p-6" : "bg-white"
           } ${view.fullscreen ? "h-full" : "h-[68vh]"}`}
         >
-          {/* 794 x 1123 is A4 at 96dpi, so the sheet keeps a real page's
-              proportions at every zoom level instead of hugging the text. */}
+          {/* A4 width (794px at 96dpi) so the measure matches print, but the
+              height fills the canvas and then grows with the text. A literal
+              A4 height would mean scrolling through blank paper on every new
+              article — the page is going on the web, not into a printer. */}
           <div
             style={{ zoom: `${view.zoom}%` }}
             className={
               view.pageMode
-                ? "mx-auto min-h-[1123px] w-[794px] max-w-full bg-white px-[76px] py-[64px] shadow-[0_1px_6px_rgba(0,0,0,0.25)]"
-                : "mx-auto w-full max-w-3xl px-4 py-3"
+                ? "mx-auto flex min-h-[calc(68vh-3rem)] w-[794px] max-w-full flex-col bg-white px-[76px] py-[56px] shadow-[0_1px_6px_rgba(0,0,0,0.25)]"
+                : "mx-auto flex w-full max-w-3xl flex-col px-4 py-3"
             }
           >
-            <EditorContent editor={editor} />
+            {/* Stretch the editable area over the whole sheet, so clicking
+                low on a mostly-empty page still puts the cursor in. */}
+            <EditorContent editor={editor} className="flex flex-1 flex-col" />
           </div>
         </div>
       </div>

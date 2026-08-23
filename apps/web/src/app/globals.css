@@ -214,7 +214,8 @@ body {
 .ln-find-match { background: #fde68a; border-radius: 2px; }
 .ln-find-current { background: #fb923c; color: #000; }
 
-/* Page view: give the editable area printed-page typography */
-.ln-page { min-height: 420px; }
+/* Page view: the editable area fills the sheet it sits on, so a click
+   anywhere on the page lands the cursor rather than only in the typed part. */
+.ln-page { flex: 1 1 auto; min-height: 260px; }
 .ln-page:focus { outline: none; }
 
