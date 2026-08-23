@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { apiFetch } from "@/lib/admin-api";
-import { ConfirmModal } from "@/components/admin/Modal";
+import { Modal } from "@/components/admin/Modal";
 import { useAdminT } from "@/lib/admin-i18n";
 
 interface Category {
@@ -24,8 +24,10 @@ export default function CategoriesAdminPage() {
   const [loading, setLoading] = useState(true);
   const [name, setName] = useState("");
   const [nameEn, setNameEn] = useState("");
-  const [error, setError] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [moveTo, setMoveTo] = useState("");
+  const [busy, setBusy] = useState(false);
 
   const load = () =>
     apiFetch<{ categories: Category[] }>("/api/admin/categories")
@@ -56,25 +58,47 @@ export default function CategoriesAdminPage() {
     load();
   };
 
-  const remove = async (id: string) => {
-    setError(null);
+  /**
+   * Deletes a category. When it holds articles the caller has to say what
+   * happens to them — move them to another category, or delete them too.
+   *
+   * Errors surface inside the dialog rather than in a banner at the top of the
+   * page, which is off-screen once you have scrolled to the row you are
+   * deleting — that is why the first attempt looked like nothing happened.
+   */
+  const remove = async (
+    id: string,
+    choice?: { moveTo: string } | { withArticles: true },
+  ) => {
+    setBusy(true);
+    setDeleteError(null);
     try {
-      await apiFetch(`/api/admin/categories/${id}`, { method: "DELETE" });
+      let query = "";
+      if (choice && "moveTo" in choice)
+        query = `?moveTo=${encodeURIComponent(choice.moveTo)}`;
+      else if (choice) query = "?withArticles=true";
+
+      await apiFetch(`/api/admin/categories/${id}${query}`, {
+        method: "DELETE",
+      });
+      closeDelete();
       load();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Error");
+      setDeleteError(e instanceof Error ? e.message : "মুছতে পারা গেল না");
+    } finally {
+      setBusy(false);
     }
+  };
+
+  const closeDelete = () => {
+    setDeleteId(null);
+    setDeleteError(null);
+    setMoveTo("");
   };
 
   return (
     <div className="max-w-3xl">
       <h1 className="text-2xl font-bold text-heading">{t("categoriesTags")}</h1>
-
-      {error && (
-        <p className="mt-3 rounded-lg bg-brand-crimson/10 px-3.5 py-2 font-ui text-sm text-brand-crimson">
-          {error}
-        </p>
-      )}
 
       <div className="mt-5 flex flex-col gap-2 rounded-xl border border-border bg-background p-4 sm:flex-row">
         <input
@@ -151,14 +175,100 @@ export default function CategoriesAdminPage() {
         )}
       </div>
 
-      {deleteId && (
-        <ConfirmModal
-          title={t("deleteTitle")}
-          message={t("deleteMessage")}
-          onConfirm={() => remove(deleteId)}
-          onClose={() => setDeleteId(null)}
-        />
-      )}
+      {deleteId && (() => {
+        const target = cats.find((c) => c.id === deleteId);
+        const count = target?._count?.articles ?? 0;
+        const others = cats.filter((c) => c.id !== deleteId);
+
+        return (
+          <Modal title={`"${target?.name}" মুছে ফেলুন`} onClose={closeDelete}>
+            {count === 0 ? (
+              <p className="font-ui text-sm text-foreground-muted">
+                এই ক্যাটাগরিতে কোনো আর্টিকেল নেই। মুছে ফেলবেন?
+              </p>
+            ) : (
+              <>
+                <p className="font-ui text-sm text-foreground">
+                  এই ক্যাটাগরিতে{" "}
+                  <b className="text-brand-crimson">{count}টি আর্টিকেল</b> আছে।
+                  সেগুলোর কী হবে?
+                </p>
+
+                <div className="mt-4 rounded-lg border border-border p-3">
+                  <p className="font-ui text-xs font-semibold text-foreground">
+                    অন্য ক্যাটাগরিতে সরিয়ে নিন
+                  </p>
+                  <p className="mt-0.5 font-ui text-[11px] text-foreground-muted">
+                    আর্টিকেলগুলো থেকে যাবে, শুধু ক্যাটাগরিটা বদলাবে।
+                  </p>
+                  <div className="mt-2 flex gap-2">
+                    <select
+                      value={moveTo}
+                      onChange={(e) => setMoveTo(e.target.value)}
+                      className={`${inputCls} flex-1`}
+                    >
+                      <option value="">ক্যাটাগরি বাছুন…</option>
+                      {others.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      type="button"
+                      disabled={!moveTo || busy}
+                      onClick={() => remove(deleteId, { moveTo })}
+                      className="shrink-0 rounded-lg border border-border px-3 py-2 font-ui text-xs font-medium text-foreground hover:bg-surface disabled:opacity-40"
+                    >
+                      সরিয়ে মুছুন
+                    </button>
+                  </div>
+                </div>
+
+                <div className="mt-3 rounded-lg border border-brand-crimson/40 bg-brand-crimson/5 p-3">
+                  <p className="font-ui text-xs font-semibold text-brand-crimson">
+                    আর্টিকেলসহ মুছে ফেলুন
+                  </p>
+                  <p className="mt-0.5 font-ui text-[11px] leading-relaxed text-foreground-muted">
+                    {count}টি আর্টিকেল ও সেগুলোর সব কমেন্ট চিরতরে মুছে যাবে।
+                    <b> ফেরত আনা যাবে না।</b>
+                  </p>
+                </div>
+              </>
+            )}
+
+            {deleteError && (
+              <p className="mt-3 rounded-lg bg-brand-crimson/10 px-3 py-2 font-ui text-xs text-brand-crimson">
+                {deleteError}
+              </p>
+            )}
+
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={closeDelete}
+                className="rounded-lg border border-border px-4 py-2 font-ui text-sm text-foreground hover:bg-surface"
+              >
+                বাতিল
+              </button>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() =>
+                  remove(deleteId, count > 0 ? { withArticles: true } : undefined)
+                }
+                className="rounded-lg bg-brand-crimson px-4 py-2 font-ui text-sm font-semibold text-white hover:bg-brand-crimson-dark disabled:opacity-60"
+              >
+                {busy
+                  ? "মোছা হচ্ছে…"
+                  : count > 0
+                    ? `আর্টিকেলসহ মুছুন (${count})`
+                    : "মুছে ফেলুন"}
+              </button>
+            </div>
+          </Modal>
+        );
+      })()}
     </div>
   );
 }

@@ -466,13 +466,79 @@ adminRouter.put("/categories/:id", requireRole(...CAN_PUBLISH), async (req, res)
   res.json({ category });
 });
 
+/**
+ * Delete a category.
+ *
+ * Articles point at their category, so the database will not let one go while
+ * it still holds any — otherwise those stories would be orphaned. The caller
+ * chooses what happens to them:
+ *
+ *   ?moveTo=<categoryId>   reassign the articles, then delete the category
+ *   ?withArticles=true     delete the articles too (comments cascade with them)
+ *
+ * With neither, a category that holds articles comes back as 409 with the
+ * count, so the UI can ask rather than fail silently.
+ */
 adminRouter.delete("/categories/:id", requireRole(...CAN_MANAGE), async (req, res) => {
-  try {
-    await prisma.category.delete({ where: { id: req.params.id } });
-    res.json({ ok: true });
-  } catch {
-    res.status(400).json({ error: "এই ক্যাটাগরিতে আর্টিকেল আছে — মুছতে পারবেন না" });
+  const id = req.params.id;
+  const moveTo = (req.query.moveTo as string | undefined)?.trim();
+  const withArticles = req.query.withArticles === "true";
+
+  const category = await prisma.category.findUnique({
+    where: { id },
+    include: { _count: { select: { articles: true } } },
+  });
+  if (!category) return res.status(404).json({ error: "ক্যাটাগরি পাওয়া যায়নি" });
+
+  const articleCount = category._count.articles;
+
+  if (articleCount > 0 && !moveTo && !withArticles) {
+    return res.status(409).json({
+      error: `এই ক্যাটাগরিতে ${articleCount}টি আর্টিকেল আছে`,
+      articleCount,
+      needsChoice: true,
+    });
   }
+
+  if (moveTo) {
+    if (moveTo === id)
+      return res.status(400).json({ error: "একই ক্যাটাগরিতে সরানো যাবে না" });
+    const target = await prisma.category.findUnique({ where: { id: moveTo } });
+    if (!target)
+      return res.status(400).json({ error: "যেখানে সরাবেন সেই ক্যাটাগরি নেই" });
+
+    await prisma.article.updateMany({
+      where: { categoryId: id },
+      data: { categoryId: moveTo },
+    });
+  }
+
+  // Homepage sections point at categories as well. Repoint them when the
+  // articles move; otherwise hide the section, or the homepage keeps a row
+  // that can never fill.
+  await prisma.homepageSection.updateMany({
+    where: { categoryId: id },
+    data: moveTo ? { categoryId: moveTo } : { categoryId: null, visible: false },
+  });
+
+  // Comments cascade from Article, and the article↔tag join rows go with it.
+  if (withArticles && !moveTo) {
+    await prisma.article.deleteMany({ where: { categoryId: id } });
+  }
+
+  try {
+    await prisma.category.delete({ where: { id } });
+  } catch {
+    return res
+      .status(400)
+      .json({ error: "ক্যাটাগরিটি মুছতে পারা গেল না — এখনো কিছু যুক্ত আছে" });
+  }
+
+  res.json({
+    ok: true,
+    moved: moveTo ? articleCount : 0,
+    deletedArticles: withArticles && !moveTo ? articleCount : 0,
+  });
 });
 
 // ===================== HOMEPAGE BUILDER =====================
