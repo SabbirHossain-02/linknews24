@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import Image from "next/image";
 import { ChevronUp } from "lucide-react";
@@ -10,6 +10,12 @@ import { buildExtensions, editorProps } from "./editor/extensions";
 import { FindReplace } from "./editor/find-replace";
 import { FindReplacePanel } from "./editor/FindReplacePanel";
 import { HomeTab } from "./editor/HomeTab";
+import { LayoutTab } from "./editor/LayoutTab";
+import { ReviewTab, type ReviewDialogKind } from "./editor/ReviewTab";
+import {
+  AccessibilityDialog,
+  WordCountDialog,
+} from "./editor/ReviewDialogs";
 import { InsertTab } from "./editor/InsertTab";
 import {
   BookmarkDialog,
@@ -28,6 +34,8 @@ import { WordTitleBar } from "./editor/WordTitleBar";
 const TABS = [
   { id: "home", label: "Home" },
   { id: "insert", label: "Insert" },
+  { id: "layout", label: "Layout" },
+  { id: "review", label: "Review" },
   { id: "view", label: "View" },
 ] as const;
 
@@ -58,7 +66,7 @@ export function RichTextEditor({
   const [ribbonOpen, setRibbonOpen] = useState(true);
   const [findOpen, setFindOpen] = useState(false);
   const [dialog, setDialog] = useState<
-    "font" | "paragraph" | InsertDialogKind | null
+    "font" | "paragraph" | InsertDialogKind | ReviewDialogKind | null
   >(null);
   const [view, setViewState] = useState<ViewState>({
     pageMode: true,
@@ -74,6 +82,31 @@ export function RichTextEditor({
   );
   const close = useCallback(() => setDialog(null), []);
 
+  /**
+   * Spellcheck is a property of the editable element, so flipping it has to
+   * reach into editorProps. Both the View and Review tabs use this.
+   */
+  const toggleSpellcheck = useCallback(() => {
+    setViewState((v) => {
+      const next = !v.spellcheck;
+      editorRef.current?.setOptions({
+        editorProps: {
+          ...editorRef.current.options.editorProps,
+          attributes: {
+            ...(editorRef.current.options.editorProps.attributes as Record<
+              string,
+              string
+            >),
+            spellcheck: String(next),
+          },
+        },
+      });
+      return { ...v, spellcheck: next };
+    });
+  }, []);
+
+  const editorRef = useRef<ReturnType<typeof useEditor>>(null);
+
   const editor = useEditor({
     immediatelyRender: false,
     // The ribbon shows live active states, which only stay in sync if the
@@ -84,6 +117,8 @@ export function RichTextEditor({
     onUpdate: ({ editor }) => onChange(editor.getHTML()),
     editorProps,
   });
+
+  editorRef.current = editor;
 
   // Ctrl+F / Ctrl+H open find-and-replace; Esc leaves full screen.
   useEffect(() => {
@@ -192,8 +227,21 @@ export function RichTextEditor({
           {tab === "insert" && (
             <InsertTab editor={editor} openDialog={setDialog} />
           )}
+          {tab === "layout" && <LayoutTab editor={editor} />}
+          {tab === "review" && (
+            <ReviewTab
+              editor={editor}
+              spellcheck={view.spellcheck}
+              onToggleSpellcheck={toggleSpellcheck}
+              openDialog={setDialog}
+            />
+          )}
           {tab === "view" && (
-            <ViewTab editor={editor} view={view} setView={setView} />
+            <ViewTab
+              view={view}
+              setView={setView}
+              onToggleSpellcheck={toggleSpellcheck}
+            />
           )}
         </div>
       )}
@@ -286,6 +334,12 @@ export function RichTextEditor({
         <EquationDialog editor={editor} onClose={close} />
       )}
       {dialog === "table" && <TableDialog editor={editor} onClose={close} />}
+      {dialog === "wordcount" && (
+        <WordCountDialog editor={editor} onClose={close} />
+      )}
+      {dialog === "accessibility" && (
+        <AccessibilityDialog editor={editor} onClose={close} />
+      )}
     </div>
   );
 }

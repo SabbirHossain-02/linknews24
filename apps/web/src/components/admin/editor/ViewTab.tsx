@@ -1,6 +1,5 @@
 "use client";
 
-import type { Editor } from "@tiptap/react";
 import {
   FileText,
   Maximize2,
@@ -22,13 +21,13 @@ export interface ViewState {
 const ZOOMS = [50, 75, 90, 100, 125, 150, 200];
 
 export function ViewTab({
-  editor,
   view,
   setView,
+  onToggleSpellcheck,
 }: {
-  editor: Editor;
   view: ViewState;
   setView: (patch: Partial<ViewState>) => void;
+  onToggleSpellcheck: () => void;
 }) {
   return (
     <div className="flex h-[92px] items-stretch overflow-x-auto bg-white">
@@ -81,22 +80,7 @@ export function ViewTab({
           label="Spelling"
           active={view.spellcheck}
           icon={<SpellCheck className="h-5 w-5" />}
-          onClick={() => {
-            const next = !view.spellcheck;
-            setView({ spellcheck: next });
-            editor.setOptions({
-              editorProps: {
-                ...editor.options.editorProps,
-                attributes: {
-                  ...(editor.options.editorProps.attributes as Record<
-                    string,
-                    string
-                  >),
-                  spellcheck: String(next),
-                },
-              },
-            });
-          }}
+          onClick={onToggleSpellcheck}
         />
         <BigBtn
           title="ফুল স্ক্রিন (Esc দিয়ে বেরোন)"
