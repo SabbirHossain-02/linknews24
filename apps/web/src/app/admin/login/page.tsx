@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { Eye, EyeOff, Lock, Mail } from "lucide-react";
 import { useAdminAuth } from "@/components/admin/AdminAuthProvider";
 import { useAdminT } from "@/lib/admin-i18n";
@@ -36,10 +37,15 @@ export default function AdminLoginPage() {
         <div className="h-1 bg-gradient-to-r from-brand-crimson to-brand-crimson-dark" />
         <div className="px-7 pb-7 pt-8">
           <div className="text-center">
-            <span className="text-2xl font-bold tracking-tight text-heading">
-              Link News<span className="text-brand-crimson">24</span>
-            </span>
-            <p className="mt-1 font-ui text-sm text-foreground-muted">
+            <Image
+              src="/logo.png"
+              alt="LinkNews24"
+              width={2048}
+              height={656}
+              priority
+              className="mx-auto h-10 w-auto"
+            />
+            <p className="mt-2 font-ui text-sm text-foreground-muted">
               {t("loginSubtitle")}
             </p>
           </div>

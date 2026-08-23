@@ -116,13 +116,13 @@ export function RichTextEditor({
       {/* ---------- ribbon tabs ---------- */}
       <div className="flex shrink-0 items-end gap-0 border-b border-[#d4d4d4] bg-[#f3f2f1] pl-1">
         {/* Word puts "File" here; ours carries the masthead instead. */}
-        <span className="mb-0 mr-1 flex h-[26px] items-center bg-white px-2.5">
+        <span className="mb-0 mr-1.5 flex h-[26px] items-center bg-white px-3">
           <Image
             src="/logo.png"
             alt="LinkNews24"
             width={2048}
             height={656}
-            className="h-3.5 w-auto"
+            className="h-[19px] w-auto"
           />
         </span>
         {TABS.map((t) => (
