@@ -182,16 +182,22 @@ export function RichTextEditor({
       {/* ---------- canvas ---------- */}
       <div className="flex min-h-0 flex-1">
         {view.outline && <Outline editor={editor} />}
+        {/* Fixed height, not content height. `zoom` shrinks the page's layout
+            box as well as its paint, so a content-sized canvas collapsed the
+            whole editor when you zoomed out. Pinning the canvas keeps the
+            window one size and lets only the sheet inside it grow or shrink. */}
         <div
-          className={`min-h-0 flex-1 overflow-y-auto ${
+          className={`min-h-0 flex-1 overflow-auto ${
             view.pageMode ? "bg-[#e6e6e6] p-6" : "bg-white"
-          } ${view.fullscreen ? "" : "max-h-[68vh]"}`}
+          } ${view.fullscreen ? "h-full" : "h-[68vh]"}`}
         >
+          {/* 794 x 1123 is A4 at 96dpi, so the sheet keeps a real page's
+              proportions at every zoom level instead of hugging the text. */}
           <div
             style={{ zoom: `${view.zoom}%` }}
             className={
               view.pageMode
-                ? "mx-auto w-full max-w-[794px] bg-white px-[76px] py-[64px] shadow-[0_1px_6px_rgba(0,0,0,0.25)]"
+                ? "mx-auto min-h-[1123px] w-[794px] max-w-full bg-white px-[76px] py-[64px] shadow-[0_1px_6px_rgba(0,0,0,0.25)]"
                 : "mx-auto w-full max-w-3xl px-4 py-3"
             }
           >
