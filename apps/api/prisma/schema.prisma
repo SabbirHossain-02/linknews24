@@ -168,13 +168,14 @@ model EpaperEdition {
 }
 
 model District {
-  id       String       @id @default(cuid())
-  name     String
-  nameEn   String
-  slug     String       @unique
-  division String
-  lawyers  Lawyer[]
-  donors   BloodDonor[]
+  id        String       @id @default(cuid())
+  name      String
+  nameEn    String
+  slug      String       @unique
+  division  String
+  lawyers   Lawyer[]
+  donors    BloodDonor[]
+  hospitals Hospital[]
 }
 
 /// Where a reader-submitted directory listing sits in the review queue.
