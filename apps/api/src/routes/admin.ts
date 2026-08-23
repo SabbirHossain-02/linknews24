@@ -419,7 +419,36 @@ const categorySchema = z.object({
   slug: z.string().optional(),
   visible: z.boolean().default(true),
   order: z.number().int().optional(),
+  /** Nest under another category — this is what turns it into a nav dropdown. */
+  parentId: z.string().nullable().optional(),
 });
+
+/**
+ * Checks that `parentId` is a legal parent for `id`.
+ *
+ * Nesting is kept to a single level because that is what the site nav renders:
+ * a parent becomes a dropdown and its children become the entries. Allowing
+ * deeper trees would silently hide the third level from readers.
+ */
+async function validateParent(
+  id: string | null,
+  parentId: string | null | undefined,
+): Promise<string | null> {
+  if (!parentId) return null;
+  if (parentId === id) return "একটি ক্যাটাগরি নিজেই নিজের ভেতরে বসতে পারে না";
+
+  const parent = await prisma.category.findUnique({ where: { id: parentId } });
+  if (!parent) return "মূল ক্যাটাগরিটি পাওয়া যায়নি";
+  if (parent.parentId)
+    return "যেটির নিচে বসাচ্ছেন সেটি নিজেই আরেকটির ভেতরে আছে — এক ধাপের বেশি গভীরে যাওয়া যাবে না";
+
+  if (id) {
+    const childCount = await prisma.category.count({ where: { parentId: id } });
+    if (childCount > 0)
+      return "এই ক্যাটাগরির নিচে অন্য ক্যাটাগরি আছে — আগে সেগুলো সরান";
+  }
+  return null;
+}
 
 adminRouter.post("/categories", requireRole(...CAN_PUBLISH), async (req, res) => {
   const parsed = categorySchema.safeParse(req.body);
@@ -435,6 +464,9 @@ adminRouter.post("/categories", requireRole(...CAN_PUBLISH), async (req, res) =>
     }
     return s;
   })();
+  const parentError = await validateParent(null, d.parentId);
+  if (parentError) return res.status(400).json({ error: parentError });
+
   const count = await prisma.category.count();
   const category = await prisma.category.create({
     data: {
@@ -443,6 +475,7 @@ adminRouter.post("/categories", requireRole(...CAN_PUBLISH), async (req, res) =>
       slug,
       visible: d.visible,
       order: d.order ?? count,
+      parentId: d.parentId ?? null,
     },
   });
   res.status(201).json({ category });
@@ -451,6 +484,12 @@ adminRouter.post("/categories", requireRole(...CAN_PUBLISH), async (req, res) =>
 adminRouter.put("/categories/:id", requireRole(...CAN_PUBLISH), async (req, res) => {
   const parsed = categorySchema.partial().safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: "Invalid input" });
+
+  if (parsed.data.parentId !== undefined) {
+    const parentError = await validateParent(req.params.id, parsed.data.parentId);
+    if (parentError) return res.status(400).json({ error: parentError });
+  }
+
   const category = await prisma.category
     .update({
       where: { id: req.params.id },
@@ -459,6 +498,8 @@ adminRouter.put("/categories/:id", requireRole(...CAN_PUBLISH), async (req, res)
         nameEn: parsed.data.nameEn,
         visible: parsed.data.visible,
         order: parsed.data.order,
+        // `undefined` leaves it alone; `null` moves it back to the top level.
+        parentId: parsed.data.parentId,
       },
     })
     .catch(() => null);

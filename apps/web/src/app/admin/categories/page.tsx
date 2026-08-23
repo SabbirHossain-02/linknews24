@@ -12,6 +12,7 @@ interface Category {
   nameEn: string;
   slug: string;
   visible: boolean;
+  parentId: string | null;
   _count?: { articles: number };
 }
 
@@ -96,6 +97,30 @@ export default function CategoriesAdminPage() {
     setMoveTo("");
   };
 
+  /**
+   * Rows in menu order: each top-level category followed by its children, so
+   * the nesting on screen matches the dropdown a reader will see.
+   */
+  const orderedCats = cats
+    .filter((c) => !c.parentId)
+    .flatMap((root) => [root, ...cats.filter((c) => c.parentId === root.id)]);
+
+  /**
+   * Which categories may be chosen as a parent for `c`.
+   *
+   * Only top-level categories qualify — the nav renders one level of dropdown,
+   * so a deeper tree would hide entries from readers. A category that already
+   * has children of its own cannot be nested either, or those children would
+   * end up on a third level.
+   */
+  const parentOptions = (c: Category) =>
+    cats.filter(
+      (p) =>
+        p.id !== c.id &&
+        !p.parentId &&
+        !cats.some((child) => child.parentId === c.id),
+    );
+
   return (
     <div className="max-w-3xl">
       <h1 className="text-2xl font-bold text-heading">{t("categoriesTags")}</h1>
@@ -122,12 +147,24 @@ export default function CategoriesAdminPage() {
         </button>
       </div>
 
-      <div className="mt-4 flex flex-col gap-2">
+      <p className="mt-4 rounded-lg bg-surface px-3.5 py-2.5 font-ui text-xs leading-relaxed text-foreground-muted">
+        <b className="text-foreground">মেনুতে ড্রপডাউন বানাবেন কীভাবে:</b>{" "}
+        যে ক্যাটাগরিটি ভেতরে ঢোকাতে চান তার সারিতে{" "}
+        <b>“মেনুতে কোথায়”</b> ঘর থেকে মূল ক্যাটাগরিটি বেছে নিন। যেমন রাজনীতি ও
+        সচিবালয়ে “জাতীয়” বেছে দিলে মেনুতে <b>জাতীয় ▾</b> ড্রপডাউন হয়ে যাবে,
+        আর ওই দুটি তার ভেতরে চলে আসবে। সাইটে সাথে সাথেই বদলাবে।
+      </p>
+
+      <div className="mt-3 flex flex-col gap-2">
         {loading ? null : (
-          cats.map((c) => (
+          orderedCats.map((c) => (
             <div
               key={c.id}
-              className="flex items-center gap-2 rounded-xl border border-border bg-background p-3"
+              className={`flex items-center gap-2 rounded-xl border bg-background p-3 ${
+                c.parentId
+                  ? "ml-8 border-dashed border-border"
+                  : "border-border"
+              }`}
             >
               <input
                 defaultValue={c.name}
@@ -144,6 +181,21 @@ export default function CategoriesAdminPage() {
                 }
                 className={inputCls}
               />
+              <select
+                value={c.parentId ?? ""}
+                onChange={(e) =>
+                  update(c.id, { parentId: e.target.value || null })
+                }
+                title="মেনুতে কোথায় বসবে"
+                className={`${inputCls} w-40 shrink-0`}
+              >
+                <option value="">— মূল মেনুতে —</option>
+                {parentOptions(c).map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}-এর ভেতরে
+                  </option>
+                ))}
+              </select>
               <span className="w-20 shrink-0 text-center font-ui text-xs text-foreground-muted">
                 {c._count?.articles ?? 0} {t("colArticles")}
               </span>
