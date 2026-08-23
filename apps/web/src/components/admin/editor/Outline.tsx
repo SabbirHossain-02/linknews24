@@ -24,12 +24,12 @@ export function Outline({ editor }: { editor: Editor }) {
   });
 
   return (
-    <aside className="w-56 shrink-0 overflow-y-auto border-r border-border bg-surface p-3">
-      <p className="mb-2 font-ui text-[11px] font-bold uppercase tracking-wide text-foreground-muted">
+    <aside className="w-56 shrink-0 overflow-y-auto border-r border-[#d4d4d4] bg-[#f3f2f1] p-3">
+      <p className="mb-2 font-ui text-[11px] font-bold uppercase tracking-wide text-[#666]">
         আউটলাইন
       </p>
       {headings.length === 0 ? (
-        <p className="font-ui text-[11px] leading-relaxed text-foreground-muted">
+        <p className="font-ui text-[11px] leading-relaxed text-[#666]">
           কোনো শিরোনাম নেই। স্টাইল গ্যালারি থেকে শিরোনাম দিলে এখানে দেখা যাবে।
         </p>
       ) : (
@@ -47,7 +47,7 @@ export function Outline({ editor }: { editor: Editor }) {
                     .run();
                 }}
                 style={{ paddingLeft: `${(heading.level - 1) * 10}px` }}
-                className="block w-full truncate rounded py-1 pr-1 text-left font-ui text-[11px] text-foreground hover:bg-background hover:text-brand-crimson"
+                className="block w-full truncate rounded py-1 pr-1 text-left font-ui text-[11px] text-[#333] hover:bg-white hover:text-[#2b579a]"
                 title={heading.text}
               >
                 {heading.text}

@@ -7,10 +7,8 @@ import {
   AlignJustify,
   AlignLeft,
   AlignRight,
-  Baseline,
   Bold,
   Brush,
-  CaseSensitive,
   ChevronsLeftRight,
   ClipboardPaste,
   Copy,
@@ -22,6 +20,8 @@ import {
   List,
   ListChecks,
   ListOrdered,
+  MousePointerSquareDashed,
+  Replace,
   Scissors,
   Search,
   Strikethrough,
@@ -31,8 +31,22 @@ import {
   Underline as UnderlineIcon,
   UnfoldVertical,
 } from "lucide-react";
-import { Btn, ColorGrid, Dropdown, Group, MenuItem, Row, Stack, keepFocus } from "./ui";
+import {
+  BigBtn,
+  Btn,
+  ColorGrid,
+  Combo,
+  Group,
+  IconCombo,
+  LabelBtn,
+  MenuHeading,
+  MenuItem,
+  Row,
+  Stack,
+  keepFocus,
+} from "./ui";
 import { FONTS, FONT_SIZES, LINE_HEIGHTS } from "./extensions";
+import { StyleGallery } from "./StyleGallery";
 import { useFormatPainter } from "./use-format-painter";
 
 /**
@@ -56,7 +70,6 @@ function transformSelection(editor: Editor, fn: (text: string) => string) {
   if (!edits.length) return;
 
   const tr = editor.state.tr;
-  // Back to front so earlier offsets stay valid.
   for (let i = edits.length - 1; i >= 0; i--) {
     const edit = edits[i];
     tr.insertText(edit.text, edit.from, edit.to);
@@ -85,48 +98,25 @@ const CASE_MODES: { label: string; fn: (s: string) => string }[] = [
   },
 ];
 
-const STYLES: { label: string; apply: (e: Editor) => void; css: React.CSSProperties }[] = [
-  {
-    label: "সাধারণ (Normal)",
-    apply: (e) => e.chain().focus().setParagraph().run(),
-    css: { fontSize: "13px" },
-  },
-  ...[1, 2, 3, 4, 5, 6].map((level) => ({
-    label: `শিরোনাম ${level} (Heading ${level})`,
-    apply: (e: Editor) =>
-      e.chain().focus().toggleHeading({ level: level as 1 | 2 | 3 | 4 | 5 | 6 }).run(),
-    css: {
-      fontSize: `${20 - level * 1.5}px`,
-      fontWeight: level <= 3 ? 700 : 600,
-    } as React.CSSProperties,
-  })),
-  {
-    label: "উদ্ধৃতি (Quote)",
-    apply: (e) => e.chain().focus().toggleBlockquote().run(),
-    css: { fontStyle: "italic", fontSize: "13px" },
-  },
-  {
-    label: "কোড ব্লক (Code)",
-    apply: (e) => e.chain().focus().toggleCodeBlock().run(),
-    css: { fontFamily: "monospace", fontSize: "12px" },
-  },
-];
-
 export function HomeTab({
   editor,
   onOpenFind,
+  onOpenFontDialog,
+  onOpenParagraphDialog,
 }: {
   editor: Editor;
-  onOpenFind: () => void;
+  onOpenFind: (replace?: boolean) => void;
+  onOpenFontDialog: () => void;
+  onOpenParagraphDialog: () => void;
 }) {
   const { armed, copyFormat, paint } = useFormatPainter(editor);
-  const [clipboardNote, setClipboardNote] = useState<string | null>(null);
+  const [note, setNote] = useState<string | null>(null);
   const painterRef = useRef(paint);
   painterRef.current = paint;
 
-  // The painter fires on the next selection the user makes.
-  const runPainter = () => {
-    if (armed) painterRef.current();
+  const flash = (message: string) => {
+    setNote(message);
+    setTimeout(() => setNote(null), 2500);
   };
 
   const selectedHTML = () => {
@@ -144,10 +134,7 @@ export function HomeTab({
 
   const doCopy = async (cut: boolean) => {
     const { from, to } = editor.state.selection;
-    if (from === to) {
-      setClipboardNote("আগে লেখা সিলেক্ট করুন");
-      return;
-    }
+    if (from === to) return flash("আগে লেখা সিলেক্ট করুন");
     const text = editor.state.doc.textBetween(from, to, "\n");
     try {
       await navigator.clipboard.write([
@@ -157,18 +144,17 @@ export function HomeTab({
         }),
       ]);
       if (cut) editor.chain().focus().deleteSelection().run();
-      setClipboardNote(cut ? "কাট হয়েছে" : "কপি হয়েছে");
+      flash(cut ? "কাট হয়েছে" : "কপি হয়েছে");
     } catch {
-      setClipboardNote(`ব্রাউজার আটকে দিয়েছে — Ctrl+${cut ? "X" : "C"} চাপুন`);
+      flash(`ব্রাউজার আটকে দিয়েছে — Ctrl+${cut ? "X" : "C"} চাপুন`);
     }
-    setTimeout(() => setClipboardNote(null), 2500);
   };
 
-  const doPaste = async () => {
+  const doPaste = async (plainText: boolean) => {
     try {
       const items = await navigator.clipboard.read();
       for (const item of items) {
-        if (item.types.includes("text/html")) {
+        if (!plainText && item.types.includes("text/html")) {
           const html = await (await item.getType("text/html")).text();
           editor.chain().focus().insertContent(html).run();
           return;
@@ -177,66 +163,98 @@ export function HomeTab({
       const text = await navigator.clipboard.readText();
       editor.chain().focus().insertContent(text).run();
     } catch {
-      setClipboardNote("ব্রাউজার আটকে দিয়েছে — Ctrl+V চাপুন");
-      setTimeout(() => setClipboardNote(null), 2500);
+      flash("ব্রাউজার আটকে দিয়েছে — Ctrl+V চাপুন");
     }
-  };
-
-  const currentSize = () => {
-    const size = editor.getAttributes("textStyle").fontSize as string | undefined;
-    return size ? size.replace("px", "") : "১৭";
   };
 
   const stepFontSize = (direction: 1 | -1) => {
     const raw = editor.getAttributes("textStyle").fontSize as string | undefined;
     const current = raw ? parseInt(raw, 10) : 17;
     const index = FONT_SIZES.findIndex((s) => s >= current);
-    const nextIndex = Math.min(
+    const next = Math.min(
       Math.max((index === -1 ? FONT_SIZES.length - 1 : index) + direction, 0),
       FONT_SIZES.length - 1,
     );
-    editor.chain().focus().setFontSize(`${FONT_SIZES[nextIndex]}px`).run();
+    editor.chain().focus().setFontSize(`${FONT_SIZES[next]}px`).run();
   };
 
   const activeFont = FONTS.find(
     (f) => f.value === editor.getAttributes("textStyle").fontFamily,
   );
+  const activeSize = editor.getAttributes("textStyle").fontSize as
+    | string
+    | undefined;
 
   return (
     <div
-      className="flex h-[74px] items-stretch overflow-x-auto"
-      onMouseUp={runPainter}
+      className="relative flex h-[92px] items-stretch overflow-x-auto bg-white"
+      onMouseUp={() => armed && painterRef.current()}
     >
-      {/* ---------------- clipboard ---------------- */}
-      <Group label="ক্লিপবোর্ড">
-        <Btn big title="পেস্ট (Ctrl+V)" onClick={doPaste}>
-          <ClipboardPaste className="h-5 w-5" />
-          পেস্ট
-        </Btn>
+      {/* ---------------- Clipboard ---------------- */}
+      <Group
+        label="ক্লিপবোর্ড"
+        launchTitle="ক্লিপবোর্ড"
+        onLaunch={() => doPaste(false)}
+      >
+        <BigBtn
+          title="পেস্ট (Ctrl+V)"
+          label="পেস্ট"
+          icon={<ClipboardPaste className="h-5 w-5" />}
+          onClick={() => doPaste(false)}
+          menu={(close) => (
+            <>
+              <MenuHeading>পেস্ট করার ধরন</MenuHeading>
+              <MenuItem
+                onClick={() => {
+                  doPaste(false);
+                  close();
+                }}
+              >
+                ফরম্যাট সহ
+              </MenuItem>
+              <MenuItem
+                onClick={() => {
+                  doPaste(true);
+                  close();
+                }}
+              >
+                শুধু লেখা (ফরম্যাট ছাড়া)
+              </MenuItem>
+            </>
+          )}
+        />
         <Stack>
-          <Btn title="কাট (Ctrl+X)" onClick={() => doCopy(true)}>
-            <Scissors className="h-4 w-4" />
-          </Btn>
-          <Btn title="কপি (Ctrl+C)" onClick={() => doCopy(false)}>
-            <Copy className="h-4 w-4" />
-          </Btn>
+          <LabelBtn
+            title="কাট (Ctrl+X)"
+            label="কাট"
+            icon={<Scissors className="h-3.5 w-3.5" />}
+            onClick={() => doCopy(true)}
+          />
+          <LabelBtn
+            title="কপি (Ctrl+C)"
+            label="কপি"
+            icon={<Copy className="h-3.5 w-3.5" />}
+            onClick={() => doCopy(false)}
+          />
+          <LabelBtn
+            title="ফরম্যাট পেইন্টার — চাপুন, তারপর যেখানে বসাবেন সিলেক্ট করুন"
+            label="ফরম্যাট পেইন্টার"
+            icon={<Brush className="h-3.5 w-3.5" />}
+            active={armed}
+            onClick={copyFormat}
+          />
         </Stack>
-        <Btn
-          big
-          active={armed}
-          title="ফরম্যাট পেইন্টার — একবার চাপুন, তারপর যে লেখায় বসাতে চান সেটা সিলেক্ট করুন"
-          onClick={copyFormat}
-        >
-          <Brush className="h-5 w-5" />
-          পেইন্টার
-        </Btn>
       </Group>
 
-      {/* ---------------- font ---------------- */}
-      <Group label="ফন্ট">
+      {/* ---------------- Font ---------------- */}
+      <Group label="ফন্ট" launchTitle="ফন্ট ডায়ালগ" onLaunch={onOpenFontDialog}>
         <Stack>
           <Row>
-            <Dropdown label={activeFont?.label ?? "ফন্ট"} width="w-32" title="ফন্ট">
+            <Combo
+              label={activeFont?.label ?? "ডিফল্ট ফন্ট"}
+              width="w-36"
+              title="ফন্ট"
+            >
               {(close) => (
                 <>
                   <MenuItem
@@ -262,8 +280,12 @@ export function HomeTab({
                   ))}
                 </>
               )}
-            </Dropdown>
-            <Dropdown label={currentSize()} width="w-14" title="ফন্ট সাইজ">
+            </Combo>
+            <Combo
+              label={activeSize ? parseInt(activeSize, 10) : 17}
+              width="w-14"
+              title="ফন্ট সাইজ"
+            >
               {(close) => (
                 <>
                   <MenuItem
@@ -287,14 +309,18 @@ export function HomeTab({
                   ))}
                 </>
               )}
-            </Dropdown>
+            </Combo>
             <Btn title="ফন্ট বড় করুন" onClick={() => stepFontSize(1)}>
-              <span className="text-sm font-bold">A</span>
+              <span className="text-[13px] font-bold leading-none">A</span>
             </Btn>
             <Btn title="ফন্ট ছোট করুন" onClick={() => stepFontSize(-1)}>
-              <span className="text-[10px] font-bold">A</span>
+              <span className="text-[9px] font-bold leading-none">A</span>
             </Btn>
-            <Dropdown label={<CaseSensitive className="h-4 w-4" />} width="w-11" title="ছোট/বড় হাতের অক্ষর" panelWidth="w-48">
+            <IconCombo
+              title="ছোট/বড় হাতের অক্ষর"
+              icon={<span className="px-0.5 text-[11px] font-semibold">Aa</span>}
+              panelWidth="w-48"
+            >
               {(close) =>
                 CASE_MODES.map((mode) => (
                   <MenuItem
@@ -308,77 +334,63 @@ export function HomeTab({
                   </MenuItem>
                 ))
               }
-            </Dropdown>
+            </IconCombo>
+            <Btn
+              title="সব ফরম্যাট মুছুন"
+              onClick={() =>
+                editor.chain().focus().unsetAllMarks().clearNodes().run()
+              }
+            >
+              <Eraser className="h-3.5 w-3.5" />
+            </Btn>
           </Row>
+
           <Row>
             <Btn
               title="Bold (Ctrl+B)"
               active={editor.isActive("bold")}
               onClick={() => editor.chain().focus().toggleBold().run()}
             >
-              <Bold className="h-4 w-4" />
+              <Bold className="h-3.5 w-3.5" />
             </Btn>
             <Btn
               title="Italic (Ctrl+I)"
               active={editor.isActive("italic")}
               onClick={() => editor.chain().focus().toggleItalic().run()}
             >
-              <Italic className="h-4 w-4" />
+              <Italic className="h-3.5 w-3.5" />
             </Btn>
             <Btn
               title="Underline (Ctrl+U)"
               active={editor.isActive("underline")}
               onClick={() => editor.chain().focus().toggleUnderline().run()}
             >
-              <UnderlineIcon className="h-4 w-4" />
+              <UnderlineIcon className="h-3.5 w-3.5" />
             </Btn>
             <Btn
               title="Strikethrough"
               active={editor.isActive("strike")}
               onClick={() => editor.chain().focus().toggleStrike().run()}
             >
-              <Strikethrough className="h-4 w-4" />
+              <Strikethrough className="h-3.5 w-3.5" />
             </Btn>
             <Btn
-              title="Subscript (Ctrl+,)"
+              title="Subscript"
               active={editor.isActive("subscript")}
               onClick={() => editor.chain().focus().toggleSubscript().run()}
             >
-              <SubIcon className="h-4 w-4" />
+              <SubIcon className="h-3.5 w-3.5" />
             </Btn>
             <Btn
-              title="Superscript (Ctrl+.)"
+              title="Superscript"
               active={editor.isActive("superscript")}
               onClick={() => editor.chain().focus().toggleSuperscript().run()}
             >
-              <SupIcon className="h-4 w-4" />
+              <SupIcon className="h-3.5 w-3.5" />
             </Btn>
-            <Dropdown
-              label={<Baseline className="h-4 w-4" />}
-              width="w-11"
-              panelWidth="w-52"
-              title="টেক্সট কালার"
-            >
-              {(close) => (
-                <ColorGrid
-                  resetLabel="স্বয়ংক্রিয় রঙ"
-                  current={editor.getAttributes("textStyle").color as string}
-                  onPick={(c) => {
-                    editor.chain().focus().setColor(c).run();
-                    close();
-                  }}
-                  onReset={() => {
-                    editor.chain().focus().unsetColor().run();
-                    close();
-                  }}
-                />
-              )}
-            </Dropdown>
-            <Dropdown
-              label={<Highlighter className="h-4 w-4" />}
-              width="w-11"
-              panelWidth="w-52"
+            <IconCombo
               title="হাইলাইট"
+              icon={<Highlighter className="h-3.5 w-3.5" />}
             >
               {(close) => (
                 <ColorGrid
@@ -394,21 +406,47 @@ export function HomeTab({
                   }}
                 />
               )}
-            </Dropdown>
-            <Btn
-              title="সব ফরম্যাট মুছুন"
-              onClick={() =>
-                editor.chain().focus().unsetAllMarks().clearNodes().run()
+            </IconCombo>
+            <IconCombo
+              title="ফন্টের রঙ"
+              icon={
+                <span
+                  className="flex h-3.5 w-3.5 flex-col items-center justify-center text-[10px] font-bold leading-none"
+                  style={{
+                    color:
+                      (editor.getAttributes("textStyle").color as string) ??
+                      "#c00000",
+                  }}
+                >
+                  A
+                </span>
               }
             >
-              <Eraser className="h-4 w-4" />
-            </Btn>
+              {(close) => (
+                <ColorGrid
+                  resetLabel="স্বয়ংক্রিয় রঙ"
+                  current={editor.getAttributes("textStyle").color as string}
+                  onPick={(c) => {
+                    editor.chain().focus().setColor(c).run();
+                    close();
+                  }}
+                  onReset={() => {
+                    editor.chain().focus().unsetColor().run();
+                    close();
+                  }}
+                />
+              )}
+            </IconCombo>
           </Row>
         </Stack>
       </Group>
 
-      {/* ---------------- paragraph ---------------- */}
-      <Group label="প্যারাগ্রাফ">
+      {/* ---------------- Paragraph ---------------- */}
+      <Group
+        label="প্যারাগ্রাফ"
+        launchTitle="প্যারাগ্রাফ ডায়ালগ"
+        onLaunch={onOpenParagraphDialog}
+      >
         <Stack>
           <Row>
             <Btn
@@ -416,40 +454,40 @@ export function HomeTab({
               active={editor.isActive("bulletList")}
               onClick={() => editor.chain().focus().toggleBulletList().run()}
             >
-              <List className="h-4 w-4" />
+              <List className="h-3.5 w-3.5" />
             </Btn>
             <Btn
               title="নম্বর তালিকা"
               active={editor.isActive("orderedList")}
               onClick={() => editor.chain().focus().toggleOrderedList().run()}
             >
-              <ListOrdered className="h-4 w-4" />
+              <ListOrdered className="h-3.5 w-3.5" />
             </Btn>
             <Btn
               title="চেকলিস্ট"
               active={editor.isActive("taskList")}
               onClick={() => editor.chain().focus().toggleTaskList().run()}
             >
-              <ListChecks className="h-4 w-4" />
+              <ListChecks className="h-3.5 w-3.5" />
             </Btn>
             <Btn
               title="ইনডেন্ট কমান (Shift+Tab)"
               onClick={() => editor.chain().focus().outdent().run()}
             >
-              <IndentDecrease className="h-4 w-4" />
+              <IndentDecrease className="h-3.5 w-3.5" />
             </Btn>
             <Btn
               title="ইনডেন্ট বাড়ান (Tab)"
               onClick={() => editor.chain().focus().indent().run()}
             >
-              <IndentIncrease className="h-4 w-4" />
+              <IndentIncrease className="h-3.5 w-3.5" />
             </Btn>
             <Btn
               title="উদ্ধৃতি"
               active={editor.isActive("blockquote")}
               onClick={() => editor.chain().focus().toggleBlockquote().run()}
             >
-              <TextQuote className="h-4 w-4" />
+              <TextQuote className="h-3.5 w-3.5" />
             </Btn>
           </Row>
           <Row>
@@ -458,40 +496,39 @@ export function HomeTab({
               active={editor.isActive({ textAlign: "left" })}
               onClick={() => editor.chain().focus().setTextAlign("left").run()}
             >
-              <AlignLeft className="h-4 w-4" />
+              <AlignLeft className="h-3.5 w-3.5" />
             </Btn>
             <Btn
               title="মাঝ"
               active={editor.isActive({ textAlign: "center" })}
               onClick={() => editor.chain().focus().setTextAlign("center").run()}
             >
-              <AlignCenter className="h-4 w-4" />
+              <AlignCenter className="h-3.5 w-3.5" />
             </Btn>
             <Btn
               title="ডান"
               active={editor.isActive({ textAlign: "right" })}
               onClick={() => editor.chain().focus().setTextAlign("right").run()}
             >
-              <AlignRight className="h-4 w-4" />
+              <AlignRight className="h-3.5 w-3.5" />
             </Btn>
             <Btn
               title="জাস্টিফাই"
               active={editor.isActive({ textAlign: "justify" })}
-              onClick={() => editor.chain().focus().setTextAlign("justify").run()}
+              onClick={() =>
+                editor.chain().focus().setTextAlign("justify").run()
+              }
             >
-              <AlignJustify className="h-4 w-4" />
+              <AlignJustify className="h-3.5 w-3.5" />
             </Btn>
-            <Dropdown
-              label={<UnfoldVertical className="h-4 w-4" />}
-              width="w-11"
-              panelWidth="w-44"
+            <IconCombo
               title="লাইন ও প্যারা স্পেসিং"
+              icon={<UnfoldVertical className="h-3.5 w-3.5" />}
+              panelWidth="w-44"
             >
               {(close) => (
                 <>
-                  <p className="px-3 pb-1 pt-1 font-ui text-[10px] font-semibold uppercase text-foreground-muted">
-                    লাইন স্পেসিং
-                  </p>
+                  <MenuHeading>লাইন স্পেসিং</MenuHeading>
                   {LINE_HEIGHTS.map((h) => (
                     <MenuItem
                       key={h}
@@ -512,10 +549,7 @@ export function HomeTab({
                   >
                     ডিফল্ট
                   </MenuItem>
-                  <div className="my-1 border-t border-border" />
-                  <p className="px-3 pb-1 font-ui text-[10px] font-semibold uppercase text-foreground-muted">
-                    প্যারার পরে ফাঁকা
-                  </p>
+                  <MenuHeading>প্যারার পরে ফাঁকা</MenuHeading>
                   {["0", "0.5em", "1em", "1.5em", "2em"].map((s) => (
                     <MenuItem
                       key={s}
@@ -529,12 +563,11 @@ export function HomeTab({
                   ))}
                 </>
               )}
-            </Dropdown>
-            <Dropdown
-              label={<ChevronsLeftRight className="h-4 w-4" />}
-              width="w-11"
-              panelWidth="w-40"
+            </IconCombo>
+            <IconCombo
               title="লেখার দিক"
+              icon={<ChevronsLeftRight className="h-3.5 w-3.5" />}
+              panelWidth="w-40"
             >
               {(close) => (
                 <>
@@ -564,53 +597,46 @@ export function HomeTab({
                   </MenuItem>
                 </>
               )}
-            </Dropdown>
+            </IconCombo>
           </Row>
         </Stack>
       </Group>
 
-      {/* ---------------- styles ---------------- */}
+      {/* ---------------- Styles ---------------- */}
       <Group label="স্টাইল">
-        <Dropdown label="স্টাইল গ্যালারি" width="w-36" panelWidth="w-52" title="স্টাইল">
-          {(close) =>
-            STYLES.map((style) => (
-              <MenuItem
-                key={style.label}
-                style={style.css}
-                onClick={() => {
-                  style.apply(editor);
-                  close();
-                }}
-              >
-                {style.label}
-              </MenuItem>
-            ))
-          }
-        </Dropdown>
+        <StyleGallery editor={editor} />
       </Group>
 
-      {/* ---------------- editing ---------------- */}
+      {/* ---------------- Editing ---------------- */}
       <Group label="এডিটিং">
-        <Btn big title="খুঁজুন ও বদলান (Ctrl+F)" onClick={onOpenFind}>
-          <Search className="h-5 w-5" />
-          খুঁজুন
-        </Btn>
-        <Btn
-          big
-          title="সব সিলেক্ট করুন (Ctrl+A)"
-          onClick={() => editor.chain().focus().selectAll().run()}
-        >
-          <span className="text-base font-bold">⌗</span>
-          সব সিলেক্ট
-        </Btn>
+        <Stack>
+          <LabelBtn
+            title="খুঁজুন (Ctrl+F)"
+            label="খুঁজুন"
+            icon={<Search className="h-3.5 w-3.5" />}
+            onClick={() => onOpenFind(false)}
+          />
+          <LabelBtn
+            title="বদলান (Ctrl+H)"
+            label="বদলান"
+            icon={<Replace className="h-3.5 w-3.5" />}
+            onClick={() => onOpenFind(true)}
+          />
+          <LabelBtn
+            title="সব সিলেক্ট করুন (Ctrl+A)"
+            label="সব সিলেক্ট"
+            icon={<MousePointerSquareDashed className="h-3.5 w-3.5" />}
+            onClick={() => editor.chain().focus().selectAll().run()}
+          />
+        </Stack>
       </Group>
 
-      {clipboardNote && (
+      {note && (
         <div
           onMouseDown={keepFocus}
-          className="pointer-events-none absolute bottom-1 left-1/2 z-50 -translate-x-1/2 rounded bg-brand-navy px-3 py-1 font-ui text-[11px] text-white shadow-lg"
+          className="pointer-events-none absolute bottom-1 left-1/2 z-50 -translate-x-1/2 rounded bg-[#2b579a] px-3 py-1 font-ui text-[11px] text-white shadow-lg"
         >
-          {clipboardNote}
+          {note}
         </div>
       )}
     </div>

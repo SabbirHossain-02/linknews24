@@ -49,7 +49,7 @@ export function FindReplacePanel({
   return (
     <div
       onMouseDown={keepFocus}
-      className="flex flex-wrap items-center gap-2 border-b border-border bg-surface px-3 py-2"
+      className="flex flex-wrap items-center gap-2 border-b border-[#d4d4d4] bg-[#f3f2f1] px-3 py-2"
     >
       <div className="flex items-center gap-1">
         <input
@@ -68,9 +68,9 @@ export function FindReplacePanel({
             if (e.key === "Escape") onClose();
           }}
           placeholder="যা খুঁজবেন…"
-          className="h-8 w-48 rounded border border-border bg-background px-2 font-ui text-xs text-foreground outline-none focus:border-brand-crimson"
+          className="h-8 w-48 rounded border border-[#d4d4d4] bg-white px-2 font-ui text-xs text-[#333] outline-none focus:border-[#2b579a]"
         />
-        <span className="w-14 shrink-0 text-center font-ui text-[11px] text-foreground-muted">
+        <span className="w-14 shrink-0 text-center font-ui text-[11px] text-[#666]">
           {total ? `${current} / ${total}` : term ? "০টি" : ""}
         </span>
         <button
@@ -79,7 +79,7 @@ export function FindReplacePanel({
           disabled={!total}
           onMouseDown={keepFocus}
           onClick={() => run(() => editor.commands.findPrevious())}
-          className="flex h-8 w-8 items-center justify-center rounded border border-border text-foreground hover:bg-background disabled:opacity-30"
+          className="flex h-8 w-8 items-center justify-center rounded border border-[#d4d4d4] text-[#333] hover:bg-white disabled:opacity-30"
         >
           <ChevronUp className="h-4 w-4" />
         </button>
@@ -89,7 +89,7 @@ export function FindReplacePanel({
           disabled={!total}
           onMouseDown={keepFocus}
           onClick={() => run(() => editor.commands.findNext())}
-          className="flex h-8 w-8 items-center justify-center rounded border border-border text-foreground hover:bg-background disabled:opacity-30"
+          className="flex h-8 w-8 items-center justify-center rounded border border-[#d4d4d4] text-[#333] hover:bg-white disabled:opacity-30"
         >
           <ChevronDown className="h-4 w-4" />
         </button>
@@ -100,14 +100,14 @@ export function FindReplacePanel({
           value={replacement}
           onChange={(e) => setReplacement(e.target.value)}
           placeholder="যা বসাবেন…"
-          className="h-8 w-48 rounded border border-border bg-background px-2 font-ui text-xs text-foreground outline-none focus:border-brand-crimson"
+          className="h-8 w-48 rounded border border-[#d4d4d4] bg-white px-2 font-ui text-xs text-[#333] outline-none focus:border-[#2b579a]"
         />
         <button
           type="button"
           disabled={!total}
           onMouseDown={keepFocus}
           onClick={() => run(() => editor.commands.replaceCurrent(replacement))}
-          className="h-8 rounded border border-border px-2 font-ui text-[11px] text-foreground hover:bg-background disabled:opacity-30"
+          className="h-8 rounded border border-[#d4d4d4] px-2 font-ui text-[11px] text-[#333] hover:bg-white disabled:opacity-30"
         >
           বদলান
         </button>
@@ -116,27 +116,27 @@ export function FindReplacePanel({
           disabled={!total}
           onMouseDown={keepFocus}
           onClick={() => run(() => editor.commands.replaceAll(replacement))}
-          className="h-8 rounded bg-brand-crimson px-2 font-ui text-[11px] font-semibold text-white hover:bg-brand-crimson-dark disabled:opacity-30"
+          className="h-8 rounded bg-[#2b579a] px-2 font-ui text-[11px] font-semibold text-white hover:bg-[#1f3f70] disabled:opacity-30"
         >
           সব বদলান
         </button>
       </div>
 
-      <label className="flex cursor-pointer items-center gap-1 font-ui text-[11px] text-foreground-muted">
+      <label className="flex cursor-pointer items-center gap-1 font-ui text-[11px] text-[#666]">
         <input
           type="checkbox"
           checked={caseSensitive}
           onChange={(e) => setCaseSensitive(e.target.checked)}
-          className="accent-brand-crimson"
+          className="accent-[#2b579a]"
         />
         ছোট/বড় হাতের মিল
       </label>
-      <label className="flex cursor-pointer items-center gap-1 font-ui text-[11px] text-foreground-muted">
+      <label className="flex cursor-pointer items-center gap-1 font-ui text-[11px] text-[#666]">
         <input
           type="checkbox"
           checked={wholeWord}
           onChange={(e) => setWholeWord(e.target.checked)}
-          className="accent-brand-crimson"
+          className="accent-[#2b579a]"
         />
         পুরো শব্দ
       </label>
@@ -146,7 +146,7 @@ export function FindReplacePanel({
         title="বন্ধ করুন (Esc)"
         onMouseDown={keepFocus}
         onClick={onClose}
-        className="ml-auto flex h-8 w-8 items-center justify-center rounded text-foreground-muted hover:bg-background"
+        className="ml-auto flex h-8 w-8 items-center justify-center rounded text-[#666] hover:bg-white"
       >
         <X className="h-4 w-4" />
       </button>

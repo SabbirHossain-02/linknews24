@@ -1,19 +1,26 @@
 "use client";
 
 import type { Editor } from "@tiptap/react";
-import { Printer, Redo2, Search, Undo2 } from "lucide-react";
+import { Printer, Redo2, Save, Search, Undo2 } from "lucide-react";
 import { keepFocus } from "./ui";
 
 /**
- * Word's Quick Access Toolbar — the always-visible strip above the tab row.
- * Holds the commands you reach for regardless of which ribbon tab is open.
+ * Word's blue title bar with the Quick Access Toolbar on the left and the
+ * document name in the middle.
  */
-export function QuickAccessToolbar({
+export function WordTitleBar({
   editor,
   onOpenFind,
+  documentName,
+  saveState,
+  onSave,
 }: {
   editor: Editor;
   onOpenFind: () => void;
+  documentName: string;
+  /** null = nothing to save yet; shown next to the document name. */
+  saveState?: string | null;
+  onSave?: () => void;
 }) {
   const Item = ({
     title,
@@ -32,14 +39,19 @@ export function QuickAccessToolbar({
       disabled={disabled}
       onMouseDown={keepFocus}
       onClick={onClick}
-      className="flex h-6 w-6 items-center justify-center rounded text-foreground/80 transition-colors hover:bg-black/10 disabled:opacity-30"
+      className="flex h-6 w-6 items-center justify-center rounded-sm text-white/90 transition-colors hover:bg-white/20 disabled:opacity-35 disabled:hover:bg-transparent"
     >
       {children}
     </button>
   );
 
   return (
-    <div className="flex items-center gap-1 border-b border-border bg-surface px-2 py-1">
+    <div className="flex h-8 items-center gap-0.5 bg-[#2b579a] px-1.5">
+      {onSave && (
+        <Item title="খসড়া সেভ করুন (Ctrl+S)" onClick={onSave}>
+          <Save className="h-3.5 w-3.5" />
+        </Item>
+      )}
       <Item
         title="আন্ডু (Ctrl+Z)"
         disabled={!editor.can().undo()}
@@ -54,15 +66,17 @@ export function QuickAccessToolbar({
       >
         <Redo2 className="h-3.5 w-3.5" />
       </Item>
-
-      <span className="mx-1 h-4 w-px bg-border" />
-
       <Item title="খুঁজুন ও বদলান (Ctrl+F)" onClick={onOpenFind}>
         <Search className="h-3.5 w-3.5" />
       </Item>
       <Item title="প্রিন্ট (Ctrl+P)" onClick={() => window.print()}>
         <Printer className="h-3.5 w-3.5" />
       </Item>
+
+      <span className="pointer-events-none absolute left-1/2 -translate-x-1/2 font-ui text-[11px] text-white/95">
+        {documentName}
+        {saveState ? <span className="text-white/70"> — {saveState}</span> : null}
+      </span>
     </div>
   );
 }
