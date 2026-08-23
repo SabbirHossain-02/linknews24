@@ -202,15 +202,7 @@ export default function CategoriesAdminPage() {
         </button>
       </div>
 
-      <p className="mt-4 rounded-lg bg-surface px-3.5 py-2.5 font-ui text-xs leading-relaxed text-foreground-muted">
-        প্রতিটি মেইন ক্যাটাগরির নিচে <b className="text-foreground">+ সাব-ক্যাটাগরি</b>{" "}
-        বোতাম আছে। সেখানে একটি যোগ করলেই সাইটের মেনুতে ওই ক্যাটাগরিটি{" "}
-        <b className="text-foreground">ড্রপডাউন</b> হয়ে যাবে — যেমন{" "}
-        <b className="text-foreground">জাতীয় ▾</b>, ভেতরে সাব-ক্যাটাগরিগুলো। সাইটে
-        সাথে সাথেই বদলাবে।
-      </p>
-
-      <div className="mt-3 flex flex-col gap-3">
+      <div className="mt-4 flex flex-col gap-3">
         {loading
           ? null
           : mains.map((main) => {
