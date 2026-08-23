@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import {
   Droplet,
@@ -107,9 +108,18 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           open ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <div className="flex h-16 shrink-0 items-center gap-2 border-b border-white/10 px-5">
-          <span className="text-lg font-bold tracking-tight text-white">
-            Link News<span className="text-brand-crimson">24</span>
+        <div className="flex h-16 shrink-0 items-center gap-2.5 border-b border-white/10 px-5">
+          {/* The real masthead, not a text stand-in. It is a dark-on-light
+              lockup, so it needs a light plate to sit on inside the navy rail. */}
+          <span className="flex items-center rounded bg-white px-2 py-1.5">
+            <Image
+              src="/logo.png"
+              alt="LinkNews24"
+              width={2048}
+              height={656}
+              priority
+              className="h-5 w-auto"
+            />
           </span>
           <span className="font-ui text-[10px] uppercase tracking-widest text-white/40">
             Admin

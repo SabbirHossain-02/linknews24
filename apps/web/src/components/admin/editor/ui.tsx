@@ -1,16 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { ChevronDown, CornerDownRight } from "lucide-react";
+import { Popover } from "./Popover";
 
 /**
- * Ribbon primitives styled after the Microsoft Word desktop ribbon.
- *
- * Word's chrome colours are used deliberately — the brief was "exactly like
- * Word" — so the editor reads as a familiar Word window embedded in the admin
- * page rather than as another crimson admin panel.
+ * Ribbon primitives laid out like the Microsoft Word desktop ribbon, but
+ * wearing LinkNews24's colours: the window chrome is brand navy and the
+ * pressed/active state is brand crimson, so the editor belongs to the admin
+ * panel instead of looking like a pasted-in copy of Word.
  */
-export const WORD_BLUE = "#2b579a";
+export const BRAND_NAVY = "#14181f";
+export const BRAND_CRIMSON = "#d81f26";
 
 /** Controls must not steal the selection out of the editor. */
 export const keepFocus = (e: React.MouseEvent) => e.preventDefault();
@@ -65,7 +66,7 @@ export function Row({ children }: { children: React.ReactNode }) {
   return <div className="flex items-center gap-0.5">{children}</div>;
 }
 
-const activeCls = "bg-[#cce4f7] ring-1 ring-inset ring-[#6dace4]";
+const activeCls = "bg-[#fbe3e4] ring-1 ring-inset ring-[#d81f26] text-[#a8151b]";
 
 /** Small square ribbon button — the default control in Word's ribbon. */
 export function Btn({
@@ -147,9 +148,10 @@ export function BigBtn({
   menu?: (close: () => void) => React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
 
   return (
-    <div className="relative">
+    <div className="relative" ref={ref}>
       <button
         type="button"
         title={title}
@@ -169,21 +171,19 @@ export function BigBtn({
         <>
           <button
             type="button"
-            aria-label={`${label} মেনু`}
+            aria-label={`${label} menu`}
             onMouseDown={keepFocus}
             onClick={() => setOpen((v) => !v)}
             className="absolute inset-x-0 bottom-0 h-3.5 rounded-b-sm hover:bg-[#d0cece]/60"
           />
           {open && (
-            <>
-              <div className="fixed inset-0 z-30" onClick={() => setOpen(false)} />
-              <div
-                onMouseDown={keepFocus}
-                className="absolute left-0 top-full z-40 mt-0.5 w-48 rounded border border-[#d4d4d4] bg-white py-1 shadow-lg"
-              >
-                {menu(() => setOpen(false))}
-              </div>
-            </>
+            <Popover
+              anchor={ref.current}
+              width={200}
+              onClose={() => setOpen(false)}
+            >
+              {menu(() => setOpen(false))}
+            </Popover>
           )}
         </>
       )}
@@ -202,14 +202,16 @@ export function Combo({
   label: React.ReactNode;
   title?: string;
   width?: string;
-  panelWidth?: string;
+  /** Panel width in px. Defaults to the trigger width. */
+  panelWidth?: number;
   children: (close: () => void) => React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
   const close = () => setOpen(false);
 
   return (
-    <div className="relative">
+    <div className="relative" ref={ref}>
       <button
         type="button"
         title={title}
@@ -221,17 +223,9 @@ export function Combo({
         <ChevronDown className="h-3 w-3 shrink-0 text-[#666]" />
       </button>
       {open && (
-        <>
-          <div className="fixed inset-0 z-30" onClick={close} />
-          <div
-            onMouseDown={keepFocus}
-            className={`absolute left-0 top-full z-40 mt-0.5 ${
-              panelWidth ?? width
-            } max-h-72 overflow-y-auto rounded border border-[#d4d4d4] bg-white py-1 shadow-lg`}
-          >
-            {children(close)}
-          </div>
-        </>
+        <Popover anchor={ref.current} width={panelWidth} onClose={close}>
+          {children(close)}
+        </Popover>
       )}
     </div>
   );
@@ -241,19 +235,21 @@ export function Combo({
 export function IconCombo({
   icon,
   title,
-  panelWidth = "w-52",
+  panelWidth = 208,
   children,
 }: {
   icon: React.ReactNode;
   title: string;
-  panelWidth?: string;
+  /** Panel width in px. */
+  panelWidth?: number;
   children: (close: () => void) => React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
   const close = () => setOpen(false);
 
   return (
-    <div className="relative">
+    <div className="relative" ref={ref}>
       <button
         type="button"
         title={title}
@@ -265,15 +261,9 @@ export function IconCombo({
         <ChevronDown className="h-2.5 w-2.5 text-[#666]" />
       </button>
       {open && (
-        <>
-          <div className="fixed inset-0 z-30" onClick={close} />
-          <div
-            onMouseDown={keepFocus}
-            className={`absolute left-0 top-full z-40 mt-0.5 ${panelWidth} max-h-72 overflow-y-auto rounded border border-[#d4d4d4] bg-white py-1 shadow-lg`}
-          >
-            {children(close)}
-          </div>
-        </>
+        <Popover anchor={ref.current} width={panelWidth} onClose={close}>
+          {children(close)}
+        </Popover>
       )}
     </div>
   );
@@ -297,7 +287,7 @@ export function MenuItem({
       onClick={onClick}
       style={style}
       className={`block w-full px-3 py-1 text-left font-ui text-[11px] text-[#333] hover:bg-[#e1dfdd] ${
-        active ? "bg-[#cce4f7] font-semibold" : ""
+        active ? "bg-[#fbe3e4] font-semibold text-[#a8151b]" : ""
       }`}
     >
       {children}
@@ -352,7 +342,7 @@ export function ColorGrid({
             style={{ background: c }}
             className={`h-5 w-5 rounded-sm border ${
               current?.toLowerCase() === c
-                ? "border-[#2b579a] ring-1 ring-[#2b579a]"
+                ? "border-[#d81f26] ring-1 ring-[#d81f26]"
                 : "border-[#d4d4d4]"
             }`}
           />

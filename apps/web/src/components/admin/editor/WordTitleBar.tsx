@@ -46,7 +46,7 @@ export function WordTitleBar({
   );
 
   return (
-    <div className="flex h-8 items-center gap-0.5 bg-[#2b579a] px-1.5">
+    <div className="flex h-8 items-center gap-0.5 bg-[#14181f] px-1.5">
       {onSave && (
         <Item title="খসড়া সেভ করুন (Ctrl+S)" onClick={onSave}>
           <Save className="h-3.5 w-3.5" />

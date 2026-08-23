@@ -32,24 +32,24 @@ export function ViewTab({
 }) {
   return (
     <div className="flex h-[92px] items-stretch overflow-x-auto bg-white">
-      <Group label="ভিউ">
+      <Group label="Views">
         <BigBtn
           title="পেজ ভিউ — Word-এর মতো সাদা কাগজে"
-          label="পেজ"
+          label="Print Layout"
           active={view.pageMode}
           icon={<FileText className="h-5 w-5" />}
           onClick={() => setView({ pageMode: true })}
         />
         <BigBtn
           title="ওয়েব ভিউ — সাইটে যে প্রস্থে দেখাবে"
-          label="ওয়েব"
+          label="Web Layout"
           active={!view.pageMode}
           icon={<ScrollText className="h-5 w-5" />}
           onClick={() => setView({ pageMode: false })}
         />
       </Group>
 
-      <Group label="জুম">
+      <Group label="Zoom">
         <Combo label={`${view.zoom}%`} width="w-20" title="জুম">
           {(close) =>
             ZOOMS.map((z) => (
@@ -68,17 +68,17 @@ export function ViewTab({
         </Combo>
       </Group>
 
-      <Group label="দেখান">
+      <Group label="Show">
         <BigBtn
           title="ডকুমেন্ট আউটলাইন — শিরোনামের তালিকা"
-          label="আউটলাইন"
+          label="Outline"
           active={view.outline}
           icon={<PanelLeft className="h-5 w-5" />}
           onClick={() => setView({ outline: !view.outline })}
         />
         <BigBtn
           title="বানান পরীক্ষা চালু/বন্ধ"
-          label="বানান"
+          label="Spelling"
           active={view.spellcheck}
           icon={<SpellCheck className="h-5 w-5" />}
           onClick={() => {
@@ -100,7 +100,7 @@ export function ViewTab({
         />
         <BigBtn
           title="ফুল স্ক্রিন (Esc দিয়ে বেরোন)"
-          label="ফুল স্ক্রিন"
+          label="Full Screen"
           active={view.fullscreen}
           icon={
             view.fullscreen ? (

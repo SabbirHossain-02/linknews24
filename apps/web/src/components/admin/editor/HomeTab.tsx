@@ -45,7 +45,8 @@ import {
   Stack,
   keepFocus,
 } from "./ui";
-import { FONTS, FONT_SIZES, LINE_HEIGHTS } from "./extensions";
+import { FONT_SIZES, LINE_HEIGHTS } from "./extensions";
+import { FontPicker } from "./FontPicker";
 import { StyleGallery } from "./StyleGallery";
 import { useFormatPainter } from "./use-format-painter";
 
@@ -178,9 +179,6 @@ export function HomeTab({
     editor.chain().focus().setFontSize(`${FONT_SIZES[next]}px`).run();
   };
 
-  const activeFont = FONTS.find(
-    (f) => f.value === editor.getAttributes("textStyle").fontFamily,
-  );
   const activeSize = editor.getAttributes("textStyle").fontSize as
     | string
     | undefined;
@@ -192,13 +190,13 @@ export function HomeTab({
     >
       {/* ---------------- Clipboard ---------------- */}
       <Group
-        label="ক্লিপবোর্ড"
+        label="Clipboard"
         launchTitle="ক্লিপবোর্ড"
         onLaunch={() => doPaste(false)}
       >
         <BigBtn
           title="পেস্ট (Ctrl+V)"
-          label="পেস্ট"
+          label="Paste"
           icon={<ClipboardPaste className="h-5 w-5" />}
           onClick={() => doPaste(false)}
           menu={(close) => (
@@ -226,19 +224,19 @@ export function HomeTab({
         <Stack>
           <LabelBtn
             title="কাট (Ctrl+X)"
-            label="কাট"
+            label="Cut"
             icon={<Scissors className="h-3.5 w-3.5" />}
             onClick={() => doCopy(true)}
           />
           <LabelBtn
             title="কপি (Ctrl+C)"
-            label="কপি"
+            label="Copy"
             icon={<Copy className="h-3.5 w-3.5" />}
             onClick={() => doCopy(false)}
           />
           <LabelBtn
             title="ফরম্যাট পেইন্টার — চাপুন, তারপর যেখানে বসাবেন সিলেক্ট করুন"
-            label="ফরম্যাট পেইন্টার"
+            label="Format Painter"
             icon={<Brush className="h-3.5 w-3.5" />}
             active={armed}
             onClick={copyFormat}
@@ -247,43 +245,14 @@ export function HomeTab({
       </Group>
 
       {/* ---------------- Font ---------------- */}
-      <Group label="ফন্ট" launchTitle="ফন্ট ডায়ালগ" onLaunch={onOpenFontDialog}>
+      <Group label="Font" launchTitle="ফন্ট ডায়ালগ" onLaunch={onOpenFontDialog}>
         <Stack>
           <Row>
-            <Combo
-              label={activeFont?.label ?? "ডিফল্ট ফন্ট"}
-              width="w-36"
-              title="ফন্ট"
-            >
-              {(close) => (
-                <>
-                  <MenuItem
-                    onClick={() => {
-                      editor.chain().focus().unsetFontFamily().run();
-                      close();
-                    }}
-                  >
-                    ডিফল্ট ফন্ট
-                  </MenuItem>
-                  {FONTS.map((f) => (
-                    <MenuItem
-                      key={f.label}
-                      active={activeFont?.label === f.label}
-                      style={{ fontFamily: f.value }}
-                      onClick={() => {
-                        editor.chain().focus().setFontFamily(f.value).run();
-                        close();
-                      }}
-                    >
-                      {f.label}
-                    </MenuItem>
-                  ))}
-                </>
-              )}
-            </Combo>
+            <FontPicker editor={editor} />
             <Combo
               label={activeSize ? parseInt(activeSize, 10) : 17}
               width="w-14"
+              panelWidth={92}
               title="ফন্ট সাইজ"
             >
               {(close) => (
@@ -319,7 +288,7 @@ export function HomeTab({
             <IconCombo
               title="ছোট/বড় হাতের অক্ষর"
               icon={<span className="px-0.5 text-[11px] font-semibold">Aa</span>}
-              panelWidth="w-48"
+              panelWidth={192}
             >
               {(close) =>
                 CASE_MODES.map((mode) => (
@@ -443,7 +412,7 @@ export function HomeTab({
 
       {/* ---------------- Paragraph ---------------- */}
       <Group
-        label="প্যারাগ্রাফ"
+        label="Paragraph"
         launchTitle="প্যারাগ্রাফ ডায়ালগ"
         onLaunch={onOpenParagraphDialog}
       >
@@ -524,7 +493,7 @@ export function HomeTab({
             <IconCombo
               title="লাইন ও প্যারা স্পেসিং"
               icon={<UnfoldVertical className="h-3.5 w-3.5" />}
-              panelWidth="w-44"
+              panelWidth={176}
             >
               {(close) => (
                 <>
@@ -567,7 +536,7 @@ export function HomeTab({
             <IconCombo
               title="লেখার দিক"
               icon={<ChevronsLeftRight className="h-3.5 w-3.5" />}
-              panelWidth="w-40"
+              panelWidth={160}
             >
               {(close) => (
                 <>
@@ -603,28 +572,28 @@ export function HomeTab({
       </Group>
 
       {/* ---------------- Styles ---------------- */}
-      <Group label="স্টাইল">
+      <Group label="Styles">
         <StyleGallery editor={editor} />
       </Group>
 
       {/* ---------------- Editing ---------------- */}
-      <Group label="এডিটিং">
+      <Group label="Editing">
         <Stack>
           <LabelBtn
             title="খুঁজুন (Ctrl+F)"
-            label="খুঁজুন"
+            label="Find"
             icon={<Search className="h-3.5 w-3.5" />}
             onClick={() => onOpenFind(false)}
           />
           <LabelBtn
             title="বদলান (Ctrl+H)"
-            label="বদলান"
+            label="Replace"
             icon={<Replace className="h-3.5 w-3.5" />}
             onClick={() => onOpenFind(true)}
           />
           <LabelBtn
             title="সব সিলেক্ট করুন (Ctrl+A)"
-            label="সব সিলেক্ট"
+            label="Select All"
             icon={<MousePointerSquareDashed className="h-3.5 w-3.5" />}
             onClick={() => editor.chain().focus().selectAll().run()}
           />
@@ -634,7 +603,7 @@ export function HomeTab({
       {note && (
         <div
           onMouseDown={keepFocus}
-          className="pointer-events-none absolute bottom-1 left-1/2 z-50 -translate-x-1/2 rounded bg-[#2b579a] px-3 py-1 font-ui text-[11px] text-white shadow-lg"
+          className="pointer-events-none absolute bottom-1 left-1/2 z-50 -translate-x-1/2 rounded bg-[#14181f] px-3 py-1 font-ui text-[11px] text-white shadow-lg"
         >
           {note}
         </div>

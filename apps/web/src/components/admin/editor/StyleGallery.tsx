@@ -39,7 +39,7 @@ const STYLES: StyleDef[] = [
     preview: {
       fontSize: Math.max(19 - level * 2, 10),
       fontWeight: level <= 3 ? 700 : 600,
-      color: level <= 2 ? "#2b579a" : "#1f3864",
+      color: level <= 2 ? "#d81f26" : "#a8151b",
     } as React.CSSProperties,
     apply: (e: Editor) => e.chain().focus().toggleHeading({ level }).run(),
     isActive: (e: Editor) => e.isActive("heading", { level }),
@@ -88,7 +88,7 @@ export function StyleGallery({ editor }: { editor: Editor }) {
             onClick={() => style.apply(editor)}
             className={`flex h-[46px] w-[62px] shrink-0 flex-col items-center justify-between rounded-sm border bg-white px-1 py-1 transition-colors ${
               active
-                ? "border-[#2b579a] bg-[#cce4f7]"
+                ? "border-[#d81f26] bg-[#fbe3e4]"
                 : "border-[#d4d4d4] hover:border-[#8a8886] hover:bg-[#f3f2f1]"
             }`}
           >

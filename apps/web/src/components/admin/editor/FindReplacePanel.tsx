@@ -68,7 +68,7 @@ export function FindReplacePanel({
             if (e.key === "Escape") onClose();
           }}
           placeholder="যা খুঁজবেন…"
-          className="h-8 w-48 rounded border border-[#d4d4d4] bg-white px-2 font-ui text-xs text-[#333] outline-none focus:border-[#2b579a]"
+          className="h-8 w-48 rounded border border-[#d4d4d4] bg-white px-2 font-ui text-xs text-[#333] outline-none focus:border-[#d81f26]"
         />
         <span className="w-14 shrink-0 text-center font-ui text-[11px] text-[#666]">
           {total ? `${current} / ${total}` : term ? "০টি" : ""}
@@ -100,7 +100,7 @@ export function FindReplacePanel({
           value={replacement}
           onChange={(e) => setReplacement(e.target.value)}
           placeholder="যা বসাবেন…"
-          className="h-8 w-48 rounded border border-[#d4d4d4] bg-white px-2 font-ui text-xs text-[#333] outline-none focus:border-[#2b579a]"
+          className="h-8 w-48 rounded border border-[#d4d4d4] bg-white px-2 font-ui text-xs text-[#333] outline-none focus:border-[#d81f26]"
         />
         <button
           type="button"
@@ -116,7 +116,7 @@ export function FindReplacePanel({
           disabled={!total}
           onMouseDown={keepFocus}
           onClick={() => run(() => editor.commands.replaceAll(replacement))}
-          className="h-8 rounded bg-[#2b579a] px-2 font-ui text-[11px] font-semibold text-white hover:bg-[#1f3f70] disabled:opacity-30"
+          className="h-8 rounded bg-[#14181f] px-2 font-ui text-[11px] font-semibold text-white hover:bg-[#2a3240] disabled:opacity-30"
         >
           সব বদলান
         </button>
@@ -127,7 +127,7 @@ export function FindReplacePanel({
           type="checkbox"
           checked={caseSensitive}
           onChange={(e) => setCaseSensitive(e.target.checked)}
-          className="accent-[#2b579a]"
+          className="accent-[#d81f26]"
         />
         ছোট/বড় হাতের মিল
       </label>
@@ -136,7 +136,7 @@ export function FindReplacePanel({
           type="checkbox"
           checked={wholeWord}
           onChange={(e) => setWholeWord(e.target.checked)}
-          className="accent-[#2b579a]"
+          className="accent-[#d81f26]"
         />
         পুরো শব্দ
       </label>

@@ -22,21 +22,13 @@ import {
 import { BlockAttributes } from "./block-attributes";
 import { cleanPastedHTML } from "./paste-cleaner";
 
-/** Fonts offered in the ribbon's font picker. */
-export const FONTS = [
-  { label: "Siyam Rupali", value: "var(--font-siyam-rupali)" },
-  { label: "Hind Siliguri", value: "var(--font-hind-siliguri)" },
-  { label: "Inter", value: "var(--font-inter)" },
-  { label: "Serif", value: "Georgia, serif" },
-  { label: "Monospace", value: "monospace" },
-];
-
-/** Word's font-size dropdown values. */
-export const FONT_SIZES = [
-  8, 9, 10, 11, 12, 14, 16, 18, 20, 24, 28, 32, 36, 48, 72,
-];
-
-export const LINE_HEIGHTS = ["1", "1.15", "1.5", "2", "2.5", "3"];
+// The font list, sizes and line-height presets live in ./fonts, which also
+// handles reading the machine's installed fonts.
+export {
+  DEFAULT_FONTS as FONTS,
+  FONT_SIZES,
+  LINE_HEIGHTS,
+} from "./fonts";
 
 export function buildExtensions(placeholder: string) {
   return [

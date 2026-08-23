@@ -20,7 +20,7 @@ function DialogShell({
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/30 p-4">
       <div className="w-full max-w-md overflow-hidden rounded border border-[#d4d4d4] bg-white shadow-2xl">
-        <div className="flex items-center justify-between bg-[#2b579a] px-3 py-1.5">
+        <div className="flex items-center justify-between bg-[#14181f] px-3 py-1.5">
           <span className="font-ui text-xs font-semibold text-white">
             {title}
           </span>
@@ -49,7 +49,7 @@ function DialogShell({
               onApply();
               onClose();
             }}
-            className="rounded-sm bg-[#2b579a] px-4 py-1 font-ui text-[11px] font-semibold text-white hover:bg-[#1f3f70]"
+            className="rounded-sm bg-[#14181f] px-4 py-1 font-ui text-[11px] font-semibold text-white hover:bg-[#2a3240]"
           >
             ঠিক আছে
           </button>
@@ -60,7 +60,7 @@ function DialogShell({
 }
 
 const fieldCls =
-  "h-7 w-full rounded-sm border border-[#d4d4d4] bg-white px-2 font-ui text-[11px] text-[#333] focus:border-[#2b579a] focus:outline-none";
+  "h-7 w-full rounded-sm border border-[#d4d4d4] bg-white px-2 font-ui text-[11px] text-[#333] focus:border-[#d81f26] focus:outline-none";
 const labelCls = "font-ui text-[10px] font-semibold uppercase text-[#666]";
 
 /** Word's Font dialog — everything applies to the current selection. */
@@ -120,7 +120,7 @@ export function FontDialog({
         type="checkbox"
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
-        className="accent-[#2b579a]"
+        className="accent-[#d81f26]"
       />
       {label}
     </label>

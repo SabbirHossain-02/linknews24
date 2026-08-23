@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
+import Image from "next/image";
 import { ChevronUp } from "lucide-react";
 import { buildExtensions, editorProps } from "./editor/extensions";
 import { FindReplace } from "./editor/find-replace";
@@ -13,8 +14,8 @@ import { ViewTab, type ViewState } from "./editor/ViewTab";
 import { WordTitleBar } from "./editor/WordTitleBar";
 
 const TABS = [
-  { id: "home", label: "হোম" },
-  { id: "view", label: "ভিউ" },
+  { id: "home", label: "Home" },
+  { id: "view", label: "View" },
 ] as const;
 
 type TabId = (typeof TABS)[number]["id"];
@@ -114,8 +115,15 @@ export function RichTextEditor({
 
       {/* ---------- ribbon tabs ---------- */}
       <div className="flex shrink-0 items-end gap-0 border-b border-[#d4d4d4] bg-[#f3f2f1] pl-1">
-        <span className="mb-0 mr-1 flex h-[26px] items-center bg-[#2b579a] px-3 font-ui text-[11px] font-semibold text-white">
-          LinkNews24
+        {/* Word puts "File" here; ours carries the masthead instead. */}
+        <span className="mb-0 mr-1 flex h-[26px] items-center bg-white px-2.5">
+          <Image
+            src="/logo.png"
+            alt="LinkNews24"
+            width={2048}
+            height={656}
+            className="h-3.5 w-auto"
+          />
         </span>
         {TABS.map((t) => (
           <button
@@ -128,7 +136,7 @@ export function RichTextEditor({
             }}
             className={`h-[26px] px-4 font-ui text-[11px] transition-colors ${
               tab === t.id && ribbonOpen
-                ? "border-x border-t border-[#d4d4d4] bg-white font-semibold text-[#2b579a]"
+                ? "border-x border-t border-[#d4d4d4] bg-white font-semibold text-[#d81f26]"
                 : "text-[#444] hover:bg-[#e1dfdd]"
             }`}
           >
@@ -193,7 +201,7 @@ export function RichTextEditor({
       </div>
 
       {/* ---------- status bar ---------- */}
-      <div className="flex shrink-0 flex-wrap items-center gap-4 border-t border-[#d4d4d4] bg-[#2b579a] px-3 py-1 font-ui text-[11px] text-white/90">
+      <div className="flex shrink-0 flex-wrap items-center gap-4 border-t border-[#d4d4d4] bg-[#14181f] px-3 py-1 font-ui text-[11px] text-white/90">
         <span>শব্দ: {bn(words)}</span>
         <span>অক্ষর: {bn(characters)}</span>
         <span>পড়তে ~{bn(minutes)} মিনিট</span>

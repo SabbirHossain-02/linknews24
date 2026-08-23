@@ -47,7 +47,7 @@ export function Outline({ editor }: { editor: Editor }) {
                     .run();
                 }}
                 style={{ paddingLeft: `${(heading.level - 1) * 10}px` }}
-                className="block w-full truncate rounded py-1 pr-1 text-left font-ui text-[11px] text-[#333] hover:bg-white hover:text-[#2b579a]"
+                className="block w-full truncate rounded py-1 pr-1 text-left font-ui text-[11px] text-[#333] hover:bg-white hover:text-[#d81f26]"
                 title={heading.text}
               >
                 {heading.text}
