@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-LinkNews24 — a clean, bilingual (Bengali/English) Bangla online news portal. The Next.js frontend is currently driven by static mock data (`apps/web/src/lib/mock-data.ts`), but the **backend build has started** (self-hosted on the owner's VPS: Node + Express, PostgreSQL + Prisma, Redis, PM2). The frontend is deployed and live on the VPS via PM2. As modules move to the API, the mock-data accessors are the seam being replaced. Until a given feature is API-backed, assume it is still mock/localStorage-based.
+LinkNews24 — a clean, bilingual (Bengali/English) Bangla online news portal. Frontend and backend are both **live and self-hosted on the owner's VPS** (Next.js + Node/Express, PostgreSQL + Prisma, Socket.io, PM2). `apps/web/src/lib/mock-data.ts` **has been deleted**: every page now reads real content from the API. The owner's rule is that nothing on the site may be invented — where the newsroom has published nothing, the page says so rather than falling back to sample content.
 
 ## Working agreement (read first)
 
@@ -34,11 +34,13 @@ Next.js 15 (App Router) + React 19 + TypeScript (strict) + Tailwind CSS v4. Impo
 
 ### Data layer — everything flows from one file
 
-`src/lib/mock-data.ts` is the single source of truth for all content. It exports per-category `Article[]` arrays, a `categories` list, `navItems` (the nav menu tree), and the accessor functions pages use: `getArticlesByCategory`, `getArticleBySlug`, `searchArticles`, `getLatestHeadlines`, `getArticleBody`, `getRelatedArticles`, and `paginate` (`ARTICLES_PER_PAGE = 6`). The `Article`/`Category` shapes live in `src/types/content.ts`. When the real API arrives, these accessor functions are the seam to replace — keep pages calling them rather than importing raw arrays where practical.
+`src/lib/api.ts` is the seam. Server components call `apiGet`/`getArticles`/`getArticleBySlug`/`getCategories`/`getHomepage` against `API_INTERNAL_URL` (localhost on the VPS); client components fetch `API_BASE` from `src/lib/admin-api.ts` and re-fetch on the Socket.io `content:changed` event. `toArticle()` maps an `ApiArticle` onto the `Article` shape in `src/types/content.ts`.
+
+**No fallback content.** An empty API response must render an empty state, never sample data — this is an explicit instruction from the owner, not a style preference.
 
 ### Routing
 
-- `src/app/page.tsx` — homepage, composes hand-picked sections from mock arrays.
+- `src/app/page.tsx` — homepage, composed from the admin's homepage plan (`GET /api/homepage`).
 - `src/app/[slug]/page.tsx` — a **single catch-all** that serves both category listings and individual articles. It first checks if `slug` matches a category, else an article, else `notFound()`. `generateStaticParams` pre-renders every category and article slug, so the whole site is static. Category vs. article is disambiguated by slug lookup, not by route structure — keep category slugs and article slugs from colliding.
 - `src/app/search/`, `src/app/epaper/`, `src/app/dashboard/` — dedicated routes. E-Paper and dashboard are placeholder/localStorage-backed.
 
@@ -70,23 +72,21 @@ Grouped by domain under `src/components/`: `home/`, `article/`, `category/`, `da
 
 ## Conventions
 
-- Content additions go in `mock-data.ts` with **both** `bn` and `en` fields filled — a missing `*En` field breaks the English view.
-- Reach content through the `getArticle*`/`search`/`paginate` accessors so the eventual API swap stays localized to `mock-data.ts`.
+- Content is created in the admin panel, never in the repo. Fill **both** `bn` and `en` fields — a missing `*En` field breaks the English view.
+- Reach content through the helpers in `src/lib/api.ts` rather than fetching ad hoc, so the API surface stays in one place.
 - Keep the app static-export-friendly: the catch-all route relies on `generateStaticParams` enumerating all slugs.
 
 ## Roadmap status (from docs/ PRD + Roadmap)
 
-`docs/` holds the Bengali PRD and a phased Roadmap (originally written for the "Provath" placeholder name; the project is now LinkNews24). The plan: Phase 0 server → Phase 1 DB + JWT auth → Phase 2 CMS → **Phase 3 public frontend** → Phase 4 real-time → Phase 5 search/E-Paper/media. **What exists today is the Phase 3 frontend shell running entirely on mock data** — Phases 0–2 (backend/CMS) are not started (and blocked on rule #1 above).
+`docs/` holds the Bengali PRD and a phased Roadmap (originally written for the "Provath" placeholder name; the project is now LinkNews24). The plan: Phase 0 server → Phase 1 DB + JWT auth → Phase 2 CMS → **Phase 3 public frontend** → Phase 4 real-time → Phase 5 search/E-Paper/media. Phases 0–4 are done: the API, CMS, public frontend and Socket.io realtime are all live on the VPS.
 
-Frontend already built: homepage (hero + thematic rows), category pages with pagination, article pages with SEO meta + Schema.org NewsArticle, responsive/mobile nav, breaking-news ticker (static), trending sidebar, social share, font-size control, newsletter form (UI), keyword search, photo gallery + video sections, localStorage dashboard (bookmarks/history), and a **bn/en toggle** (the PRD deferred this to a later phase — it's already done).
+Frontend already built: homepage (hero + thematic rows), category pages with pagination, article pages with SEO meta + Schema.org NewsArticle, responsive/mobile nav, breaking-news ticker (live, from the CMS), trending sidebar, social share, font-size control, newsletter form (UI), keyword search, photo gallery + video sections, localStorage dashboard (bookmarks/history), and a **bn/en toggle** (the PRD deferred this to a later phase — it's already done).
 
 Frontend still remaining vs. the PRD/roadmap:
 - **Search filters** — only keyword search exists; category + date filters (PRD 6.1) are missing.
 - **Tag-based browsing** — no tag routes/pages (categories only).
 - **E-Paper PDF viewer** — placeholder "coming soon" only (`epaper/EpaperView.tsx`); needs a real viewer + PDF upload from CMS.
-- **Live Update page** and **real-time breaking ticker** — need Socket.io (roadmap Phase 4); the ticker is currently static mock data.
 - **Push notifications** — not built.
-- **Backend integration** — all content is hardcoded in `mock-data.ts`; the Phase 3 checkpoint "articles published from the CMS appear on the frontend" is impossible until the backend exists.
 - **Real images** — article "images" are CSS gradients (`tone.ts`); no real media, Next.js Image, or WebP optimization yet.
 - Lighthouse 90+ (mobile) is unverified.
 
