@@ -219,3 +219,84 @@ body {
 .ln-page { flex: 1 1 auto; min-height: 260px; }
 .ln-page:focus { outline: none; }
 
+/* --- Insert: photos, fact boxes, video, equations --- */
+
+.ln-editor figure.ln-figure {
+  margin: 1.2em 0;
+  max-width: 100%;
+}
+.ln-editor figure.ln-figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 0.4rem;
+}
+.ln-editor figure.ln-figure figcaption {
+  margin-top: 0.5em;
+  font-size: 0.85em;
+  line-height: 1.5;
+  color: var(--foreground-muted);
+  border-left: 2px solid var(--brand-crimson);
+  padding-left: 0.6em;
+}
+.ln-editor figure.ln-figure .ln-figure__credit {
+  display: block;
+  font-size: 0.9em;
+  opacity: 0.75;
+}
+
+.ln-editor figure.ln-figure[data-align="center"] { margin-left: auto; margin-right: auto; }
+.ln-editor figure.ln-figure[data-align="left"]   { margin-right: auto; }
+.ln-editor figure.ln-figure[data-align="right"]  { margin-left: auto; }
+
+/* Text wraps around these two — the classic news photo placement. */
+.ln-editor figure.ln-figure[data-align="wrap-left"] {
+  float: left;
+  margin: 0.3em 1.4em 1em 0;
+}
+.ln-editor figure.ln-figure[data-align="wrap-right"] {
+  float: right;
+  margin: 0.3em 0 1em 1.4em;
+}
+
+/* Floats must not escape the article on narrow screens. */
+@media (max-width: 640px) {
+  .ln-editor figure.ln-figure[data-align="wrap-left"],
+  .ln-editor figure.ln-figure[data-align="wrap-right"] {
+    float: none;
+    width: 100% !important;
+    margin: 1.2em 0;
+  }
+}
+
+/* Fact box / pull-out */
+.ln-editor aside.ln-callout {
+  margin: 1.2em 0;
+  padding: 1em 1.2em;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--brand-crimson);
+  border-radius: 0.4rem;
+}
+.ln-editor aside.ln-callout > :first-child { margin-top: 0; }
+.ln-editor aside.ln-callout > :last-child { margin-bottom: 0; }
+
+/* YouTube embeds keep a 16:9 box instead of collapsing */
+.ln-editor div[data-youtube-video] {
+  margin: 1.2em 0;
+}
+.ln-editor div[data-youtube-video] iframe {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  height: auto;
+  border: 0;
+  border-radius: 0.4rem;
+}
+
+/* Selected block nodes (photo, video) get a visible ring while editing */
+.ln-editor .ProseMirror-selectednode {
+  outline: 2px solid var(--brand-crimson);
+  outline-offset: 2px;
+  border-radius: 0.4rem;
+}
+

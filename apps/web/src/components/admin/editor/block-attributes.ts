@@ -67,6 +67,12 @@ export const BlockAttributes = Extension.create({
             parseHTML: (element) => element.getAttribute("dir"),
             renderHTML: (attrs) => (attrs.dir ? { dir: attrs.dir } : {}),
           },
+          // Anchor target for in-article bookmarks (Insert → Bookmark).
+          id: {
+            default: null,
+            parseHTML: (element) => element.getAttribute("id"),
+            renderHTML: (attrs) => (attrs.id ? { id: attrs.id } : {}),
+          },
         },
       },
     ];

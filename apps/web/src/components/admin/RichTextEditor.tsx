@@ -4,10 +4,22 @@ import { useCallback, useEffect, useState } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import Image from "next/image";
 import { ChevronUp } from "lucide-react";
+// KaTeX ships its own stylesheet; without it equations render as raw markup.
+import "katex/dist/katex.min.css";
 import { buildExtensions, editorProps } from "./editor/extensions";
 import { FindReplace } from "./editor/find-replace";
 import { FindReplacePanel } from "./editor/FindReplacePanel";
 import { HomeTab } from "./editor/HomeTab";
+import { InsertTab } from "./editor/InsertTab";
+import {
+  BookmarkDialog,
+  EquationDialog,
+  ImageDialog,
+  LinkDialog,
+  TableDialog,
+  VideoDialog,
+  type InsertDialogKind,
+} from "./editor/InsertDialogs";
 import { Outline } from "./editor/Outline";
 import { FontDialog, ParagraphDialog } from "./editor/RibbonDialogs";
 import { ViewTab, type ViewState } from "./editor/ViewTab";
@@ -15,6 +27,7 @@ import { WordTitleBar } from "./editor/WordTitleBar";
 
 const TABS = [
   { id: "home", label: "Home" },
+  { id: "insert", label: "Insert" },
   { id: "view", label: "View" },
 ] as const;
 
@@ -44,7 +57,9 @@ export function RichTextEditor({
   const [tab, setTab] = useState<TabId>("home");
   const [ribbonOpen, setRibbonOpen] = useState(true);
   const [findOpen, setFindOpen] = useState(false);
-  const [dialog, setDialog] = useState<"font" | "paragraph" | null>(null);
+  const [dialog, setDialog] = useState<
+    "font" | "paragraph" | InsertDialogKind | null
+  >(null);
   const [view, setViewState] = useState<ViewState>({
     pageMode: true,
     zoom: 100,
@@ -57,6 +72,7 @@ export function RichTextEditor({
     (patch: Partial<ViewState>) => setViewState((v) => ({ ...v, ...patch })),
     [],
   );
+  const close = useCallback(() => setDialog(null), []);
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -76,6 +92,10 @@ export function RichTextEditor({
       if ((e.ctrlKey || e.metaKey) && (key === "f" || key === "h")) {
         e.preventDefault();
         setFindOpen(true);
+      }
+      if ((e.ctrlKey || e.metaKey) && key === "k") {
+        e.preventDefault();
+        setDialog("link");
       }
       if (e.key === "Escape") {
         setViewState((v) => (v.fullscreen ? { ...v, fullscreen: false } : v));
@@ -169,6 +189,9 @@ export function RichTextEditor({
               onOpenParagraphDialog={() => setDialog("paragraph")}
             />
           )}
+          {tab === "insert" && (
+            <InsertTab editor={editor} openDialog={setDialog} />
+          )}
           {tab === "view" && (
             <ViewTab editor={editor} view={view} setView={setView} />
           )}
@@ -249,12 +272,20 @@ export function RichTextEditor({
         </div>
       </div>
 
-      {dialog === "font" && (
-        <FontDialog editor={editor} onClose={() => setDialog(null)} />
-      )}
+      {dialog === "font" && <FontDialog editor={editor} onClose={close} />}
       {dialog === "paragraph" && (
-        <ParagraphDialog editor={editor} onClose={() => setDialog(null)} />
+        <ParagraphDialog editor={editor} onClose={close} />
       )}
+      {dialog === "image" && <ImageDialog editor={editor} onClose={close} />}
+      {dialog === "video" && <VideoDialog editor={editor} onClose={close} />}
+      {dialog === "link" && <LinkDialog editor={editor} onClose={close} />}
+      {dialog === "bookmark" && (
+        <BookmarkDialog editor={editor} onClose={close} />
+      )}
+      {dialog === "equation" && (
+        <EquationDialog editor={editor} onClose={close} />
+      )}
+      {dialog === "table" && <TableDialog editor={editor} onClose={close} />}
     </div>
   );
 }

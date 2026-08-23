@@ -20,6 +20,8 @@ import {
   LineHeight,
 } from "@tiptap/extension-text-style";
 import { BlockAttributes } from "./block-attributes";
+import { Callout } from "./callout";
+import { Figure } from "./figure";
 import { cleanPastedHTML } from "./paste-cleaner";
 
 // The font list, sizes and line-height presets live in ./fonts, which also
@@ -58,6 +60,8 @@ export function buildExtensions(placeholder: string) {
 
     CharacterCount,
     BlockAttributes,
+    Figure,
+    Callout,
     Placeholder.configure({ placeholder }),
   ];
 }
