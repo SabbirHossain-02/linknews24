@@ -284,6 +284,31 @@ servicesRouter.post("/hospital", authAccount, async (req, res) => {
   res.json({ hospital });
 });
 
+/* ---------------------------------------------------------------- delete */
+
+/**
+ * Withdraw one's own listing.
+ *
+ * Scoped to the signed-in account, so a reader can only remove what they
+ * submitted — an admin deleting someone's listing goes through the admin
+ * routes instead.
+ */
+servicesRouter.delete("/:service", authAccount, async (req, res) => {
+  const accountId = req.accountId!;
+  const { service } = req.params;
+
+  if (service === "lawyer")
+    await prisma.lawyer.deleteMany({ where: { accountId } });
+  else if (service === "donor")
+    await prisma.bloodDonor.deleteMany({ where: { accountId } });
+  else if (service === "hospital")
+    await prisma.hospital.deleteMany({ where: { accountId } });
+  else return res.status(400).json({ error: "অজানা সেবা" });
+
+  emitChange({ type: "listing", service });
+  res.json({ ok: true });
+});
+
 /* ------------------------------------------------------------------ like */
 
 servicesRouter.post("/donors/:id/like", authAccount, async (req, res) => {

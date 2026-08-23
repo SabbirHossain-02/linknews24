@@ -135,6 +135,10 @@ export const submitHospital = (body: unknown) =>
     body: JSON.stringify(body),
   });
 
+/** Withdraw one's own listing — scoped server-side to the signed-in account. */
+export const deleteMyListing = (service: "lawyer" | "donor" | "hospital") =>
+  call<{ ok: true }>(`/services/${service}`, { method: "DELETE" });
+
 export const addDonation = (donatedOn: string, place?: string) =>
   call<{ ok: true; badge: DonorBadge | null }>("/services/donor/donations", {
     method: "POST",

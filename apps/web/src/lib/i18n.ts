@@ -408,6 +408,23 @@ export const translations = {
     en: 'Your account photo is used as the listing photo. Change it in Settings.',
   },
   fCannotAdd: { bn: 'যোগ করা গেল না', en: 'Could not add' },
+  // --- My listing card (dashboard) ---
+  fMyListing: { bn: 'আপনার জমা দেওয়া তথ্য', en: 'Your submission' },
+  fEdit: { bn: 'এডিট', en: 'Edit' },
+  fDelete: { bn: 'ডিলিট', en: 'Delete' },
+  fCancelEdit: { bn: 'বাতিল', en: 'Cancel' },
+  fDeleteTitle: { bn: 'তথ্যটি মুছে ফেলবেন?', en: 'Delete this listing?' },
+  fDeleteBody: {
+    bn: 'আপনার জমা দেওয়া তথ্য সাইট থেকে সরে যাবে এবং ফেরত আনা যাবে না।',
+    en: 'Your listing will be removed from the site and cannot be restored.',
+  },
+  fDeleting: { bn: 'মোছা হচ্ছে…', en: 'Deleting…' },
+  fNotSubmitted: { bn: 'আপনি এখনো কিছু জমা দেননি।', en: 'You have not submitted anything yet.' },
+  fSubmitNow: { bn: 'তথ্য জমা দিন', en: 'Submit details' },
+  fEditNote: {
+    bn: 'সম্পাদনা করলে তথ্যটি আবার অনুমোদনের জন্য পাঠানো হবে।',
+    en: 'Editing sends the listing back for approval.',
+  },
 } as const;
 
 export type TranslationKey = keyof typeof translations;

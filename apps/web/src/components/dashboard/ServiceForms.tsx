@@ -21,6 +21,7 @@ import {
   type MyListings,
 } from "@/lib/services-api";
 import { useLocale } from "@/components/providers/LocaleProvider";
+import { MyListingCard } from "./MyListingCard";
 import { localizedName, type TranslationKey } from "@/lib/i18n";
 
 const input =
@@ -325,9 +326,6 @@ export function DonorServiceForm({
 }) {
   const { t, locale } = useLocale();
   const { busy, error, saved, run } = useSubmit(reload);
-  const [donationDate, setDonationDate] = useState("");
-  const [donationPlace, setDonationPlace] = useState("");
-  const [logError, setLogError] = useState<string | null>(null);
 
   return (
     <div className="flex flex-col gap-6">
@@ -451,92 +449,112 @@ export function DonorServiceForm({
         <SubmitBar busy={busy} error={error} saved={saved} label={t("fSubmit")} />
       </form>
 
-      {/* Donation log — the badge is built from these dated entries. */}
-      {listing && (
-        <div className="rounded-xl border border-border bg-background p-4">
-          <h3 className="font-ui text-sm font-bold text-heading">
-            {t("fDonationLog")}
-          </h3>
-          <p className="mt-1 font-ui text-xs text-foreground-muted">
-            {t("fDonationLogHint")}
-          </p>
-
-          <div className="mt-3 flex flex-col gap-2 sm:flex-row">
-            <input
-              type="date"
-              value={donationDate}
-              onChange={(e) => setDonationDate(e.target.value)}
-              className={input}
-            />
-            <input
-              value={donationPlace}
-              onChange={(e) => setDonationPlace(e.target.value)}
-              placeholder={t("fWherePh")}
-              className={input}
-            />
-            <button
-              type="button"
-              disabled={!donationDate}
-              onClick={async () => {
-                setLogError(null);
-                try {
-                  await addDonation(donationDate, donationPlace || undefined);
-                  setDonationDate("");
-                  setDonationPlace("");
-                  reload();
-                } catch (e) {
-                  setLogError(e instanceof Error ? e.message : t("fCannotAdd"));
-                }
-              }}
-              className="flex shrink-0 items-center justify-center gap-1.5 rounded-lg border border-brand-crimson px-4 py-2.5 font-ui text-sm font-semibold text-brand-crimson hover:bg-brand-crimson hover:text-white disabled:opacity-40"
-            >
-              <Plus className="h-4 w-4" />
-              {t("fAdd")}
-            </button>
-          </div>
-          {logError && (
-            <p className="mt-2 font-ui text-xs text-brand-crimson">{logError}</p>
-          )}
-
-          <ul className="mt-3 flex flex-col divide-y divide-border">
-            {(listing.donations ?? []).length === 0 ? (
-              <li className="py-2 font-ui text-xs text-foreground-muted">
-                {t("fNoRecords")}
-              </li>
-            ) : (
-              (listing.donations ?? []).map((d) => (
-                <li key={d.id} className="flex items-center gap-3 py-2">
-                  <span className="font-ui text-sm text-foreground">
-                    {bnDate(d.donatedOn)}
-                  </span>
-                  {d.place && (
-                    <span className="font-ui text-xs text-foreground-muted">
-                      {d.place}
-                    </span>
-                  )}
-                  {d.verified && (
-                    <span className="rounded-full bg-green-100 px-2 py-0.5 font-ui text-[10px] font-semibold text-green-800">
-                      {t("fVerified")}
-                    </span>
-                  )}
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      await removeDonation(d.id);
-                      reload();
-                    }}
-                    className="ml-auto rounded p-1 text-foreground-muted hover:text-brand-crimson"
-                    title="মুছুন"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </li>
-              ))
-            )}
-          </ul>
-        </div>
-      )}
     </div>
+  );
+}
+
+/**
+ * The donation log: dated entries the public badge is computed from.
+ *
+ * Lives outside the form because it belongs to the listing rather than to
+ * editing it — a donor adds a date after giving blood, which has nothing to do
+ * with correcting their details.
+ */
+export function DonationLog({
+  listing,
+  reload,
+}: {
+  listing: DonorListing;
+  reload: () => void;
+}) {
+  const { t } = useLocale();
+  const [donationDate, setDonationDate] = useState("");
+  const [donationPlace, setDonationPlace] = useState("");
+  const [logError, setLogError] = useState<string | null>(null);
+
+  return (
+      <div className="rounded-xl border border-border bg-background p-4">
+        <h3 className="font-ui text-sm font-bold text-heading">
+          {t("fDonationLog")}
+        </h3>
+        <p className="mt-1 font-ui text-xs text-foreground-muted">
+          {t("fDonationLogHint")}
+        </p>
+
+        <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+          <input
+            type="date"
+            value={donationDate}
+            onChange={(e) => setDonationDate(e.target.value)}
+            className={input}
+          />
+          <input
+            value={donationPlace}
+            onChange={(e) => setDonationPlace(e.target.value)}
+            placeholder={t("fWherePh")}
+            className={input}
+          />
+          <button
+            type="button"
+            disabled={!donationDate}
+            onClick={async () => {
+              setLogError(null);
+              try {
+                await addDonation(donationDate, donationPlace || undefined);
+                setDonationDate("");
+                setDonationPlace("");
+                reload();
+              } catch (e) {
+                setLogError(e instanceof Error ? e.message : t("fCannotAdd"));
+              }
+            }}
+            className="flex shrink-0 items-center justify-center gap-1.5 rounded-lg border border-brand-crimson px-4 py-2.5 font-ui text-sm font-semibold text-brand-crimson hover:bg-brand-crimson hover:text-white disabled:opacity-40"
+          >
+            <Plus className="h-4 w-4" />
+            {t("fAdd")}
+          </button>
+        </div>
+        {logError && (
+          <p className="mt-2 font-ui text-xs text-brand-crimson">{logError}</p>
+        )}
+
+        <ul className="mt-3 flex flex-col divide-y divide-border">
+          {(listing.donations ?? []).length === 0 ? (
+            <li className="py-2 font-ui text-xs text-foreground-muted">
+              {t("fNoRecords")}
+            </li>
+          ) : (
+            (listing.donations ?? []).map((d) => (
+              <li key={d.id} className="flex items-center gap-3 py-2">
+                <span className="font-ui text-sm text-foreground">
+                  {bnDate(d.donatedOn)}
+                </span>
+                {d.place && (
+                  <span className="font-ui text-xs text-foreground-muted">
+                    {d.place}
+                  </span>
+                )}
+                {d.verified && (
+                  <span className="rounded-full bg-green-100 px-2 py-0.5 font-ui text-[10px] font-semibold text-green-800">
+                    {t("fVerified")}
+                  </span>
+                )}
+                <button
+                  type="button"
+                  onClick={async () => {
+                    await removeDonation(d.id);
+                    reload();
+                  }}
+                  className="ml-auto rounded p-1 text-foreground-muted hover:text-brand-crimson"
+                  title={t("fDelete")}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </li>
+            ))
+          )}
+        </ul>
+      </div>
   );
 }
 
@@ -650,6 +668,7 @@ export function ServicePanel({
 }) {
   const { t } = useLocale();
   const [data, setData] = useState<MyListings | null>(null);
+  const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const reload = () => {
@@ -666,8 +685,19 @@ export function ServicePanel({
       <p className="font-ui text-sm text-foreground-muted">{t("svcLoading")}</p>
     );
 
+  const listing =
+    service === "lawyer"
+      ? data?.lawyer
+      : service === "donor"
+        ? data?.donor
+        : data?.hospital;
+
   const photo =
     data?.lawyer?.photo ?? data?.donor?.photo ?? data?.hospital?.photo ?? null;
+
+  // Once something is filed, the card is the default view and the form opens
+  // on demand — a reader wants to see what they published before editing it.
+  const showForm = editing || !listing;
 
   return (
     <div className="flex flex-col gap-4">
@@ -686,14 +716,68 @@ export function ServicePanel({
         </div>
       )}
 
-      {service === "lawyer" && (
-        <LawyerServiceForm listing={data?.lawyer ?? null} reload={reload} />
-      )}
-      {service === "donor" && (
-        <DonorServiceForm listing={data?.donor ?? null} reload={reload} />
-      )}
-      {service === "hospital" && (
-        <HospitalServiceForm listing={data?.hospital ?? null} reload={reload} />
+      {!showForm && listing ? (
+        <>
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-bold text-heading">{t("fMyListing")}</h2>
+          </div>
+          <MyListingCard
+            service={service}
+            lawyer={data?.lawyer}
+            donor={data?.donor}
+            hospital={data?.hospital}
+            onEdit={() => setEditing(true)}
+            onDeleted={reload}
+            statusBanner={
+              <StatusBanner
+                status={listing.status}
+                note={listing.reviewNote}
+              />
+            }
+          />
+          {service === "donor" && data?.donor && (
+            <DonationLog listing={data.donor} reload={reload} />
+          )}
+        </>
+      ) : (
+        <>
+          {editing && (
+            <button
+              type="button"
+              onClick={() => setEditing(false)}
+              className="self-start rounded-lg border border-border px-3.5 py-2 font-ui text-sm text-foreground hover:bg-surface"
+            >
+              ← {t("fCancelEdit")}
+            </button>
+          )}
+          {service === "lawyer" && (
+            <LawyerServiceForm
+              listing={data?.lawyer ?? null}
+              reload={() => {
+                setEditing(false);
+                reload();
+              }}
+            />
+          )}
+          {service === "donor" && (
+            <DonorServiceForm
+              listing={data?.donor ?? null}
+              reload={() => {
+                setEditing(false);
+                reload();
+              }}
+            />
+          )}
+          {service === "hospital" && (
+            <HospitalServiceForm
+              listing={data?.hospital ?? null}
+              reload={() => {
+                setEditing(false);
+                reload();
+              }}
+            />
+          )}
+        </>
       )}
     </div>
   );
