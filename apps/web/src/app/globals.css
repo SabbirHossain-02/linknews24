@@ -13,6 +13,9 @@
   --brand-crimson: #d81f26;
   --brand-crimson-dark: #a8151b;
 
+  --scrollbar-thumb: #c9ccd2;
+  --scrollbar-thumb-hover: #9aa0aa;
+
   --font-scale: 1;
 }
 
@@ -52,6 +55,37 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), var(--font-ui), sans-serif;
+}
+
+/* Slim scrollbars.
+   The OS default bar is wide enough to crowd the editor's dropdown menus and
+   to eat a visible slice of the ribbon's height. A 6px rounded thumb on a
+   transparent track keeps the scroll affordance without the bulk. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
 }
 
 @media print {
