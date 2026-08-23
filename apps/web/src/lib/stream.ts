@@ -49,6 +49,9 @@ export function liveEmbedUrl(
     // Lets the sound button unmute without reloading (and restarting) the video.
     enablejsapi: "1",
   });
+  // YouTube only accepts JS API commands from a page it knows, so the player
+  // has to be told which origin will be talking to it.
+  if (typeof window !== "undefined") params.set("origin", window.location.origin);
   return `https://www.youtube-nocookie.com/embed/${id}?${params.toString()}`;
 }
 
