@@ -200,6 +200,26 @@ body {
   cursor: col-resize;
 }
 
+/* A resized table can be wider than the sheet; scroll it rather than the page. */
+.ln-editor .tableWrapper { overflow-x: auto; }
+/* prosemirror-tables sets this class on the editor while a column is dragged. */
+.ln-editor.resize-cursor,
+.ln-editor.resize-cursor * { cursor: col-resize; }
+
+/* Newspaper columns (Layout -> Columns) */
+.ln-editor .ln-columns,
+.article-body .ln-columns {
+  margin: 1em 0;
+}
+.ln-editor .ln-columns > *:first-child,
+.article-body .ln-columns > *:first-child {
+  margin-top: 0;
+}
+/* On a phone there is no room for two columns of Bangla text. */
+@media (max-width: 640px) {
+  .ln-columns { column-count: 1 !important; }
+}
+
 /* Drop cap — Word's "first letter large" */
 .ln-editor p.ln-dropcap::first-letter {
   float: left;

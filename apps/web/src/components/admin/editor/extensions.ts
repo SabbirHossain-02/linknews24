@@ -21,6 +21,7 @@ import {
 } from "@tiptap/extension-text-style";
 import { BlockAttributes } from "./block-attributes";
 import { Callout } from "./callout";
+import { ColumnBlock } from "./columns";
 import { Figure } from "./figure";
 import { cleanPastedHTML } from "./paste-cleaner";
 
@@ -62,6 +63,7 @@ export function buildExtensions(placeholder: string) {
     BlockAttributes,
     Figure,
     Callout,
+    ColumnBlock,
     Placeholder.configure({ placeholder }),
   ];
 }

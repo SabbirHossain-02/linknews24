@@ -71,6 +71,17 @@ export function ReviewTab({
               onClick={read.toggle}
             />
           )}
+          {read.notice && (
+            <button
+              type="button"
+              title="বন্ধ করুন"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={read.dismissNotice}
+              className="max-w-[300px] self-center rounded-sm border border-[#f0c36d] bg-[#fdf6e3] px-2 py-1 text-left font-ui text-[10px] leading-snug text-[#7a5b12]"
+            >
+              {read.notice}
+            </button>
+          )}
           {dictate.supported && (
             <BigBtn
               title="মুখে বলুন, লেখা হয়ে যাবে (বাংলা)"

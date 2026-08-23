@@ -3,18 +3,31 @@
 import { useEffect, useState } from "react";
 import { Check, Plus } from "lucide-react";
 import { getFollowedTopics, toggleTopic } from "@/lib/auth-storage";
-import { categories } from "@/lib/mock-data";
-import { localizedName } from "@/lib/i18n";
+import { API_BASE } from "@/lib/admin-api";
 import { useLocale } from "@/components/providers/LocaleProvider";
 import { ForYouFeed } from "./ForYouFeed";
+
+interface Topic {
+  id: string;
+  name: string;
+  nameEn: string;
+  slug: string;
+  parentId?: string | null;
+}
 
 export function FollowedTopics() {
   const { t, locale } = useLocale();
   const [follows, setFollows] = useState<string[]>([]);
   const [version, setVersion] = useState(0);
+  const [categories, setCategories] = useState<Topic[]>([]);
 
   useEffect(() => {
     setFollows(getFollowedTopics());
+    // The real category list from the newsroom, not a hardcoded one.
+    fetch(`${API_BASE}/api/categories`)
+      .then((r) => r.json())
+      .then((d) => setCategories(Array.isArray(d.categories) ? d.categories : []))
+      .catch(() => {});
   }, []);
 
   const handleToggle = (slug: string) => {
@@ -31,6 +44,11 @@ export function FollowedTopics() {
           {t("followTopicsCopy")}
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
+          {categories.length === 0 && (
+            <p className="font-ui text-sm text-foreground-muted">
+              {t("noResultsFound")}
+            </p>
+          )}
           {categories.map((category) => {
             const active = follows.includes(category.slug);
             return (
@@ -48,7 +66,7 @@ export function FollowedTopics() {
                 ) : (
                   <Plus className="h-3.5 w-3.5" />
                 )}
-                {localizedName(category, locale)}
+                {locale === "en" ? category.nameEn || category.name : category.name}
               </button>
             );
           })}

@@ -17,6 +17,8 @@ import {
   WordCountDialog,
 } from "./editor/ReviewDialogs";
 import { InsertTab } from "./editor/InsertTab";
+import { TableTab } from "./editor/TableTab";
+import { TableHandles, findTable } from "./editor/table-tools";
 import {
   BookmarkDialog,
   EquationDialog,
@@ -39,7 +41,10 @@ const TABS = [
   { id: "view", label: "View" },
 ] as const;
 
-type TabId = (typeof TABS)[number]["id"];
+/** Word's contextual "Table Tools" tab — only shown with the cursor in a table. */
+const TABLE_TAB = { id: "table", label: "Table" } as const;
+
+type TabId = (typeof TABS)[number]["id"] | typeof TABLE_TAB.id;
 
 /**
  * Word-style article editor.
@@ -146,6 +151,13 @@ export function RichTextEditor({
     );
   }
 
+  // The contextual Table tab appears and disappears with the cursor, exactly
+  // as Word's Table Tools do. Falling back to Home keeps a stale tab from
+  // being left selected once the cursor leaves the table.
+  const inTable = !!findTable(editor);
+  const tabs = inTable ? [...TABS, TABLE_TAB] : TABS;
+  const activeTab: TabId = tab === "table" && !inTable ? "home" : tab;
+
   const words = editor.storage.characterCount.words() as number;
   const characters = editor.storage.characterCount.characters() as number;
   // Bangla news copy is read at roughly 180 words a minute.
@@ -180,7 +192,7 @@ export function RichTextEditor({
             className="h-[26px] w-auto"
           />
         </span>
-        {TABS.map((t) => (
+        {tabs.map((t) => (
           <button
             key={t.id}
             type="button"
@@ -190,7 +202,7 @@ export function RichTextEditor({
               setRibbonOpen(true);
             }}
             className={`h-[34px] px-4 font-ui text-[11px] transition-colors ${
-              tab === t.id && ribbonOpen
+              activeTab === t.id && ribbonOpen
                 ? "border-x border-t border-[#d4d4d4] bg-white font-semibold text-[#d81f26]"
                 : "text-[#444] hover:bg-[#e1dfdd]"
             }`}
@@ -216,7 +228,7 @@ export function RichTextEditor({
       {/* ---------- ribbon ---------- */}
       {ribbonOpen && (
         <div className="shrink-0 border-b border-[#d4d4d4] bg-white">
-          {tab === "home" && (
+          {activeTab === "home" && (
             <HomeTab
               editor={editor}
               onOpenFind={() => setFindOpen(true)}
@@ -224,11 +236,12 @@ export function RichTextEditor({
               onOpenParagraphDialog={() => setDialog("paragraph")}
             />
           )}
-          {tab === "insert" && (
+          {activeTab === "insert" && (
             <InsertTab editor={editor} openDialog={setDialog} />
           )}
-          {tab === "layout" && <LayoutTab editor={editor} />}
-          {tab === "review" && (
+          {activeTab === "layout" && <LayoutTab editor={editor} />}
+          {activeTab === "table" && <TableTab editor={editor} />}
+          {activeTab === "review" && (
             <ReviewTab
               editor={editor}
               spellcheck={view.spellcheck}
@@ -236,7 +249,7 @@ export function RichTextEditor({
               openDialog={setDialog}
             />
           )}
-          {tab === "view" && (
+          {activeTab === "view" && (
             <ViewTab
               view={view}
               setView={setView}
@@ -277,6 +290,8 @@ export function RichTextEditor({
             {/* Stretch the editable area over the whole sheet, so clicking
                 low on a mostly-empty page still puts the cursor in. */}
             <EditorContent editor={editor} className="flex flex-1 flex-col" />
+            {/* Move / resize grips, drawn over the page — never saved. */}
+            <TableHandles editor={editor} />
           </div>
         </div>
       </div>

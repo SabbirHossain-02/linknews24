@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Maximize2, Play, Volume2, X } from "lucide-react";
 import { useLocale } from "@/components/providers/LocaleProvider";
-import { breakingNewsItems, breakingNewsItemsEn } from "@/lib/mock-data";
 import { API_BASE } from "@/lib/admin-api";
 import { getSocket } from "@/lib/socket";
 
@@ -12,6 +11,9 @@ export function LiveTV() {
   const { locale, t } = useLocale();
   const [open, setOpen] = useState(false);
   const [streamUrl, setStreamUrl] = useState("");
+  const [breaking, setBreaking] = useState<{ text: string; textEn: string }[]>(
+    [],
+  );
   const overlayRef = useRef<HTMLDivElement>(null);
 
   // Live stream config comes from the admin (Live TV settings) — refetched
@@ -27,15 +29,27 @@ export function LiveTV() {
         })
         .catch(() => {});
 
+    // The lower-third ticker carries the newsroom's real breaking list.
+    const refetchBreaking = () =>
+      fetch(`${API_BASE}/api/breaking`)
+        .then((r) => r.json())
+        .then((d) => setBreaking(Array.isArray(d.items) ? d.items : []))
+        .catch(() => {});
+
     refetch();
+    refetchBreaking();
     const socket = getSocket();
     socket.on("content:changed", refetch);
+    socket.on("content:changed", refetchBreaking);
     return () => {
       socket.off("content:changed", refetch);
+      socket.off("content:changed", refetchBreaking);
     };
   }, []);
 
-  const ticker = locale === "en" ? breakingNewsItemsEn : breakingNewsItems;
+  const ticker = breaking.map((i) =>
+    locale === "en" ? i.textEn || i.text : i.text,
+  );
 
   const closeLive = () => {
     setOpen(false);
@@ -155,7 +169,8 @@ export function LiveTV() {
             )}
           </div>
 
-          {/* Bottom breaking ticker — live-news feel */}
+          {/* Bottom breaking ticker — only when there is real breaking news */}
+          {ticker.length > 0 && (
           <div className="flex items-stretch bg-black">
             <div className="flex shrink-0 items-center bg-brand-crimson px-4 font-ui text-xs font-bold uppercase tracking-wider text-white">
               {t("breaking")}
@@ -173,6 +188,7 @@ export function LiveTV() {
               </div>
             </div>
           </div>
+          )}
         </div>,
           document.body,
         )}

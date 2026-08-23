@@ -15,8 +15,6 @@ declare module "@tiptap/core" {
       toggleDropCap: () => ReturnType;
       /** Named `setBlockDirection` because TipTap already owns `setTextDirection`. */
       setBlockDirection: (dir: "ltr" | "rtl" | null) => ReturnType;
-      /** Flow the block's text into 1, 2 or 3 newspaper columns. */
-      setColumns: (count: 1 | 2 | 3) => ReturnType;
       /** Break long words at line ends, the way print does. */
       toggleHyphenation: () => ReturnType;
     };
@@ -70,17 +68,6 @@ export const BlockAttributes = Extension.create({
             default: null,
             parseHTML: (element) => element.getAttribute("dir"),
             renderHTML: (attrs) => (attrs.dir ? { dir: attrs.dir } : {}),
-          },
-          columns: {
-            default: 1,
-            parseHTML: (element) =>
-              parseInt(element.style.columnCount || "1", 10) || 1,
-            renderHTML: (attrs) =>
-              (attrs.columns as number) > 1
-                ? {
-                    style: `column-count:${attrs.columns};column-gap:2em`,
-                  }
-                : {},
           },
           hyphens: {
             default: false,
@@ -137,8 +124,6 @@ export const BlockAttributes = Extension.create({
 
       setBlockDirection: (dir: "ltr" | "rtl" | null) =>
         forEachBlock(() => ({ dir })),
-
-      setColumns: (count: 1 | 2 | 3) => forEachBlock(() => ({ columns: count })),
 
       toggleHyphenation: () =>
         forEachBlock((attrs) => ({ hyphens: !attrs.hyphens })),

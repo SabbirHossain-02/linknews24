@@ -43,23 +43,23 @@ export function LayoutTab({ editor }: { editor: Editor }) {
         <BigBtn
           title="এক কলাম — স্বাভাবিক"
           label="One"
-          active={editor.isActive("paragraph", { columns: 1 })}
+          active={!editor.isActive("columnBlock")}
           icon={<Square className="h-5 w-5" />}
-          onClick={() => editor.chain().focus().setColumns(1).run()}
+          onClick={() => editor.chain().focus().setColumnCount(1).run()}
         />
         <BigBtn
-          title="দুই কলামে ভাগ করুন"
+          title="বাছাই করা লেখাটি দুই কলামে সাজান"
           label="Two"
-          active={editor.isActive("paragraph", { columns: 2 })}
+          active={editor.isActive("columnBlock", { count: 2 })}
           icon={<Columns2 className="h-5 w-5" />}
-          onClick={() => editor.chain().focus().setColumns(2).run()}
+          onClick={() => editor.chain().focus().setColumnCount(2).run()}
         />
         <BigBtn
-          title="তিন কলামে ভাগ করুন"
+          title="বাছাই করা লেখাটি তিন কলামে সাজান"
           label="Three"
-          active={editor.isActive("paragraph", { columns: 3 })}
+          active={editor.isActive("columnBlock", { count: 3 })}
           icon={<Columns3 className="h-5 w-5" />}
-          onClick={() => editor.chain().focus().setColumns(3).run()}
+          onClick={() => editor.chain().focus().setColumnCount(3).run()}
         />
       </Group>
 

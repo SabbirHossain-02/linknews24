@@ -4,7 +4,6 @@ import Link from "next/link";
 import Image from "next/image";
 import type { Article } from "@/types/content";
 import { toneGradientClass } from "@/lib/tone";
-import { getArticleBody, getRelatedArticles } from "@/lib/mock-data";
 import { localizedAuthor, localizedName } from "@/lib/i18n";
 import { useLocale } from "@/components/providers/LocaleProvider";
 import { TimeAgo } from "@/components/home/TimeAgo";
@@ -30,9 +29,9 @@ export function ArticleContent({
 }) {
   const { locale, t } = useLocale();
   const hasHtml = bodyHtmlBn !== undefined || bodyHtmlEn !== undefined;
-  const body = hasHtml ? [] : getArticleBody(article, locale);
+  const body: string[] = [];
   const bodyHtml = locale === "en" ? bodyHtmlEn ?? "" : bodyHtmlBn ?? "";
-  const related = relatedProp ?? getRelatedArticles(article);
+  const related = relatedProp ?? [];
   const categoryLabel = localizedName(article.category, locale);
   const title = locale === "en" ? article.titleEn : article.title;
 

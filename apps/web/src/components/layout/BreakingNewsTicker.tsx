@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { breakingNewsItems, breakingNewsItemsEn } from "@/lib/mock-data";
 import { API_BASE } from "@/lib/admin-api";
 import { getSocket } from "@/lib/socket";
 import { useLocale } from "@/components/providers/LocaleProvider";
@@ -34,9 +33,11 @@ export function BreakingNewsTicker() {
 
   const items = apiItems
     ? apiItems.map((i) => (locale === "en" ? i.textEn || i.text : i.text))
-    : locale === "en"
-      ? breakingNewsItemsEn
-      : breakingNewsItems;
+    : [];
+
+  // Nothing to announce means no bar at all. A ticker filled with made-up
+  // headlines would read as real breaking news.
+  if (!items.length) return null;
 
   return (
     <div className="flex items-stretch bg-brand-crimson text-white">
