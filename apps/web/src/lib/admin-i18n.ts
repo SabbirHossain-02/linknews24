@@ -69,6 +69,7 @@ export const adminDict = {
   titleBnLabel: { bn: "শিরোনাম (বাংলা)", en: "Title (Bangla)" },
   titleEnLabel: { bn: "শিরোনাম (English)", en: "Title (English)" },
   excerptBnLabel: { bn: "সারসংক্ষেপ (বাংলা)", en: "Excerpt (Bangla)" },
+  excerptEnLabel: { bn: "সারসংক্ষেপ (English)", en: "Excerpt (English)" },
   bodyBnLabel: { bn: "মূল লেখা (বাংলা)", en: "Body (Bangla)" },
   bodyEnLabel: { bn: "মূল লেখা (English)", en: "Body (English)" },
   publish: { bn: "প্রকাশ করুন", en: "Publish" },

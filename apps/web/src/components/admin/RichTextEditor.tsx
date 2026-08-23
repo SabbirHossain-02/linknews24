@@ -7,6 +7,7 @@ import { FindReplace } from "./editor/find-replace";
 import { FindReplacePanel } from "./editor/FindReplacePanel";
 import { HomeTab } from "./editor/HomeTab";
 import { Outline } from "./editor/Outline";
+import { QuickAccessToolbar } from "./editor/QuickAccessToolbar";
 import { ViewTab, type ViewState } from "./editor/ViewTab";
 
 const TABS = [
@@ -92,18 +93,21 @@ export function RichTextEditor({
           : "flex flex-col overflow-hidden rounded-lg border border-border bg-background"
       }
     >
+      {/* ---------- quick access toolbar ---------- */}
+      <QuickAccessToolbar editor={editor} onOpenFind={() => setFindOpen(true)} />
+
       {/* ---------- ribbon tabs ---------- */}
-      <div className="flex shrink-0 items-center gap-1 border-b border-border bg-surface px-2 pt-1">
+      <div className="flex shrink-0 items-center gap-0.5 border-b border-border bg-surface px-2">
         {TABS.map((t) => (
           <button
             key={t.id}
             type="button"
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => setTab(t.id)}
-            className={`rounded-t px-4 py-1.5 font-ui text-xs transition-colors ${
+            className={`relative px-4 py-2 font-ui text-xs transition-colors ${
               tab === t.id
-                ? "border border-b-0 border-border bg-background font-semibold text-brand-crimson"
-                : "text-foreground-muted hover:text-foreground"
+                ? "rounded-t border-x border-t border-border bg-background font-semibold text-brand-crimson after:absolute after:-bottom-px after:left-0 after:h-px after:w-full after:bg-background"
+                : "text-foreground-muted hover:bg-black/5 hover:text-foreground"
             }`}
           >
             {t.label}

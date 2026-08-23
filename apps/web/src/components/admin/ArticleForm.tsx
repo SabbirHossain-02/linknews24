@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ArrowLeft, Eye, Upload } from "lucide-react";
 import { apiFetch, uploadFile } from "@/lib/admin-api";
 import { RichTextEditor } from "./RichTextEditor";
+import { LanguageBar, type Lang } from "./LanguageBar";
 import { Modal } from "./Modal";
 import { useAdminAuth } from "./AdminAuthProvider";
 import { toneGradientClass } from "@/lib/tone";
@@ -75,6 +76,9 @@ export function ArticleForm({ articleId }: { articleId?: string }) {
   const [showPreview, setShowPreview] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
   const coverRef = useRef<HTMLInputElement>(null);
+  // One editor, switched between languages, instead of two stacked editors.
+  const [lang, setLang] = useState<Lang>("bn");
+  const [machineTranslated, setMachineTranslated] = useState(false);
 
   const set = <K extends keyof FormState>(key: K, val: FormState[K]) =>
     setForm((f) => ({ ...f, [key]: val }));
@@ -197,35 +201,54 @@ export function ArticleForm({ articleId }: { articleId?: string }) {
 
       <div className="mt-5 grid gap-6 lg:grid-cols-[1fr_300px]">
         <div className="flex flex-col gap-4">
+          <LanguageBar
+            lang={lang}
+            onLangChange={setLang}
+            fields={{
+              title: form.title,
+              excerpt: form.excerpt,
+              bodyHtml: form.body,
+            }}
+            machineTranslated={machineTranslated}
+            onConfirm={() => setMachineTranslated(false)}
+            onTranslated={(result) => {
+              setForm((f) => ({
+                ...f,
+                titleEn: result.title,
+                excerptEn: result.excerpt,
+                bodyEn: result.bodyHtml,
+              }));
+              setMachineTranslated(true);
+            }}
+          />
+
           <div>
             <label className="font-ui text-xs font-semibold text-foreground-muted">
-              {t("titleBnLabel")}
+              {lang === "bn" ? t("titleBnLabel") : t("titleEnLabel")}
             </label>
             <input
-              value={form.title}
-              onChange={(e) => set("title", e.target.value)}
-              placeholder={t("titlePlaceholderBn")}
+              value={lang === "bn" ? form.title : form.titleEn}
+              onChange={(e) =>
+                set(lang === "bn" ? "title" : "titleEn", e.target.value)
+              }
+              placeholder={
+                lang === "bn"
+                  ? t("titlePlaceholderBn")
+                  : t("titlePlaceholderEn")
+              }
               className={`${inputCls} mt-1 text-base font-semibold`}
             />
           </div>
+
           <div>
             <label className="font-ui text-xs font-semibold text-foreground-muted">
-              {t("titleEnLabel")}
-            </label>
-            <input
-              value={form.titleEn}
-              onChange={(e) => set("titleEn", e.target.value)}
-              placeholder={t("titlePlaceholderEn")}
-              className={`${inputCls} mt-1`}
-            />
-          </div>
-          <div>
-            <label className="font-ui text-xs font-semibold text-foreground-muted">
-              {t("excerptBnLabel")}
+              {lang === "bn" ? t("excerptBnLabel") : t("excerptEnLabel")}
             </label>
             <textarea
-              value={form.excerpt}
-              onChange={(e) => set("excerpt", e.target.value)}
+              value={lang === "bn" ? form.excerpt : form.excerptEn}
+              onChange={(e) =>
+                set(lang === "bn" ? "excerpt" : "excerptEn", e.target.value)
+              }
               rows={2}
               className={`${inputCls} mt-1 resize-none`}
             />
@@ -233,25 +256,15 @@ export function ArticleForm({ articleId }: { articleId?: string }) {
 
           <div>
             <label className="font-ui text-xs font-semibold text-foreground-muted">
-              {t("bodyBnLabel")}
+              {lang === "bn" ? t("bodyBnLabel") : t("bodyEnLabel")}
             </label>
             <div className="mt-1">
+              {/* Keyed by language so TipTap remounts with the other body —
+                  its content is only read when the editor is created. */}
               <RichTextEditor
-                value={form.body}
-                onChange={(html) => set("body", html)}
-                placeholder={t("writeHere")}
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="font-ui text-xs font-semibold text-foreground-muted">
-              {t("bodyEnLabel")}
-            </label>
-            <div className="mt-1">
-              <RichTextEditor
-                value={form.bodyEn}
-                onChange={(html) => set("bodyEn", html)}
+                key={lang}
+                value={lang === "bn" ? form.body : form.bodyEn}
+                onChange={(html) => set(lang === "bn" ? "body" : "bodyEn", html)}
                 placeholder={t("writeHere")}
               />
             </div>
