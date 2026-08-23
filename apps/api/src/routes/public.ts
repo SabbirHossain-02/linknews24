@@ -71,6 +71,37 @@ publicRouter.get("/categories", async (_req, res) => {
 
 const CAT_SELECT = { select: { name: true, nameEn: true, slug: true } };
 
+/**
+ * A category's own id plus every category nested under it.
+ *
+ * Asking for "জাতীয়" should return what is filed under জাতীয় *and* under its
+ * sub-categories — a reader opening the parent expects everything beneath it,
+ * not an empty-looking page while the stories sit one level down. Returns null
+ * when the slug matches no category.
+ */
+async function categoryIdsFor(slug: string): Promise<string[] | null> {
+  const category = await prisma.category.findUnique({
+    where: { slug },
+    select: { id: true },
+  });
+  if (!category) return null;
+
+  const children = await prisma.category.findMany({
+    where: { parentId: category.id },
+    select: { id: true },
+  });
+  return [category.id, ...children.map((c) => c.id)];
+}
+
+/** The same expansion by id, for the homepage sections. */
+async function withChildIds(categoryId: string): Promise<string[]> {
+  const children = await prisma.category.findMany({
+    where: { parentId: categoryId },
+    select: { id: true },
+  });
+  return [categoryId, ...children.map((c) => c.id)];
+}
+
 publicRouter.get("/homepage", async (_req, res) => {
   const latest = await prisma.article.findMany({
     where: { status: "PUBLISHED" },
@@ -117,8 +148,11 @@ publicRouter.get("/homepage", async (_req, res) => {
       cardCount: c.cardCount || 6,
     }));
   } else {
+    // Only top-level categories get their own row — a sub-category's stories
+    // already appear inside its parent's row, so listing it again would repeat
+    // the same articles twice on the homepage.
     const cats = await prisma.category.findMany({
-      where: { visible: true },
+      where: { visible: true, parentId: null },
       orderBy: { order: "asc" },
     });
     plan = cats.map((c) => ({ categoryId: c.id, cardCount: 6 }));
@@ -127,7 +161,11 @@ publicRouter.get("/homepage", async (_req, res) => {
   const sections = [];
   for (const p of plan) {
     const articles = await prisma.article.findMany({
-      where: { status: "PUBLISHED", categoryId: p.categoryId },
+      // A homepage row for a parent category shows its sub-categories too.
+      where: {
+        status: "PUBLISHED",
+        categoryId: { in: await withChildIds(p.categoryId) },
+      },
       // lead first, then manual order (homeRank), then newest
       orderBy: [
         { sectionLead: "desc" },
@@ -137,8 +175,15 @@ publicRouter.get("/homepage", async (_req, res) => {
       take: p.cardCount,
       include: { category: CAT_SELECT },
     });
-    if (articles.length >= 2)
-      sections.push({ category: articles[0].category, articles });
+    if (articles.length >= 2) {
+      // Label the row with the category the row is *for*, not with whichever
+      // article happens to be first — that could be a sub-category's.
+      const heading = await prisma.category.findUnique({
+        where: { id: p.categoryId },
+        ...CAT_SELECT,
+      });
+      if (heading) sections.push({ category: heading, articles });
+    }
     if (sections.length >= 14) break;
   }
 
@@ -254,7 +299,12 @@ publicRouter.get("/articles", async (req, res) => {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const where: any = { status: "PUBLISHED" };
-  if (category) where.category = { slug: category };
+  if (category) {
+    const ids = await categoryIdsFor(category);
+    if (!ids)
+      return res.json({ articles: [], total: 0, page: Number(page) || 1, limit: take });
+    where.categoryId = { in: ids };
+  }
   if (q) {
     where.OR = [
       { title: { contains: q, mode: "insensitive" } },

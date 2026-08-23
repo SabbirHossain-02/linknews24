@@ -17,6 +17,8 @@ interface Category {
   name: string;
   nameEn: string;
   slug: string;
+  /** Set on sub-categories — groups them under their parent in the picker. */
+  parentId: string | null;
 }
 
 interface FormState {
@@ -309,11 +311,32 @@ export function ArticleForm({ articleId }: { articleId?: string }) {
                 className={`${inputCls} mt-1`}
               >
                 <option value="">{t("selectOption")}</option>
-                {categories.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
+                {/* Sub-categories are grouped under their parent, so it is
+                    obvious whether you are filing under জাতীয় or under
+                    জাতীয় পশু — both stay selectable. */}
+                {categories
+                  .filter((c) => !c.parentId)
+                  .map((main) => {
+                    const subs = categories.filter(
+                      (c) => c.parentId === main.id,
+                    );
+                    if (!subs.length)
+                      return (
+                        <option key={main.id} value={main.id}>
+                          {main.name}
+                        </option>
+                      );
+                    return (
+                      <optgroup key={main.id} label={main.name}>
+                        <option value={main.id}>{main.name}</option>
+                        {subs.map((sub) => (
+                          <option key={sub.id} value={sub.id}>
+                            &nbsp;&nbsp;↳ {sub.name}
+                          </option>
+                        ))}
+                      </optgroup>
+                    );
+                  })}
               </select>
             </div>
             <div>
