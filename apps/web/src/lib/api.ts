@@ -37,6 +37,9 @@ export interface ApiCategory {
   name: string;
   nameEn: string;
   slug: string;
+  /** Set when the category is nested under another — drives nav dropdowns. */
+  parentId?: string | null;
+  order?: number;
 }
 
 export async function apiGet<T>(path: string): Promise<T | null> {

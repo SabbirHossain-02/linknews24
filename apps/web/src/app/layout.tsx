@@ -6,7 +6,7 @@ import { LocaleProvider } from "@/components/providers/LocaleProvider";
 import { AuthProvider } from "@/components/providers/AuthProvider";
 import { AdBanner } from "@/components/layout/AdBanner";
 import { SiteHeader } from "@/components/layout/SiteHeader";
-import { SiteFooter } from "@/components/layout/SiteFooter";
+import { SiteFooterSection } from "@/components/layout/SiteFooterSection";
 import { HideOnAdmin } from "@/components/layout/HideOnAdmin";
 import { RealtimeRefresh } from "@/components/providers/RealtimeRefresh";
 import { TrackView } from "@/components/providers/TrackView";
@@ -81,7 +81,7 @@ export default function RootLayout({
               </HideOnAdmin>
               {children}
               <HideOnAdmin>
-                <SiteFooter />
+                <SiteFooterSection />
               </HideOnAdmin>
             </div>
           </AuthProvider>

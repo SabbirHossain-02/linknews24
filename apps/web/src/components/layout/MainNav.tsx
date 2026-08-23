@@ -4,11 +4,10 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ChevronDown, Menu, Search, X } from "lucide-react";
-import { navItems } from "@/lib/mock-data";
-import { localizedName } from "@/lib/i18n";
+import type { NavEntry } from "@/lib/nav";
 import { useLocale } from "@/components/providers/LocaleProvider";
 
-export function MainNav() {
+export function MainNav({ items }: { items: NavEntry[] }) {
   const { locale, t } = useLocale();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [openDesktopDropdown, setOpenDesktopDropdown] = useState<
@@ -18,7 +17,7 @@ export function MainNav() {
     new Set(),
   );
 
-  const navLabel = (item: (typeof navItems)[number]) =>
+  const navLabel = (item: { label: string; labelEn: string }) =>
     locale === "en" ? item.labelEn : item.label;
 
   const toggleMobileDropdown = (label: string) => {
@@ -66,12 +65,12 @@ export function MainNav() {
 
       <div className="relative hidden border-t border-border md:block">
         <ul className="mx-auto flex max-w-[1600px] items-center gap-x-6 overflow-x-auto px-6 py-2.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {navItems.map((item) => (
+          {items.map((item) => (
             <li
-              key={item.label}
+              key={item.key}
               className="shrink-0"
               onMouseEnter={() =>
-                item.children && setOpenDesktopDropdown(item.label)
+                item.children && setOpenDesktopDropdown(item.key)
               }
             >
               {item.children ? (
@@ -79,10 +78,10 @@ export function MainNav() {
                   className="flex items-center gap-1 font-medium text-sm text-foreground/80 transition-colors hover:text-brand-crimson"
                   onClick={() =>
                     setOpenDesktopDropdown((current) =>
-                      current === item.label ? null : item.label,
+                      current === item.key ? null : item.key,
                     )
                   }
-                  aria-expanded={openDesktopDropdown === item.label}
+                  aria-expanded={openDesktopDropdown === item.key}
                 >
                   {navLabel(item)}
                   <ChevronDown className="h-3.5 w-3.5" />
@@ -96,17 +95,17 @@ export function MainNav() {
                 </Link>
               )}
 
-              {item.children && openDesktopDropdown === item.label && (
+              {item.children && openDesktopDropdown === item.key && (
                 <div className="absolute left-0 right-0 top-full border-t border-border bg-background shadow-md">
                   <ul className="mx-auto flex max-w-[1600px] flex-wrap gap-x-8 gap-y-2 px-6 py-4">
                     {item.children.map((child) => (
-                      <li key={child.id}>
+                      <li key={child.key}>
                         <Link
-                          href={`/${child.slug}`}
+                          href={child.href}
                           onClick={() => setOpenDesktopDropdown(null)}
                           className="font-medium text-sm text-foreground/80 transition-colors hover:text-brand-crimson"
                         >
-                          {localizedName(child, locale)}
+                          {navLabel(child)}
                         </Link>
                       </li>
                     ))}
@@ -122,32 +121,32 @@ export function MainNav() {
         className={`${mobileOpen ? "block" : "hidden"} border-t border-border md:hidden`}
       >
         <ul className="mx-auto flex max-w-[1600px] flex-col gap-1 px-6 py-3">
-          {navItems.map((item) => (
-            <li key={item.label}>
+          {items.map((item) => (
+            <li key={item.key}>
               {item.children ? (
                 <>
                   <button
-                    onClick={() => toggleMobileDropdown(item.label)}
+                    onClick={() => toggleMobileDropdown(item.key)}
                     className="flex w-full items-center justify-between py-1.5 font-medium text-sm text-foreground/80"
-                    aria-expanded={openMobileDropdowns.has(item.label)}
+                    aria-expanded={openMobileDropdowns.has(item.key)}
                   >
                     {navLabel(item)}
                     <ChevronDown
                       className={`h-4 w-4 transition-transform ${
-                        openMobileDropdowns.has(item.label) ? "rotate-180" : ""
+                        openMobileDropdowns.has(item.key) ? "rotate-180" : ""
                       }`}
                     />
                   </button>
-                  {openMobileDropdowns.has(item.label) && (
+                  {openMobileDropdowns.has(item.key) && (
                     <ul className="flex flex-col gap-1 border-l border-border pb-1 pl-4">
                       {item.children.map((child) => (
-                        <li key={child.id}>
+                        <li key={child.key}>
                           <Link
-                            href={`/${child.slug}`}
+                            href={child.href}
                             onClick={() => setMobileOpen(false)}
                             className="block py-1.5 font-medium text-sm text-foreground/70 transition-colors hover:text-brand-crimson"
                           >
-                            {localizedName(child, locale)}
+                            {navLabel(child)}
                           </Link>
                         </li>
                       ))}

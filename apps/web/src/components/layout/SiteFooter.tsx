@@ -3,11 +3,9 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowUp, Mail, MapPin, Phone } from "lucide-react";
-import { categories } from "@/lib/mock-data";
-import { localizedName } from "@/lib/i18n";
 import { API_BASE } from "@/lib/admin-api";
 import { useLocale } from "@/components/providers/LocaleProvider";
-import type { Category } from "@/types/content";
+import type { NavChild } from "@/lib/nav";
 import { FacebookIcon, XIcon, YoutubeIcon } from "@/components/icons/SocialIcons";
 import { NewsletterForm } from "./NewsletterForm";
 import { AdSlot } from "@/components/ads/AdSlot";
@@ -24,28 +22,7 @@ interface SiteConfig {
   editor?: string;
 }
 
-// Only the main news categories in the footer (not the 64 districts or
-// blood groups from the directory nav dropdowns).
-const FOOTER_CATEGORY_SLUGS = [
-  "national",
-  "politics",
-  "world",
-  "business",
-  "sports",
-  "entertainment",
-  "technology",
-  "nationwide",
-  "opinion",
-  "features",
-  "crime",
-  "jobs",
-];
-
-const footerCategories: Category[] = FOOTER_CATEGORY_SLUGS.map((slug) =>
-  categories.find((c) => c.slug === slug),
-).filter((c): c is Category => Boolean(c));
-
-export function SiteFooter() {
+export function SiteFooter({ categories }: { categories: NavChild[] }) {
   const { locale, t } = useLocale();
   const [cfg, setCfg] = useState<SiteConfig>({});
 
@@ -114,10 +91,10 @@ export function SiteFooter() {
             {t("footerCategories")}
           </h3>
           <ul className="mt-3 grid grid-cols-2 gap-2 font-ui text-sm">
-            {footerCategories.map((cat) => (
-              <li key={cat.id}>
-                <Link href={`/${cat.slug}`} className="hover:text-brand-crimson">
-                  {localizedName(cat, locale)}
+            {categories.map((cat) => (
+              <li key={cat.key}>
+                <Link href={cat.href} className="hover:text-brand-crimson">
+                  {locale === "en" ? cat.labelEn : cat.label}
                 </Link>
               </li>
             ))}
