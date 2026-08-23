@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import {
+  Building2,
   Droplet,
   FileText,
   FolderTree,
@@ -24,6 +25,8 @@ import {
   Users,
 } from "lucide-react";
 import { useAdminAuth } from "./AdminAuthProvider";
+import { apiFetch } from "@/lib/admin-api";
+import { getSocket } from "@/lib/socket";
 import { useLocale } from "@/components/providers/LocaleProvider";
 import { useAdminT, type AdminKey } from "@/lib/admin-i18n";
 
@@ -44,12 +47,55 @@ const NAV: NavItem[] = [
   { key: "epaper", href: "/admin/epaper", icon: FileText },
   { key: "lawyers", href: "/admin/lawyers", icon: Scale },
   { key: "donors", href: "/admin/donors", icon: Droplet },
+  { key: "hospitals", href: "/admin/hospitals", icon: Building2 },
   { key: "newsletter", href: "/admin/newsletter", icon: Mail },
   { key: "ads", href: "/admin/ads", icon: Megaphone },
   { key: "comments", href: "/admin/comments", icon: MessageSquare },
   { key: "settings", href: "/admin/settings", icon: Settings },
   { key: "usersRoles", href: "/admin/users", icon: Users },
 ];
+
+/**
+ * Reader submissions waiting on each section, keyed by the nav entry they
+ * belong to, so the sidebar can show a count without every page fetching it.
+ *
+ * Refreshed on the API's realtime `content:changed` signal — a submission made
+ * while an editor is looking at the panel shows up without a reload — and on a
+ * slow poll as a backstop for a dropped socket.
+ */
+function usePendingCounts(): Partial<Record<AdminKey, number>> {
+  const [counts, setCounts] = useState<Partial<Record<AdminKey, number>>>({});
+
+  useEffect(() => {
+    const load = () =>
+      apiFetch<{
+        lawyers: number;
+        donors: number;
+        hospitals: number;
+        comments: number;
+      }>("/api/admin/pending-counts")
+        .then((d) =>
+          setCounts({
+            lawyers: d.lawyers,
+            donors: d.donors,
+            hospitals: d.hospitals,
+            comments: d.comments,
+          }),
+        )
+        .catch(() => {});
+
+    load();
+    const socket = getSocket();
+    socket.on("content:changed", load);
+    const timer = setInterval(load, 60_000);
+    return () => {
+      socket.off("content:changed", load);
+      clearInterval(timer);
+    };
+  }, []);
+
+  return counts;
+}
 
 const FONT_KEY = "linknews24-font-scale";
 
@@ -94,6 +140,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const pending = usePendingCounts();
 
   const handleLogout = async () => {
     await logout();
@@ -126,6 +173,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         <nav className="flex-1 overflow-y-auto px-3 py-4">
           {NAV.map(({ key, href, icon: Icon }) => {
             const active = href && pathname === href;
+            const waiting = pending[key] ?? 0;
             const cls =
               "flex items-center gap-3 rounded-lg px-3 py-2.5 font-ui text-sm transition-colors";
             if (!href) {
@@ -145,7 +193,18 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                 className={`${cls} ${active ? "bg-brand-crimson text-white" : "text-white/80 hover:bg-white/10"}`}
               >
                 <Icon className="h-4 w-4 shrink-0" />
-                {t(key)}
+                <span className="flex-1">{t(key)}</span>
+                {/* How many reader submissions are waiting on this section. */}
+                {waiting > 0 && (
+                  <span
+                    title={`${waiting}টি অনুমোদনের অপেক্ষায়`}
+                    className={`min-w-[20px] rounded-full px-1.5 py-0.5 text-center font-ui text-[10px] font-bold ${
+                      active ? "bg-white text-brand-crimson" : "bg-brand-crimson text-white"
+                    }`}
+                  >
+                    {waiting}
+                  </span>
+                )}
               </Link>
             );
           })}

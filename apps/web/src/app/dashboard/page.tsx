@@ -3,10 +3,13 @@
 import { useState } from "react";
 import {
   Bookmark,
+  Building2,
   Clock,
+  Droplet,
   Hash,
   LayoutDashboard,
   Megaphone,
+  Scale,
   Settings,
 } from "lucide-react";
 import { useAuth } from "@/components/providers/AuthProvider";
@@ -22,12 +25,32 @@ import { HistoryList } from "@/components/dashboard/HistoryList";
 import { PreferencesPanel } from "@/components/dashboard/PreferencesPanel";
 import { AccountSettings } from "@/components/dashboard/AccountSettings";
 import { AdvertisePanel } from "@/components/dashboard/AdvertisePanel";
+import { ServicePanel } from "@/components/dashboard/ServiceForms";
 
-type TabKey = "overview" | "advertise" | "saved" | "history" | "following" | "settings";
+type TabKey =
+  | "overview"
+  | "advertise"
+  | "lawyer"
+  | "donor"
+  | "hospital"
+  | "saved"
+  | "history"
+  | "following"
+  | "settings";
 
-const TABS: { key: TabKey; label: TranslationKey; icon: typeof Bookmark }[] = [
+// The three service tabs carry plain labels rather than i18n keys — they are
+// new sections and the dictionary has no entries for them yet.
+const TABS: {
+  key: TabKey;
+  label?: TranslationKey;
+  text?: string;
+  icon: typeof Bookmark;
+}[] = [
   { key: "overview", label: "overview", icon: LayoutDashboard },
   { key: "advertise", label: "advertise", icon: Megaphone },
+  { key: "lawyer", text: "আইন সেবা", icon: Scale },
+  { key: "donor", text: "রক্ত সেবা", icon: Droplet },
+  { key: "hospital", text: "হাসপাতাল সেবা", icon: Building2 },
   { key: "saved", label: "savedNews", icon: Bookmark },
   { key: "history", label: "readingHistory", icon: Clock },
   { key: "following", label: "followingTab", icon: Hash },
@@ -67,7 +90,7 @@ export default function DashboardPage() {
       <div className="mt-6 flex flex-col gap-6 lg:grid lg:grid-cols-[220px_1fr] lg:items-start lg:gap-8">
         {/* Side nav */}
         <nav className="flex gap-2 overflow-x-auto lg:sticky lg:top-[190px] lg:flex-col lg:overflow-visible">
-          {TABS.map(({ key, label, icon: Icon }) => (
+          {TABS.map(({ key, label, text, icon: Icon }) => (
             <button
               key={key}
               onClick={() => setTab(key)}
@@ -78,7 +101,7 @@ export default function DashboardPage() {
               }`}
             >
               <Icon className="h-4 w-4 shrink-0" />
-              {t(label)}
+              {text ?? t(label!)}
             </button>
           ))}
         </nav>
@@ -93,6 +116,9 @@ export default function DashboardPage() {
             </>
           )}
           {tab === "advertise" && <AdvertisePanel />}
+          {tab === "lawyer" && <ServicePanel service="lawyer" />}
+          {tab === "donor" && <ServicePanel service="donor" />}
+          {tab === "hospital" && <ServicePanel service="hospital" />}
           {tab === "saved" && <SavedArticlesList />}
           {tab === "history" && <HistoryList />}
           {tab === "following" && <FollowedTopics />}

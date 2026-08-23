@@ -32,8 +32,9 @@ const MAX_TOP_LEVEL = 12;
 const DIRECTORY_ENTRIES: NavEntry[] = [
   {
     key: "lawyers",
-    label: "আইনজীবী",
-    labelEn: "Lawyers",
+    label: "আইন সেবা",
+    labelEn: "Legal Service",
+    href: "/lawyers",
     children: districts.map((d) => ({
       key: `lawyers-${d.slug}`,
       label: d.name,
@@ -43,14 +44,21 @@ const DIRECTORY_ENTRIES: NavEntry[] = [
   },
   {
     key: "blood",
-    label: "রক্তের গ্রুপ",
-    labelEn: "Blood Group",
+    label: "রক্ত সেবা",
+    labelEn: "Blood Service",
+    href: "/blood",
     children: bloodGroups.map((g) => ({
       key: `blood-${g.slug}`,
       label: g.label,
       labelEn: g.label,
       href: `/blood/${g.slug}`,
     })),
+  },
+  {
+    key: "hospitals",
+    label: "হাসপাতাল সেবা",
+    labelEn: "Hospital Service",
+    href: "/hospitals",
   },
 ];
 

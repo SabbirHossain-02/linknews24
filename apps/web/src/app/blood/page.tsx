@@ -1,38 +1,31 @@
-"use client";
+import type { Metadata } from "next";
+import { DonorFeed } from "@/components/directory/DonorFeed";
 
-import Link from "next/link";
-import { Droplet } from "lucide-react";
-import { bloodGroups } from "@/lib/directory-data";
-import { useLocale } from "@/components/providers/LocaleProvider";
+export const metadata: Metadata = {
+  title: "রক্ত সেবা",
+  description:
+    "রক্তদাতাদের তালিকা — রক্তের গ্রুপ ও জেলা অনুযায়ী খুঁজুন, সরাসরি ফোন করুন।",
+};
 
+/**
+ * Blood service.
+ *
+ * Was a grid of eight group buttons that made you pick before seeing anyone.
+ * It now opens straight onto the donor feed with group and district as filters,
+ * because someone landing here usually needs a donor now, not a menu.
+ */
 export default function BloodPage() {
-  const { t } = useLocale();
-
   return (
-    <main className="mx-auto w-full max-w-4xl flex-1 px-6 py-8">
-      <h1 className="text-2xl font-bold text-heading sm:text-3xl">
-        {t("bloodTitle")}
-      </h1>
-      <p className="mt-1 font-ui text-sm text-foreground-muted">
-        {t("bloodSubtitle")}
+    <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-8">
+      <h1 className="text-2xl font-bold text-heading sm:text-3xl">রক্ত সেবা</h1>
+      <p className="mt-2 max-w-2xl font-ui text-sm text-foreground-muted">
+        স্বেচ্ছায় রক্তদানে আগ্রহী মানুষের তালিকা। রক্তের গ্রুপ ও জেলা বেছে নিয়ে
+        খুঁজুন, তারপর সরাসরি ফোন করুন। নিজে রক্তদাতা হিসেবে নাম লেখাতে চাইলে
+        ড্যাশবোর্ডের “রক্ত সেবা” থেকে তথ্য জমা দিন।
       </p>
 
-      <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
-        {bloodGroups.map((g) => (
-          <Link
-            key={g.slug}
-            href={`/blood/${g.slug}`}
-            className="group flex flex-col items-center gap-2 rounded-xl border border-border bg-background p-6 shadow-sm transition-colors hover:border-brand-crimson"
-          >
-            <Droplet
-              className="h-6 w-6 text-brand-crimson"
-              fill="currentColor"
-            />
-            <span className="text-3xl font-bold text-heading transition-colors group-hover:text-brand-crimson">
-              {g.label}
-            </span>
-          </Link>
-        ))}
+      <div className="mt-6">
+        <DonorFeed />
       </div>
     </main>
   );
