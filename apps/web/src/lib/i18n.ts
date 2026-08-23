@@ -242,6 +242,18 @@ export const translations = {
   },
   downloadPdf: { bn: "ডাউনলোড PDF", en: "Download PDF" },
   viewsSuffix: { bn: "বার পঠিত", en: "views" },
+  mute: { bn: "সাউন্ড বন্ধ", en: "Mute" },
+  unmute: { bn: "সাউন্ড চালু", en: "Unmute" },
+  mostRead: { bn: "সর্বাধিক পঠিত", en: "Most Read" },
+  latestRead: { bn: "আপনি সর্বশেষ যা পড়েছেন", en: "Recently Read" },
+  mostReadEmpty: {
+    bn: "এখনও কোনো খবর পড়া হয়নি।",
+    en: "No article has been read yet.",
+  },
+  latestReadEmpty: {
+    bn: "আপনি এখনও কোনো খবর পড়েননি। কোনো খবরে ক্লিক করলে সেটি এখানে জমা হবে।",
+    en: "You haven't read anything yet. Open an article and it will show up here.",
+  },
   noResultsFound: {
     bn: "কোনো সংবাদ পাওয়া যায়নি। ভিন্ন কীওয়ার্ড দিয়ে আবার চেষ্টা করুন।",
     en: "No news found. Try a different keyword.",

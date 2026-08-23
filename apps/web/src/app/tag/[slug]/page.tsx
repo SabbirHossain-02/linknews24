@@ -36,7 +36,7 @@ export default async function TagPage({
     <main className="mx-auto grid w-full max-w-[1600px] flex-1 gap-10 px-6 py-8 lg:grid-cols-[1fr_300px]">
       <TagListing tag={data.tag} items={items} />
       <div className="hidden lg:block">
-        <ReadingSidebar mostRead={sidebar.mostRead} latestRead={sidebar.latest} />
+        <ReadingSidebar mostRead={sidebar.mostRead} />
       </div>
     </main>
   );

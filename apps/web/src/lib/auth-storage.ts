@@ -19,6 +19,8 @@ export interface BookmarkedArticle {
 export interface HistoryEntry {
   slug: string;
   title: string;
+  /** Optional: entries stored before the English view existed will not have it. */
+  titleEn?: string;
   categoryName: string;
   categorySlug: string;
   viewedAt: string;

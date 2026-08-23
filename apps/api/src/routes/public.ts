@@ -378,16 +378,50 @@ publicRouter.get("/livetv", async (_req, res) => {
   res.json({ live });
 });
 
+/**
+ * The ticker carries both kinds of breaking news the newsroom can raise: the
+ * free-text lines typed on the Breaking News page, and any published article
+ * whose "breaking" switch is on. Flipping that switch used to change nothing
+ * outside the article card, which is why the ticker looked broken.
+ */
 publicRouter.get("/breaking", async (_req, res) => {
-  const items = await prisma.breakingItem.findMany({
-    where: { active: true },
-    orderBy: { order: "asc" },
+  const now = new Date();
+  const [manual, articles] = await Promise.all([
+    prisma.breakingItem.findMany({
+      where: {
+        active: true,
+        OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
+      },
+      orderBy: { order: "asc" },
+    }),
+    prisma.article.findMany({
+      where: { status: "PUBLISHED", isBreaking: true },
+      orderBy: { publishedAt: "desc" },
+      take: 10,
+      select: { id: true, title: true, titleEn: true, slug: true },
+    }),
+  ]);
+
+  res.json({
+    items: [
+      ...manual.map((i) => ({
+        id: i.id,
+        text: i.text,
+        textEn: i.textEn,
+        href: null as string | null,
+      })),
+      ...articles.map((a) => ({
+        id: a.id,
+        text: a.title,
+        textEn: a.titleEn,
+        href: `/${a.slug}`,
+      })),
+    ],
   });
-  res.json({ items });
 });
 
 publicRouter.get("/articles", async (req, res) => {
-  const { category, q, from, to, page = "1", limit = "12" } =
+  const { category, q, from, to, sort, page = "1", limit = "12" } =
     req.query as Record<string, string>;
   const take = Math.min(Number(limit) || 12, 50);
   const skip = (Math.max(Number(page) || 1, 1) - 1) * take;
@@ -420,7 +454,11 @@ publicRouter.get("/articles", async (req, res) => {
     prisma.article.findMany({
       where,
       include: { category: { select: { name: true, nameEn: true, slug: true } } },
-      orderBy: { publishedAt: "desc" },
+      // "views" powers Most Read; anything else is newest first.
+      orderBy:
+        sort === "views"
+          ? [{ viewCount: "desc" }, { publishedAt: "desc" }]
+          : { publishedAt: "desc" },
       skip,
       take,
     }),

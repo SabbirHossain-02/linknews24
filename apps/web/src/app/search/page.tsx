@@ -39,7 +39,7 @@ export default async function SearchPage({
       />
 
       <div className="hidden lg:block">
-        <ReadingSidebar mostRead={sidebar.mostRead} latestRead={sidebar.latest} />
+        <ReadingSidebar mostRead={sidebar.mostRead} />
       </div>
     </main>
   );

@@ -2,19 +2,31 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Maximize2, Play, Volume2, X } from "lucide-react";
+import { Maximize2, Play, Volume2, VolumeX, X } from "lucide-react";
 import { useLocale } from "@/components/providers/LocaleProvider";
 import { API_BASE } from "@/lib/admin-api";
 import { getSocket } from "@/lib/socket";
+import { liveEmbedUrl, youtubeCommand } from "@/lib/stream";
 
 export function LiveTV() {
   const { locale, t } = useLocale();
   const [open, setOpen] = useState(false);
   const [streamUrl, setStreamUrl] = useState("");
-  const [breaking, setBreaking] = useState<{ text: string; textEn: string }[]>(
-    [],
-  );
+  const [breaking, setBreaking] = useState<
+    { text: string; textEn: string }[]
+  >([]);
+  const [muted, setMuted] = useState(true);
   const overlayRef = useRef<HTMLDivElement>(null);
+  const cardFrame = useRef<HTMLIFrameElement>(null);
+
+  // The player URL is built once per stream. Rebuilding it on unmute would
+  // reload the iframe and start the video over.
+  const embedUrl = streamUrl ? liveEmbedUrl(streamUrl) : null;
+
+  const toggleSound = () => {
+    youtubeCommand(cardFrame.current, muted ? "unMute" : "mute");
+    setMuted((m) => !m);
+  };
 
   // Live stream config comes from the admin (Live TV settings) — refetched
   // live when the admin changes it.
@@ -98,21 +110,60 @@ export function LiveTV() {
           </span>
         </div>
 
-        {/* 16:9 screen — click to go fullscreen */}
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          aria-label={t("watchLive")}
-          className="group relative block aspect-video w-full bg-black"
-        >
-          <TvScreen t={t} variant="card" />
-          {/* Play button */}
-          <span className="absolute inset-0 grid place-items-center">
-            <span className="grid h-14 w-14 place-items-center rounded-full bg-white/10 ring-1 ring-white/30 backdrop-blur-sm transition group-hover:scale-105 group-hover:bg-white/20">
-              <Play className="ml-0.5 h-6 w-6 fill-white text-white" />
+        {/* 16:9 screen. With a stream set it plays by itself — silent and on
+            a loop, the way a TV in the corner of a room does. Without one it
+            stays a poster you can click to open the full-screen view. */}
+        {embedUrl ? (
+          <div className="relative aspect-video w-full bg-black">
+            <iframe
+              ref={cardFrame}
+              src={embedUrl}
+              title={t("liveTv")}
+              allow="autoplay; encrypted-media; picture-in-picture"
+              className="absolute inset-0 h-full w-full"
+            />
+            {/* Sound and full screen sit above the player; the rest of the
+                picture is left alone so the video keeps playing. */}
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-end gap-1.5 bg-gradient-to-t from-black/70 to-transparent p-2">
+              <button
+                type="button"
+                onClick={toggleSound}
+                aria-label={muted ? t("unmute") : t("mute")}
+                title={muted ? t("unmute") : t("mute")}
+                className="pointer-events-auto grid h-8 w-8 place-items-center rounded-full bg-white/15 text-white transition hover:bg-white/25"
+              >
+                {muted ? (
+                  <VolumeX className="h-4 w-4" />
+                ) : (
+                  <Volume2 className="h-4 w-4" />
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => setOpen(true)}
+                aria-label={t("watchLive")}
+                title={t("watchLive")}
+                className="pointer-events-auto grid h-8 w-8 place-items-center rounded-full bg-white/15 text-white transition hover:bg-white/25"
+              >
+                <Maximize2 className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setOpen(true)}
+            aria-label={t("watchLive")}
+            className="group relative block aspect-video w-full bg-black"
+          >
+            <TvScreen t={t} variant="card" />
+            <span className="absolute inset-0 grid place-items-center">
+              <span className="grid h-14 w-14 place-items-center rounded-full bg-white/10 ring-1 ring-white/30 backdrop-blur-sm transition group-hover:scale-105 group-hover:bg-white/20">
+                <Play className="ml-0.5 h-6 w-6 fill-white text-white" />
+              </span>
             </span>
-          </span>
-        </button>
+          </button>
+        )}
       </section>
 
       {/* Fullscreen live-news overlay — portalled to <body> so it escapes the
@@ -154,9 +205,9 @@ export function LiveTV() {
 
           {/* Screen */}
           <div className="relative flex min-h-0 flex-1 items-center justify-center">
-            {streamUrl ? (
+            {embedUrl ? (
               <iframe
-                src={streamUrl}
+                src={`${embedUrl}&controls=1&mute=0`}
                 title={t("liveTv")}
                 allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
                 allowFullScreen

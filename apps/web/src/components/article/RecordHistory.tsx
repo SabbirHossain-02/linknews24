@@ -10,6 +10,7 @@ export function RecordHistory({ article }: { article: Article }) {
     recordHistory({
       slug: article.slug,
       title: article.title,
+      titleEn: article.titleEn,
       categoryName: article.category.name,
       categorySlug: article.category.slug,
     });
@@ -22,7 +23,13 @@ export function RecordHistory({ article }: { article: Article }) {
         method: "POST",
       }).catch(() => {});
     }
-  }, [article.slug, article.title, article.category.name, article.category.slug]);
+  }, [
+    article.slug,
+    article.title,
+    article.titleEn,
+    article.category.name,
+    article.category.slug,
+  ]);
 
   return null;
 }

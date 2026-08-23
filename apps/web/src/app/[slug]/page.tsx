@@ -82,7 +82,7 @@ export default async function SlugPage({
           tags={apiArticle.tags ?? []}
         />
         <div className="hidden lg:block print:hidden">
-          <ReadingSidebar mostRead={sidebar.mostRead} latestRead={sidebar.latest} />
+          <ReadingSidebar mostRead={sidebar.mostRead} />
         </div>
       </main>
     );
@@ -120,7 +120,7 @@ export default async function SlugPage({
           totalPages={totalPages}
         />
         <div className="hidden lg:block">
-          <ReadingSidebar mostRead={sidebar.mostRead} latestRead={sidebar.latest} />
+          <ReadingSidebar mostRead={sidebar.mostRead} />
         </div>
       </main>
     );

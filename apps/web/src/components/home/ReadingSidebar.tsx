@@ -1,18 +1,16 @@
 "use client";
 
-import { Clock, Flame } from "lucide-react";
+import { Flame } from "lucide-react";
 import type { Article } from "@/types/content";
+import { useLocale } from "@/components/providers/LocaleProvider";
 import { RankedArticleList } from "./RankedArticleList";
+import { RecentlyRead } from "./RecentlyRead";
 import { LiveTV } from "./LiveTV";
 import { AdSlot } from "@/components/ads/AdSlot";
 
-export function ReadingSidebar({
-  mostRead,
-  latestRead,
-}: {
-  mostRead: Article[];
-  latestRead: Article[];
-}) {
+export function ReadingSidebar({ mostRead }: { mostRead: Article[] }) {
+  const { t } = useLocale();
+
   return (
     <div className="sticky top-[190px] flex max-h-[calc(100vh-190px-2rem)] flex-col gap-4">
       <LiveTV />
@@ -22,15 +20,31 @@ export function ReadingSidebar({
         <div className="min-h-0 flex-1 overflow-y-auto">
           <div className="flex flex-col divide-y divide-border p-5">
             <div className="pb-6">
-              <RankedArticleList
-                title="Most Read"
-                icon={Flame}
-                articles={mostRead}
-                showViewCount
-              />
+              {mostRead.length === 0 ? (
+                <>
+                  <div className="flex items-center gap-2.5">
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-crimson/10 text-brand-crimson">
+                      <Flame className="h-4 w-4" />
+                    </span>
+                    <h2 className="font-ui text-sm font-bold uppercase tracking-wider text-heading">
+                      {t("mostRead")}
+                    </h2>
+                  </div>
+                  <p className="mt-3 font-ui text-[12.5px] leading-relaxed text-foreground-muted">
+                    {t("mostReadEmpty")}
+                  </p>
+                </>
+              ) : (
+                <RankedArticleList
+                  title={t("mostRead")}
+                  icon={Flame}
+                  articles={mostRead}
+                  showViewCount
+                />
+              )}
             </div>
             <div className="pt-6">
-              <RankedArticleList title="Latest Read" icon={Clock} articles={latestRead} />
+              <RecentlyRead />
             </div>
           </div>
         </div>

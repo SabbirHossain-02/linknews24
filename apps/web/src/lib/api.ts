@@ -96,6 +96,8 @@ export async function getArticles(
     q?: string;
     from?: string;
     to?: string;
+    /** "views" for Most Read; omitted means newest first. */
+    sort?: "views";
   } = {},
 ): Promise<{ articles: ApiArticle[]; total: number }> {
   const q = new URLSearchParams();
@@ -105,6 +107,7 @@ export async function getArticles(
   if (params.q) q.set("q", params.q);
   if (params.from) q.set("from", params.from);
   if (params.to) q.set("to", params.to);
+  if (params.sort) q.set("sort", params.sort);
   const data = await apiGet<{ articles: ApiArticle[]; total: number }>(
     `/api/articles?${q.toString()}`,
   );
@@ -178,15 +181,13 @@ export async function getDonors(group: string): Promise<ApiDonor[]> {
   return d?.donors ?? [];
 }
 
-// Sidebar: most-read (by views) and latest, derived from recent articles.
-export async function getSidebar(): Promise<{
-  mostRead: Article[];
-  latest: Article[];
-}> {
-  const { articles } = await getArticles({ limit: 12 });
-  const mapped = articles.map(toArticle);
-  const mostRead = [...mapped]
-    .sort((a, b) => (b.viewCount ?? 0) - (a.viewCount ?? 0))
-    .slice(0, 5);
-  return { mostRead, latest: mapped.slice(0, 5) };
+/**
+  * Sidebar: the genuinely most-read articles, ranked by the view counter the
+  * article page increments. Sorting happens in the database over everything
+  * published — ranking only the newest dozen made a story that nobody opened
+  * "most read" simply because it was recent.
+  */
+export async function getSidebar(): Promise<{ mostRead: Article[] }> {
+  const { articles } = await getArticles({ limit: 5, sort: "views" });
+  return { mostRead: articles.map(toArticle).filter((a) => (a.viewCount ?? 0) > 0) };
 }

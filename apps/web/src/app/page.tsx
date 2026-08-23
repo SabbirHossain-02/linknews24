@@ -58,7 +58,7 @@ export default async function Home() {
       </div>
 
       <div className="hidden lg:block">
-        <ReadingSidebar mostRead={sidebar.mostRead} latestRead={sidebar.latest} />
+        <ReadingSidebar mostRead={sidebar.mostRead} />
       </div>
     </main>
   );
