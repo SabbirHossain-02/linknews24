@@ -389,6 +389,12 @@ model Account {
   city      String?
   createdAt DateTime @default(now())
   ads       Ad[]
+
+  // Directory listings this reader submitted, each awaiting admin approval.
+  lawyerListings   Lawyer[]
+  donorListings    BloodDonor[]
+  hospitalListings Hospital[]
+  donorLikes       DonorLike[]
 }
 
 // --- Advertising ---
