@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useLocale } from "@/components/providers/LocaleProvider";
 
 export function Pagination({
   basePath,
@@ -10,6 +13,7 @@ export function Pagination({
   currentPage: number;
   totalPages: number;
 }) {
+  const { t } = useLocale();
   if (totalPages <= 1) return null;
 
   const pageHref = (page: number) =>
@@ -19,7 +23,7 @@ export function Pagination({
 
   return (
     <nav
-      aria-label="পেজিনেশন"
+      aria-label={t("paginationLabel")}
       className="flex items-center justify-center gap-2 pt-4"
     >
       <Link

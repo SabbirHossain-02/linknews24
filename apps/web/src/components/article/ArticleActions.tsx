@@ -308,7 +308,7 @@ export function ArticleActions({
         aria-label={t("fontSize")}
         className={`${outlineBtn} text-sm`}
       >
-        অ+
+        {t("fontBigGlyph")}
       </button>
       <button
         type="button"
@@ -317,7 +317,7 @@ export function ArticleActions({
         aria-label={t("fontSize")}
         className={`${outlineBtn} text-xs`}
       >
-        অ−
+        {t("fontSmallGlyph")}
       </button>
       <button
         type="button"

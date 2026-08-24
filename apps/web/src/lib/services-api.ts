@@ -84,17 +84,20 @@ export interface HospitalListing {
 export type ListingStatus = "PENDING" | "APPROVED" | "REJECTED";
 export type HospitalType = "GOVERNMENT" | "PRIVATE" | "SPECIALIZED" | "NGO";
 
-export const HOSPITAL_TYPES: { value: HospitalType; label: string }[] = [
-  { value: "GOVERNMENT", label: "সরকারি" },
-  { value: "PRIVATE", label: "বেসরকারি" },
-  { value: "SPECIALIZED", label: "বিশেষায়িত" },
-  { value: "NGO", label: "এনজিও" },
+import type { TranslationKey } from "./i18n";
+
+/** Each option names its translation key rather than carrying one language. */
+export const HOSPITAL_TYPES: { value: HospitalType; label: TranslationKey }[] = [
+  { value: "GOVERNMENT", label: "hospGovernment" },
+  { value: "PRIVATE", label: "hospPrivate" },
+  { value: "SPECIALIZED", label: "hospSpecialized" },
+  { value: "NGO", label: "hospNgo" },
 ];
 
-export const STATUS_LABEL: Record<ListingStatus, string> = {
-  PENDING: "অনুমোদনের অপেক্ষায়",
-  APPROVED: "প্রকাশিত",
-  REJECTED: "ফেরত পাঠানো হয়েছে",
+export const STATUS_LABEL: Record<ListingStatus, TranslationKey> = {
+  PENDING: "listingPending",
+  APPROVED: "listingApproved",
+  REJECTED: "listingRejected",
 };
 
 async function call<T>(path: string, init: RequestInit = {}): Promise<T> {
@@ -105,7 +108,7 @@ async function call<T>(path: string, init: RequestInit = {}): Promise<T> {
   });
   const data = await res.json().catch(() => null);
   if (!res.ok)
-    throw new Error((data && (data as { error?: string }).error) || "ব্যর্থ হয়েছে");
+    throw new Error((data && (data as { error?: string }).error) || "Request failed");
   return data as T;
 }
 

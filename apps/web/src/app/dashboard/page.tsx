@@ -48,9 +48,9 @@ const TABS: {
 }[] = [
   { key: "overview", label: "overview", icon: LayoutDashboard },
   { key: "advertise", label: "advertise", icon: Megaphone },
-  { key: "lawyer", text: "আইন সেবা", icon: Scale },
-  { key: "donor", text: "রক্ত সেবা", icon: Droplet },
-  { key: "hospital", text: "হাসপাতাল সেবা", icon: Building2 },
+  { key: "lawyer", label: "svcLegal", icon: Scale },
+  { key: "donor", label: "svcBlood", icon: Droplet },
+  { key: "hospital", label: "svcHospital", icon: Building2 },
   { key: "saved", label: "savedNews", icon: Bookmark },
   { key: "history", label: "readingHistory", icon: Clock },
   { key: "following", label: "followingTab", icon: Hash },

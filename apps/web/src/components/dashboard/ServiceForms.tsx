@@ -605,9 +605,9 @@ export function HospitalServiceForm({
         <Field label={t("fHospitalType")}>
           <select name="type" required defaultValue={listing?.type ?? ""} className={input}>
             <option value="">{t("fPick")}</option>
-            {HOSPITAL_TYPES.map((t) => (
-              <option key={t.value} value={t.value}>
-                {t.label}
+            {HOSPITAL_TYPES.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {t(opt.label)}
               </option>
             ))}
           </select>

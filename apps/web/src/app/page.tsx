@@ -1,4 +1,5 @@
 import { HeroStory } from "@/components/home/HeroStory";
+import { EmptyHome } from "@/components/home/EmptyHome";
 import { TopStoriesList } from "@/components/home/TopStoriesList";
 import { LatestHeadlines } from "@/components/home/LatestHeadlines";
 import { NewsSection } from "@/components/home/NewsSection";
@@ -14,12 +15,7 @@ export default async function Home() {
   if (!heroRaw) {
     return (
       <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col items-center gap-3 px-6 py-20 text-center">
-        <h1 className="text-2xl font-bold text-heading">
-          এখনো কোনো সংবাদ প্রকাশিত হয়নি
-        </h1>
-        <p className="font-ui text-sm text-foreground-muted">
-          অ্যাডমিন প্যানেল থেকে আর্টিকেল প্রকাশ করলে এখানে দেখা যাবে।
-        </p>
+        <EmptyHome />
       </main>
     );
   }

@@ -54,10 +54,10 @@ export function AccountSettings() {
             <button
               onClick={() => adjust(-STEP)}
               disabled={scale <= MIN_SCALE}
-              aria-label="ছোট"
+              aria-label={t("fontSmaller")}
               className="flex h-8 w-8 items-center justify-center rounded-lg border border-border text-sm font-bold transition-colors hover:bg-surface disabled:opacity-30"
             >
-              অ−
+              {t("fontSmallGlyph")}
             </button>
             <span className="w-10 text-center font-ui text-sm tabular-nums text-foreground-muted">
               {Math.round(scale * 100)}%
@@ -65,10 +65,10 @@ export function AccountSettings() {
             <button
               onClick={() => adjust(STEP)}
               disabled={scale >= MAX_SCALE}
-              aria-label="বড়"
+              aria-label={t("fontBigger")}
               className="flex h-8 w-8 items-center justify-center rounded-lg border border-border text-base font-bold transition-colors hover:bg-surface disabled:opacity-30"
             >
-              অ+
+              {t("fontBigGlyph")}
             </button>
           </div>
         </div>

@@ -43,6 +43,6 @@ async function uploadTo(path: string, file: File): Promise<string> {
     body: fd,
   });
   const data = await res.json().catch(() => null);
-  if (!res.ok) throw new Error((data && data.error) || "আপলোড ব্যর্থ");
+  if (!res.ok) throw new Error((data && data.error) || "Upload failed");
   return (data as { url: string }).url;
 }

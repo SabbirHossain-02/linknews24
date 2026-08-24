@@ -93,7 +93,7 @@ export function MainNav({ items }: { items: NavEntry[] }) {
                 {item.children && (
                   <button
                     type="button"
-                    aria-label={`${navLabel(item)} — উপ-বিভাগ`}
+                    aria-label={`${navLabel(item)} — ${t("subMenu")}`}
                     aria-expanded={openDesktopDropdown === item.key}
                     onClick={() =>
                       setOpenDesktopDropdown((current) =>
@@ -170,7 +170,7 @@ export function MainNav({ items }: { items: NavEntry[] }) {
                     )}
                     <button
                       onClick={() => toggleMobileDropdown(item.key)}
-                      aria-label={`${navLabel(item)} — উপ-বিভাগ`}
+                      aria-label={`${navLabel(item)} — ${t("subMenu")}`}
                       aria-expanded={openMobileDropdowns.has(item.key)}
                       className="p-1.5 text-foreground/60"
                     >

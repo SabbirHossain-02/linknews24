@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { API_BASE } from "@/lib/admin-api";
 import { getSocket } from "@/lib/socket";
+import { useLocale } from "@/components/providers/LocaleProvider";
 
 interface Ad {
   id: string;
@@ -38,6 +39,7 @@ export function AdSlot({
   className?: string;
   imgClassName?: string;
 }) {
+  const { t } = useLocale();
   const [ad, setAd] = useState<Ad | null>(null);
   const holder = useRef<HTMLAnchorElement>(null);
   const counted = useRef(false);
@@ -161,7 +163,7 @@ export function AdSlot({
         <img src={ad.imageUrl} alt={ad.name} className={imgClassName} />
       )}
       <span className="absolute right-1 top-1 rounded bg-black/45 px-1.5 py-0.5 font-ui text-[10px] text-white/90">
-        বিজ্ঞাপন
+        {t("adLabel")}
       </span>
     </a>
   );

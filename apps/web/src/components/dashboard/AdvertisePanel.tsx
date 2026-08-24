@@ -111,7 +111,8 @@ export function AdvertisePanel() {
               </span>
               <div className="mt-3 flex items-end justify-between">
                 <span className="text-xl font-bold text-brand-crimson">
-                  ৳{s.pricePerDay.toLocaleString("en-US")}
+                  {t("currencySymbol")}
+                  {s.pricePerDay.toLocaleString("en-US")}
                   <span className="font-ui text-xs font-normal text-foreground-muted">
                     {t("perDay")}
                   </span>
@@ -178,7 +179,8 @@ export function AdvertisePanel() {
                       </span>
                       <span>CTR {ctr}%</span>
                       <span>
-                        ৳{ad.amount.toLocaleString("en-US")} · {ad.days}d
+                        {t("currencySymbol")}
+                        {ad.amount.toLocaleString("en-US")} · {ad.days}d
                       </span>
                     </div>
                   </div>
@@ -482,7 +484,8 @@ function BookingModal({
               {t("adTotal")} {days > 0 ? `(${days}d)` : ""}
             </span>
             <span className="text-xl font-bold text-brand-crimson">
-              ৳{total.toLocaleString("en-US")}
+              {t("currencySymbol")}
+              {total.toLocaleString("en-US")}
             </span>
           </div>
           <button
@@ -512,7 +515,8 @@ function PaymentModal({ ad, onClose }: { ad: MyAd; onClose: () => void }) {
       <div className="mt-4 flex items-center justify-between rounded-lg bg-surface px-4 py-3">
         <span className="font-ui text-sm text-foreground-muted">{t("amountDue")}</span>
         <span className="text-xl font-bold text-brand-crimson">
-          ৳{ad.amount.toLocaleString("en-US")}
+          {t("currencySymbol")}
+          {ad.amount.toLocaleString("en-US")}
         </span>
       </div>
       <p className="mt-4 font-ui text-sm leading-relaxed text-foreground-muted">
