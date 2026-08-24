@@ -12,7 +12,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { BigBtn, Group, LabelBtn, Stack } from "./ui";
-import { findTable } from "./table-tools";
+import { findTable, moveTableBy } from "./table-tools";
 
 /**
  * Word's contextual Table tab — it appears only while the cursor is inside a
@@ -139,6 +139,20 @@ export function TableTab({ editor }: { editor: Editor }) {
             if (found) editor.chain().focus().setNodeSelection(found.pos).run();
           }}
         />
+        <Stack>
+          <LabelBtn
+            title="টেবিলটি এক ধাপ উপরে নিন"
+            label="উপরে সরান"
+            icon={<ArrowUp className="h-3.5 w-3.5" />}
+            onClick={() => moveTableBy(editor, -1)}
+          />
+          <LabelBtn
+            title="টেবিলটি এক ধাপ নিচে নিন"
+            label="নিচে সরান"
+            icon={<ArrowDown className="h-3.5 w-3.5" />}
+            onClick={() => moveTableBy(editor, 1)}
+          />
+        </Stack>
       </Group>
 
       <div className="flex items-center px-4">

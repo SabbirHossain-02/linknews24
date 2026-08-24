@@ -44,7 +44,15 @@ function splitRuns(text: string): { text: string; bangla: boolean }[] {
   return runs.filter((r) => r.text.trim().length > 0);
 }
 
-export function useReadAloud(editor: Editor | null) {
+export interface ReadAloud {
+  supported: boolean;
+  speaking: boolean;
+  toggle: () => void;
+  notice: string | null;
+  dismissNotice: () => void;
+}
+
+export function useReadAloud(editor: Editor | null): ReadAloud {
   const [speaking, setSpeaking] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const supported =

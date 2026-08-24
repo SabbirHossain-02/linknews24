@@ -32,6 +32,41 @@ function tableDom(editor: Editor, pos: number): HTMLTableElement | null {
 }
 
 /**
+ * Swaps the table with the block above or below it.
+ *
+ * Dragging is fine in a long story, but in a page that holds little besides the
+ * table there is barely anywhere to drop it, so the grip felt dead. These two
+ * commands always do something you can see.
+ */
+export function moveTableBy(editor: Editor, dir: -1 | 1): boolean {
+  const found = findTable(editor);
+  if (!found) return false;
+
+  const { state, view } = editor;
+  const { pos, node } = found;
+  const $pos = state.doc.resolve(pos);
+  // Only tables sitting directly in the document can trade places.
+  if ($pos.depth !== 0) return false;
+
+  const index = $pos.index();
+  const sibling = state.doc.maybeChild(dir < 0 ? index - 1 : index + 1);
+  if (!sibling) return false;
+
+  const from = pos;
+  const to = pos + node.nodeSize;
+  const target = dir < 0 ? pos - sibling.nodeSize : to + sibling.nodeSize;
+
+  const tr = state.tr;
+  tr.delete(from, to);
+  const at = tr.mapping.map(target);
+  tr.insert(at, node);
+  tr.setSelection(TextSelection.near(tr.doc.resolve(at + 1)));
+  view.dispatch(tr.scrollIntoView());
+  editor.commands.focus();
+  return true;
+}
+
+/**
  * Where a table dropped at this pointer position would land: after the last
  * top-level block whose middle is above the pointer. `y` is where to draw the
  * insertion line.
@@ -164,14 +199,16 @@ export function TableHandles({ editor }: { editor: Editor }) {
 
     const onMove = (ev: MouseEvent) => {
       const t = dropTarget(editor, ev.clientY);
-      // Dropping inside itself is a no-op, so don't offer it.
-      if (!t || (t.pos > from && t.pos < to)) {
+      // Inside itself, or right where it already is, would move nothing — so
+      // don't draw a line promising a move that will not happen.
+      const noop = !t || (t.pos >= from && t.pos <= to);
+      if (noop) {
         target = null;
         setDropY(null);
         return;
       }
-      target = t.pos;
-      setDropY(t.y);
+      target = t!.pos;
+      setDropY(t!.y);
     };
 
     const onUp = () => {

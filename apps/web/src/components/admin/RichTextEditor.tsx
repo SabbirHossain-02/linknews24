@@ -18,6 +18,8 @@ import {
 } from "./editor/ReviewDialogs";
 import { InsertTab } from "./editor/InsertTab";
 import { TableTab } from "./editor/TableTab";
+import { EditorContextMenu } from "./editor/EditorContextMenu";
+import { useReadAloud } from "./editor/use-speech";
 import { TableHandles, findTable } from "./editor/table-tools";
 import {
   BookmarkDialog,
@@ -70,6 +72,9 @@ export function RichTextEditor({
   const [tab, setTab] = useState<TabId>("home");
   const [ribbonOpen, setRibbonOpen] = useState(true);
   const [findOpen, setFindOpen] = useState(false);
+  // Where the right-click menu should open, in viewport coordinates.
+  const [menuAt, setMenuAt] = useState<{ x: number; y: number } | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [dialog, setDialog] = useState<
     "font" | "paragraph" | InsertDialogKind | ReviewDialogKind | null
   >(null);
@@ -112,6 +117,15 @@ export function RichTextEditor({
 
   const editorRef = useRef<ReturnType<typeof useEditor>>(null);
 
+  /**
+   * A clipboard command can legitimately fail — reading the clipboard needs
+   * HTTPS — so the outcome is shown rather than swallowed.
+   */
+  const showNotice = useCallback((message: string) => {
+    setNotice(message);
+    window.setTimeout(() => setNotice(null), 4000);
+  }, []);
+
   const editor = useEditor({
     immediatelyRender: false,
     // The ribbon shows live active states, which only stay in sync if the
@@ -124,6 +138,9 @@ export function RichTextEditor({
   });
 
   editorRef.current = editor;
+
+  // Owned here so both the Review tab and the right-click menu use one player.
+  const read = useReadAloud(editor);
 
   // Ctrl+F / Ctrl+H open find-and-replace; Esc leaves full screen.
   useEffect(() => {
@@ -169,7 +186,7 @@ export function RichTextEditor({
       className={
         view.fullscreen
           ? "fixed inset-0 z-50 flex flex-col bg-[#f3f2f1]"
-          : "flex flex-col overflow-hidden rounded border border-[#d4d4d4] bg-[#f3f2f1]"
+          : "relative flex flex-col overflow-hidden rounded border border-[#d4d4d4] bg-[#f3f2f1]"
       }
     >
       <div className="relative shrink-0">
@@ -247,6 +264,7 @@ export function RichTextEditor({
               spellcheck={view.spellcheck}
               onToggleSpellcheck={toggleSpellcheck}
               openDialog={setDialog}
+              read={read}
             />
           )}
           {activeTab === "view" && (
@@ -263,6 +281,20 @@ export function RichTextEditor({
         <FindReplacePanel editor={editor} onClose={() => setFindOpen(false)} />
       )}
 
+      {menuAt && (
+        <EditorContextMenu
+          editor={editor}
+          x={menuAt.x}
+          y={menuAt.y}
+          onClose={() => setMenuAt(null)}
+          onOpenFind={() => setFindOpen(true)}
+          onOpenDialog={setDialog}
+          onReadAloud={read.toggle}
+          canReadAloud={read.supported}
+          onNotice={showNotice}
+        />
+      )}
+
       {/* ---------- canvas ---------- */}
       <div className="flex min-h-0 flex-1">
         {view.outline && <Outline editor={editor} />}
@@ -271,6 +303,19 @@ export function RichTextEditor({
             whole editor when you zoomed out. Pinning the canvas keeps the
             window one size and lets only the sheet inside it grow or shrink. */}
         <div
+          onContextMenu={(e) => {
+            e.preventDefault();
+            // Right-clicking outside the current selection should move the
+            // caret first, so the menu acts on what was clicked.
+            const at = editor.view.posAtCoords({
+              left: e.clientX,
+              top: e.clientY,
+            });
+            const { from, to } = editor.state.selection;
+            if (at && (at.pos < from || at.pos > to))
+              editor.commands.setTextSelection(at.pos);
+            setMenuAt({ x: e.clientX, y: e.clientY });
+          }}
           className={`min-h-0 flex-1 overflow-auto ${
             view.pageMode ? "bg-[#e6e6e6] p-6" : "bg-white"
           } ${view.fullscreen ? "h-full" : "h-[68vh]"}`}
@@ -334,6 +379,14 @@ export function RichTextEditor({
           <span className="w-10 text-right tabular-nums">{view.zoom}%</span>
         </div>
       </div>
+
+      {notice && (
+        <div className="pointer-events-none absolute inset-x-0 bottom-12 flex justify-center">
+          <p className="max-w-[520px] rounded bg-[#14181f] px-3 py-2 font-ui text-[11px] leading-snug text-white shadow-lg">
+            {notice}
+          </p>
+        </div>
+      )}
 
       {dialog === "font" && <FontDialog editor={editor} onClose={close} />}
       {dialog === "paragraph" && (

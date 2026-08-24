@@ -11,7 +11,7 @@ import {
   Volume2,
 } from "lucide-react";
 import { BigBtn, Group } from "./ui";
-import { useDictate, useReadAloud } from "./use-speech";
+import { useDictate, type ReadAloud } from "./use-speech";
 
 export type ReviewDialogKind = "wordcount" | "accessibility";
 
@@ -27,13 +27,15 @@ export function ReviewTab({
   spellcheck,
   onToggleSpellcheck,
   openDialog,
+  read,
 }: {
   editor: Editor;
   spellcheck: boolean;
   onToggleSpellcheck: () => void;
   openDialog: (kind: ReviewDialogKind) => void;
+  /** Owned by the editor shell, so the right-click menu can read it too. */
+  read: ReadAloud;
 }) {
-  const read = useReadAloud(editor);
   const dictate = useDictate(editor);
 
   return (
