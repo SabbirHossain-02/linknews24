@@ -13,7 +13,8 @@ import {
   CAN_WRITE,
   slugify,
 } from "../lib/roles";
-import { hashPassword } from "../lib/password";
+import { hashPassword, verifyPassword } from "../lib/password";
+import { permissionMatrix } from "../lib/permissions";
 import { emitChange, emitAnalytics, onlineCount } from "../realtime";
 import { adReport } from "../lib/adTracking";
 import { auditArticles, readSeo, sitemapStats, writeSeo } from "../lib/seo";
@@ -802,25 +803,60 @@ adminRouter.get("/notifications", async (_req, res) => {
   res.json(await listNotifications());
 });
 
+/** What each role may do — served from the same lists that guard the routes. */
+adminRouter.get("/permissions", async (_req, res) => {
+  res.json(permissionMatrix());
+});
+
 const profileSchema = z.object({
   name: z.string().trim().min(1).max(80),
   avatar: z.string().trim().max(500).nullable().optional(),
+  email: z.string().trim().email().optional(),
+  currentPassword: z.string().optional(),
+  newPassword: z.string().min(6).optional(),
 });
 
 /**
- * The signed-in person's own name and picture. Anyone may change their own —
- * this is not the Users page, which is about other people's accounts.
+ * The signed-in person's own account — name, picture, email and password.
+ * This is not the Users page, which is about other people's accounts, so it
+ * needs no role: everyone may change their own.
+ *
+ * Changing the email or the password requires the current password. Without
+ * that, anyone who found an unattended logged-in browser could take the
+ * account over by pointing it at their own address.
  */
 adminRouter.put("/me", async (req, res) => {
   const parsed = profileSchema.safeParse(req.body);
   if (!parsed.success)
-    return res.status(400).json({ error: "নাম দিতে হবে" });
+    return res.status(400).json({ error: "তথ্য ঠিকভাবে পূরণ করুন" });
+  const { name, avatar, email, currentPassword, newPassword } = parsed.data;
+
+  const me = await prisma.user.findUnique({ where: { id: req.user!.id } });
+  if (!me) return res.status(401).json({ error: "Unauthorized" });
+
+  const wantsEmail = !!email && email.toLowerCase() !== me.email.toLowerCase();
+  const wantsPassword = !!newPassword;
+
+  if (wantsEmail || wantsPassword) {
+    if (!currentPassword)
+      return res.status(400).json({ error: "বর্তমান পাসওয়ার্ড দিন" });
+    if (!(await verifyPassword(currentPassword, me.password)))
+      return res.status(400).json({ error: "বর্তমান পাসওয়ার্ড ঠিক নয়" });
+  }
+
+  if (wantsEmail) {
+    const taken = await prisma.user.findUnique({ where: { email: email! } });
+    if (taken && taken.id !== me.id)
+      return res.status(409).json({ error: "এই ইমেইল আগে থেকেই ব্যবহৃত" });
+  }
 
   const user = await prisma.user.update({
-    where: { id: req.user!.id },
+    where: { id: me.id },
     data: {
-      name: parsed.data.name,
-      avatar: parsed.data.avatar?.trim() || null,
+      name,
+      avatar: avatar?.trim() || null,
+      ...(wantsEmail ? { email: email! } : {}),
+      ...(wantsPassword ? { password: await hashPassword(newPassword!) } : {}),
     },
     select: { id: true, name: true, email: true, role: true, avatar: true, bio: true },
   });

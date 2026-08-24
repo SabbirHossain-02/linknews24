@@ -22,6 +22,7 @@ import {
   Scale,
   Search,
   Settings,
+  ShieldCheck,
   Tv,
   Users,
 } from "lucide-react";
@@ -36,6 +37,8 @@ interface NavItem {
   key: AdminKey;
   href: string | null;
   icon: typeof LayoutDashboard;
+  /** Hidden from anyone who is not a Super Admin — the API refuses them too. */
+  superOnly?: boolean;
 }
 
 const NAV: NavItem[] = [
@@ -55,7 +58,8 @@ const NAV: NavItem[] = [
   { key: "comments", href: "/admin/comments", icon: MessageSquare },
   { key: "seo", href: "/admin/seo", icon: Search },
   { key: "settings", href: "/admin/settings", icon: Settings },
-  { key: "usersRoles", href: "/admin/users", icon: Users },
+  { key: "usersRoles", href: "/admin/users", icon: Users, superOnly: true },
+  { key: "rolesNav", href: "/admin/roles", icon: ShieldCheck, superOnly: true },
 ];
 
 /**
@@ -174,7 +178,8 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           </span>
         </div>
         <nav className="flex-1 overflow-y-auto px-3 py-4">
-          {NAV.map(({ key, href, icon: Icon }) => {
+          {NAV.filter((n) => !n.superOnly || user?.role === "SUPER_ADMIN").map(
+            ({ key, href, icon: Icon }) => {
             const active = href && pathname === href;
             const waiting = pending[key] ?? 0;
             const cls =
@@ -210,7 +215,8 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                 )}
               </Link>
             );
-          })}
+            },
+          )}
         </nav>
       </aside>
 

@@ -181,6 +181,136 @@ function ProfileCard() {
   );
 }
 
+/**
+ * Email and password for the signed-in account.
+ *
+ * Both need the current password: without that, anyone who walked up to an
+ * unattended logged-in browser could point the account at their own address
+ * and lock the owner out.
+ */
+function AccountCard() {
+  const t = useAdminT();
+  const { user, refresh } = useAdminAuth();
+  const [email, setEmail] = useState("");
+  const [current, setCurrent] = useState("");
+  const [next, setNext] = useState("");
+  const [again, setAgain] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (user) setEmail(user.email);
+  }, [user]);
+
+  const save = async () => {
+    setError(null);
+    setSaved(false);
+    if (next && next !== again) return setError(t("accountMismatch"));
+    setBusy(true);
+    try {
+      await apiFetch<{ user: AdminUser }>("/api/admin/me", {
+        method: "PUT",
+        body: JSON.stringify({
+          name: user?.name ?? "",
+          avatar: user?.avatar ?? null,
+          email: email.trim(),
+          currentPassword: current || undefined,
+          newPassword: next || undefined,
+        }),
+      });
+      await refresh();
+      setCurrent("");
+      setNext("");
+      setAgain("");
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t("errSave"));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const changed = !!user && (email.trim() !== user.email || !!next);
+
+  return (
+    <div className="mt-5 flex flex-col gap-4 rounded-xl border border-border bg-background p-5">
+      <div>
+        <p className="font-ui text-sm font-semibold text-heading">
+          {t("accountSection")}
+        </p>
+        <p className="mt-0.5 font-ui text-xs text-foreground-muted">
+          {t("accountNote")}
+        </p>
+      </div>
+
+      <Field label={t("accountEmail")} value={email} onChange={setEmail} />
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div>
+          <label className="font-ui text-xs font-semibold text-foreground-muted">
+            {t("accountNewPassword")}
+          </label>
+          <input
+            type="password"
+            value={next}
+            onChange={(e) => setNext(e.target.value)}
+            autoComplete="new-password"
+            className={`${inputCls} mt-1`}
+          />
+          <p className="mt-1 font-ui text-[11px] text-foreground-muted">
+            {t("accountNewPasswordHint")}
+          </p>
+        </div>
+        <div>
+          <label className="font-ui text-xs font-semibold text-foreground-muted">
+            {t("accountConfirmPassword")}
+          </label>
+          <input
+            type="password"
+            value={again}
+            onChange={(e) => setAgain(e.target.value)}
+            autoComplete="new-password"
+            className={`${inputCls} mt-1`}
+          />
+        </div>
+      </div>
+
+      {/* Only asked for when something is actually changing. */}
+      {changed && (
+        <div>
+          <label className="font-ui text-xs font-semibold text-foreground-muted">
+            {t("accountCurrentPassword")}
+          </label>
+          <input
+            type="password"
+            value={current}
+            onChange={(e) => setCurrent(e.target.value)}
+            autoComplete="current-password"
+            className={`${inputCls} mt-1`}
+          />
+        </div>
+      )}
+
+      {error && <p className="font-ui text-sm text-brand-crimson">{error}</p>}
+
+      <div className="flex items-center gap-3">
+        <button
+          onClick={save}
+          disabled={busy || !changed}
+          className="rounded-lg bg-brand-crimson px-5 py-2.5 font-ui text-sm font-semibold text-white hover:bg-brand-crimson-dark disabled:opacity-50"
+        >
+          {busy ? t("saving") : t("save")}
+        </button>
+        {saved && (
+          <span className="font-ui text-sm text-green-600">{t("accountSaved")}</span>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function SettingsAdminPage() {
   const t = useAdminT();
   const [s, setS] = useState<Settings>({});
@@ -221,6 +351,7 @@ export default function SettingsAdminPage() {
       <h1 className="text-2xl font-bold text-heading">{t("settings")}</h1>
 
       <ProfileCard />
+      <AccountCard />
 
       <div className="mt-5 flex flex-col gap-4 rounded-xl border border-border bg-background p-5">
         <Field label={t("tagline")} value={s.tagline ?? ""} onChange={(v) => set("tagline", v)} />

@@ -307,6 +307,107 @@ export const adminDict = {
   dashLast24Total: { bn: "মোট {n} ভিজিট", en: "{n} visits in total" },
   chartOther: { bn: "অন্যান্য", en: "Other" },
 
+  // --- roles & permissions ---
+  rolesNav: { bn: "রোল ও অনুমতি", en: "Roles & permissions" },
+  rolesTitle: { bn: "রোল ও অনুমতি", en: "Roles & permissions" },
+  rolesIntro: {
+    bn: "কোন রোল কী কী করতে পারবে। এই তালিকাটি সার্ভারের আসল নিয়ম থেকেই তৈরি — যা এখানে ✓ নেই, সেটি সার্ভারও করতে দেবে না।",
+    en: "What each role may do. This table is built from the server's own rules — anything without a ✓ here is refused by the server too.",
+  },
+  rolesCapability: { bn: "কাজ", en: "Capability" },
+  rolesYou: { bn: "আপনি", en: "You" },
+  rolesAllowed: { bn: "অনুমতি আছে", en: "Allowed" },
+  rolesDeniedShort: { bn: "অনুমতি নেই", en: "Not allowed" },
+  rolesDenied: {
+    bn: "এই পাতা দেখার অনুমতি আপনার নেই।",
+    en: "You do not have access to this page.",
+  },
+  rolesFooterNote: {
+    bn: "রোল বদলাতে ইউজার ও রোল পাতায় যান। শুধু সুপার অ্যাডমিন রোল বদলাতে পারেন — এবং চাইলে অন্য কাউকে সুপার অ্যাডমিন করে একই ক্ষমতা দিতে পারেন।",
+    en: "Change a role on the Users page. Only a Super Admin can do that — and may make someone else a Super Admin to share the same power.",
+  },
+
+  roleAboutSUPER_ADMIN: {
+    bn: "সব কিছুতে অ্যাক্সেস, এবং একমাত্র যিনি ইউজার যোগ করতে বা রোল বদলাতে পারেন।",
+    en: "Access to everything, and the only role that can add users or change roles.",
+  },
+  roleAboutADMIN: {
+    bn: "সাইটের সব সেটিং, হোমপেজ, বিজ্ঞাপন ও SEO — শুধু ইউজার ব্যবস্থাপনা ছাড়া।",
+    en: "All site settings, homepage, ads and SEO — everything except managing users.",
+  },
+  roleAboutEDITOR: {
+    bn: "খবর প্রকাশ, ক্যাটাগরি, ব্রেকিং নিউজ, ই-পেপার ও কমেন্ট মডারেশন।",
+    en: "Publishing, categories, breaking news, e-paper and comment moderation.",
+  },
+  roleAboutMODERATOR: {
+    bn: "পাঠকের জমা দেওয়া আইন, রক্ত ও হাসপাতাল সেবার আবেদন এবং কমেন্ট দেখভাল।",
+    en: "Reader submissions to the legal, blood and hospital directories, plus comments.",
+  },
+  roleAboutREPORTER: {
+    bn: "খবর লিখতে ও ছবি আপলোড করতে পারেন, কিন্তু নিজে প্রকাশ করতে পারেন না।",
+    en: "Can write articles and upload images, but cannot publish them.",
+  },
+
+  roleShortSUPER_ADMIN: { bn: "সুপার", en: "Super" },
+  roleShortADMIN: { bn: "অ্যাডমিন", en: "Admin" },
+  roleShortEDITOR: { bn: "এডিটর", en: "Editor" },
+  roleShortMODERATOR: { bn: "মডারেটর", en: "Mod" },
+  roleShortREPORTER: { bn: "রিপোর্টার", en: "Reporter" },
+
+  capGroup_content: { bn: "কনটেন্ট", en: "Content" },
+  capGroup_directory: { bn: "পাঠকের আবেদন", en: "Reader submissions" },
+  capGroup_site: { bn: "সাইট", en: "The site" },
+  capGroup_account: { bn: "অ্যাকাউন্ট", en: "Accounts" },
+
+  cap_writeArticles: { bn: "খবর লেখা ও সম্পাদনা", en: "Write and edit articles" },
+  cap_publishArticles: { bn: "খবর প্রকাশ করা", en: "Publish articles" },
+  cap_deleteArticles: { bn: "খবর মুছে ফেলা", en: "Delete articles" },
+  cap_manageCategories: { bn: "ক্যাটাগরি তৈরি ও সম্পাদনা", en: "Create and edit categories" },
+  cap_deleteCategories: { bn: "ক্যাটাগরি মুছে ফেলা", en: "Delete categories" },
+  cap_breakingNews: { bn: "ব্রেকিং নিউজ", en: "Breaking news" },
+  cap_epaper: { bn: "ই-পেপার", en: "E-paper" },
+  cap_media: { bn: "ছবি আপলোড", en: "Upload media" },
+  cap_moderateComments: { bn: "কমেন্ট মডারেশন", en: "Moderate comments" },
+  cap_reviewListings: {
+    bn: "আবেদন অনুমোদন / বাতিল",
+    en: "Approve or reject submissions",
+  },
+  cap_manageDirectories: {
+    bn: "আইন, রক্ত ও হাসপাতাল তালিকা সম্পাদনা",
+    en: "Edit the legal, blood and hospital directories",
+  },
+  cap_homepageBuilder: { bn: "হোমপেজ বিন্যাস", en: "Homepage builder" },
+  cap_liveTv: { bn: "লাইভ টিভি", en: "Live TV" },
+  cap_ads: { bn: "বিজ্ঞাপন", en: "Advertising" },
+  cap_newsletter: { bn: "নিউজলেটার গ্রাহক", en: "Newsletter subscribers" },
+  cap_seo: { bn: "SEO সেটিং", en: "SEO settings" },
+  cap_siteSettings: { bn: "সাইট সেটিং", en: "Site settings" },
+  cap_ownProfile: {
+    bn: "নিজের নাম, ছবি, ইমেইল ও পাসওয়ার্ড",
+    en: "Own name, picture, email and password",
+  },
+  cap_manageUsers: {
+    bn: "ইউজার যোগ করা ও রোল বদলানো",
+    en: "Add users and change roles",
+  },
+
+  // --- account settings ---
+  accountSection: { bn: "লগইনের তথ্য", en: "Sign-in details" },
+  accountNote: {
+    bn: "ইমেইল বা পাসওয়ার্ড বদলাতে বর্তমান পাসওয়ার্ডটি দিতে হবে।",
+    en: "Changing the email or password requires your current password.",
+  },
+  accountEmail: { bn: "ইমেইল", en: "Email" },
+  accountCurrentPassword: { bn: "বর্তমান পাসওয়ার্ড", en: "Current password" },
+  accountNewPassword: { bn: "নতুন পাসওয়ার্ড", en: "New password" },
+  accountNewPasswordHint: {
+    bn: "কমপক্ষে ৬ অক্ষর। খালি রাখলে পাসওয়ার্ড বদলাবে না।",
+    en: "At least 6 characters. Leave blank to keep your current password.",
+  },
+  accountConfirmPassword: { bn: "নতুন পাসওয়ার্ড আবার", en: "Repeat new password" },
+  accountMismatch: { bn: "দুইটি পাসওয়ার্ড মেলেনি", en: "The passwords do not match" },
+  accountSaved: { bn: "লগইনের তথ্য বদলানো হয়েছে ✓", en: "Sign-in details updated ✓" },
+
   // --- notification bell ---
   notifications: { bn: "নোটিফিকেশন", en: "Notifications" },
   notifEmpty: {

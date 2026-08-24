@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { Plus, Trash2 } from "lucide-react";
 import { apiFetch } from "@/lib/admin-api";
 import { ConfirmModal } from "@/components/admin/Modal";
 import { Toggle } from "@/components/admin/Toggle";
 import { useAdminT, type AdminKey } from "@/lib/admin-i18n";
+import { useAdminAuth } from "@/components/admin/AdminAuthProvider";
 
 interface User {
   id: string;
@@ -22,6 +24,7 @@ const inputCls =
 
 export default function UsersAdminPage() {
   const t = useAdminT();
+  const { user: me } = useAdminAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState({ name: "", email: "", password: "", role: "REPORTER" });
@@ -77,9 +80,22 @@ export default function UsersAdminPage() {
     }
   };
 
+  if (me && me.role !== "SUPER_ADMIN")
+    return (
+      <p className="font-ui text-sm text-foreground-muted">{t("rolesDenied")}</p>
+    );
+
   return (
     <div className="max-w-4xl">
-      <h1 className="text-2xl font-bold text-heading">{t("usersRoles")}</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-2xl font-bold text-heading">{t("usersRoles")}</h1>
+        <Link
+          href="/admin/roles"
+          className="rounded-lg border border-border px-3.5 py-2 font-ui text-sm font-semibold text-foreground hover:bg-surface"
+        >
+          {t("rolesNav")}
+        </Link>
+      </div>
 
       {error && (
         <p className="mt-3 rounded-lg bg-brand-crimson/10 px-3.5 py-2 font-ui text-sm text-brand-crimson">
