@@ -45,14 +45,16 @@ function Badge({
     <a
       href="#"
       title={line1}
-      className="inline-flex items-center gap-2 rounded-lg border border-black/15 bg-white px-2.5 py-1.5 text-black transition-shadow hover:shadow-md"
+      className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-black/15 bg-white px-2 py-1.5 text-black transition-shadow hover:shadow-md sm:gap-2 sm:px-2.5"
     >
       {icon}
       <span className="flex flex-col leading-none">
         <span className="font-ui text-[8px] font-medium tracking-wide text-black/60">
           {line1}
         </span>
-        <span className="-mt-0.5 font-ui text-[13px] font-semibold">{line2}</span>
+        <span className="-mt-0.5 font-ui text-[12px] font-semibold sm:text-[13px]">
+          {line2}
+        </span>
       </span>
     </a>
   );
@@ -60,7 +62,7 @@ function Badge({
 
 export function StoreBadges({ soonLabel = "" }: { soonLabel?: string }) {
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-nowrap gap-2">
       <Badge
         icon={<GooglePlayIcon className="h-5 w-5" />}
         line1={soonLabel}

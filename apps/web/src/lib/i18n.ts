@@ -26,6 +26,7 @@ export const translations = {
   relatedNews: { bn: "সম্পর্কিত সংবাদ", en: "Related News" },
   breaking: { bn: "ব্রেকিং", en: "Breaking" },
   shareThis: { bn: "শেয়ার করুন", en: "Share" },
+  footerDevelopedBy: { bn: "ডেভেলপ করেছে", en: "Developed by" },
 
   // Accessible names and small glyphs that used to be Bengali in both views.
   fontSmaller: { bn: "ফন্ট ছোট করুন", en: "Smaller text" },

@@ -89,7 +89,7 @@ export function SiteFooter({ categories }: { categories: NavChild[] }) {
                 {cfg.tagline || t("footerTagline")}
               </p>
             )}
-            <div className="mt-4 grid grid-cols-2 items-start gap-4 lg:block">
+            <div className="mt-4 flex flex-wrap items-start justify-between gap-4 lg:block">
             {show("social") && (
               <div className="flex gap-4 lg:mt-4">
                 <a href={cfg.facebook || "#"} aria-label="Facebook" className="hover:text-brand-crimson">
@@ -213,10 +213,21 @@ export function SiteFooter({ categories }: { categories: NavChild[] }) {
 
       {/* Bottom bar */}
       <div className="border-t border-border">
-        <div className="mx-auto flex max-w-[1600px] flex-col items-center gap-2 px-4 py-4 text-center font-ui text-[11px] text-foreground-muted/70 sm:flex-row sm:justify-between sm:px-6 sm:text-left sm:text-xs">
+        <div className="mx-auto flex max-w-[1600px] flex-col items-center gap-x-4 gap-y-2 px-4 py-4 text-center font-ui text-[11px] text-foreground-muted/70 sm:flex-row sm:flex-wrap sm:justify-between sm:px-6 sm:text-left sm:text-xs">
           <span>{show("editor") ? cfg.editor || t("footerEditor") : ""}</span>
           <span>
             © {new Date().getFullYear()} LinkNews24. {t("footerRights")}
+          </span>
+          <span>
+            {t("footerDevelopedBy")}{" "}
+            <a
+              href="https://pkgit.net"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-foreground-muted transition-colors hover:text-brand-crimson"
+            >
+              pkgit.net
+            </a>
           </span>
           <button
             onClick={scrollTop}
