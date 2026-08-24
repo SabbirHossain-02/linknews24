@@ -60,12 +60,18 @@ export default function HomepageBuilderPage() {
     load();
   };
 
+  // Applied on screen first — see the note on the articles list.
   const update = async (id: string, patch: Partial<Section>) => {
-    await apiFetch(`/api/admin/homepage/${id}`, {
-      method: "PUT",
-      body: JSON.stringify(patch),
-    });
-    load();
+    const before = sections;
+    setSections((list) => list.map((s) => (s.id === id ? { ...s, ...patch } : s)));
+    try {
+      await apiFetch(`/api/admin/homepage/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(patch),
+      });
+    } catch {
+      setSections(before);
+    }
   };
 
   const move = async (index: number, dir: -1 | 1) => {

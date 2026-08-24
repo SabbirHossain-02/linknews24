@@ -76,12 +76,18 @@ export default function CategoriesAdminPage() {
     }
   };
 
+  // Applied on screen first — see the note on the articles list.
   const update = async (id: string, patch: Partial<Category>) => {
-    await apiFetch(`/api/admin/categories/${id}`, {
-      method: "PUT",
-      body: JSON.stringify(patch),
-    });
-    load();
+    const before = cats;
+    setCats((list) => list.map((c) => (c.id === id ? { ...c, ...patch } : c)));
+    try {
+      await apiFetch(`/api/admin/categories/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(patch),
+      });
+    } catch {
+      setCats(before);
+    }
   };
 
   /**

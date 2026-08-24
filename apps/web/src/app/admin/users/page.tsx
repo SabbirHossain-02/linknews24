@@ -53,9 +53,18 @@ export default function UsersAdminPage() {
     }
   };
 
+  // Applied on screen first — see the note on the articles list.
   const update = async (id: string, patch: Partial<User>) => {
-    await apiFetch(`/api/admin/users/${id}`, { method: "PUT", body: JSON.stringify(patch) });
-    load();
+    const before = users;
+    setUsers((list) => list.map((u) => (u.id === id ? { ...u, ...patch } : u)));
+    try {
+      await apiFetch(`/api/admin/users/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(patch),
+      });
+    } catch {
+      setUsers(before);
+    }
   };
 
   const remove = async (id: string) => {

@@ -83,12 +83,37 @@ export default function AdminArticlesPage() {
     setPage(1);
   }, [q, category, status]);
 
+  /**
+   * Flips the switch on screen first, then tells the server.
+   *
+   * This used to await the request and reload the whole list. Two things went
+   * wrong with that: the list is paged and re-sorted server-side, so the row
+   * you clicked could move somewhere else and the click looked like it had
+   * done nothing; and the reload emptied the table for a moment, which
+   * collapsed the page and threw the scroll position around.
+   */
   const patchFlags = async (id: string, body: Record<string, unknown>) => {
-    await apiFetch(`/api/admin/articles/${id}/flags`, {
-      method: "PATCH",
-      body: JSON.stringify(body),
-    });
-    load();
+    const before = articles;
+    setArticles((list) =>
+      list.map((a) => (a.id === id ? ({ ...a, ...body } as AdminArticle) : a)),
+    );
+    try {
+      const d = await apiFetch<{ article: AdminArticle }>(
+        `/api/admin/articles/${id}/flags`,
+        { method: "PATCH", body: JSON.stringify(body) },
+      );
+      // Trust the server for the flags themselves, but keep the joined
+      // category and author the flags endpoint does not return.
+      setArticles((list) =>
+        list.map((a) =>
+          a.id === id
+            ? { ...a, status: d.article.status, isBreaking: d.article.isBreaking }
+            : a,
+        ),
+      );
+    } catch {
+      setArticles(before); // the server refused — put the row back as it was
+    }
   };
 
   const remove = async (id: string) => {
@@ -159,12 +184,16 @@ export default function AdminArticlesPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
-            {loading ? null : articles.length === 0 ? (
-              <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-foreground-muted">
-                  {t("noArticles")}
-                </td>
-              </tr>
+            {/* Rows stay put while a new page loads. Blanking them made the
+                table collapse and the page jump. */}
+            {articles.length === 0 ? (
+              loading ? null : (
+                <tr>
+                  <td colSpan={5} className="px-4 py-8 text-center text-foreground-muted">
+                    {t("noArticles")}
+                  </td>
+                </tr>
+              )
             ) : (
               articles.map((a) => (
                 <tr key={a.id} className="hover:bg-surface/50">

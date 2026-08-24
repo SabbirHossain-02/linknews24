@@ -47,12 +47,19 @@ export default function BreakingAdminPage() {
     load();
   };
 
+  // Applied on screen first, so the row does not wait for the round trip and
+  // the list is not rebuilt underneath the pointer.
   const update = async (id: string, patch: Partial<BreakingItem>) => {
-    await apiFetch(`/api/admin/breaking/${id}`, {
-      method: "PUT",
-      body: JSON.stringify(patch),
-    });
-    load();
+    const before = items;
+    setItems((list) => list.map((i) => (i.id === id ? { ...i, ...patch } : i)));
+    try {
+      await apiFetch(`/api/admin/breaking/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(patch),
+      });
+    } catch {
+      setItems(before);
+    }
   };
 
   const remove = async (id: string) => {

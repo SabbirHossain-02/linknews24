@@ -172,7 +172,13 @@ adminRouter.get("/articles", async (req, res) => {
         category: { select: { name: true, nameEn: true, slug: true } },
         author: { select: { name: true } },
       },
-      orderBy: { updatedAt: "desc" },
+      // Newest published first, drafts after them, and stable while you work:
+      // ordering by updatedAt meant flipping a switch moved that row to the
+      // top of the list, so every click reshuffled the page under the pointer.
+      orderBy: [
+        { publishedAt: { sort: "desc", nulls: "last" } },
+        { createdAt: "desc" },
+      ],
       skip,
       take,
     }),
