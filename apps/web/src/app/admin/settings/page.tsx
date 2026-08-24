@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { apiFetch } from "@/lib/admin-api";
-import { useAdminT } from "@/lib/admin-i18n";
+import { useAdminT, type AdminKey } from "@/lib/admin-i18n";
+import { Toggle } from "@/components/admin/Toggle";
+import { FOOTER_BLOCKS, footerShows, type FooterBlock } from "@/lib/footer-blocks";
 
 interface Settings {
-  siteName?: string;
   tagline?: string;
   facebook?: string;
   twitter?: string;
@@ -14,6 +15,7 @@ interface Settings {
   email?: string;
   phone?: string;
   editor?: string;
+  footer?: Partial<Record<FooterBlock, boolean>>;
 }
 
 const inputCls =
@@ -54,6 +56,12 @@ export default function SettingsAdminPage() {
 
   const set = (k: keyof Settings, v: string) => setS((p) => ({ ...p, [k]: v }));
 
+  // Not switched off means shown, so an unsaved settings row still gives a
+  // complete footer.
+  const shows = (b: FooterBlock) => footerShows(s.footer, b);
+  const toggleBlock = (b: FooterBlock, on: boolean) =>
+    setS((p) => ({ ...p, footer: { ...p.footer, [b]: on } }));
+
   useEffect(() => {
     apiFetch<{ settings: Settings }>("/api/admin/settings")
       .then((d) => setS(d.settings ?? {}))
@@ -79,7 +87,6 @@ export default function SettingsAdminPage() {
       <h1 className="text-2xl font-bold text-heading">{t("settings")}</h1>
 
       <div className="mt-5 flex flex-col gap-4 rounded-xl border border-border bg-background p-5">
-        <Field label={t("siteName")} value={s.siteName ?? ""} onChange={(v) => set("siteName", v)} />
         <Field label={t("tagline")} value={s.tagline ?? ""} onChange={(v) => set("tagline", v)} />
 
         <p className="mt-2 font-ui text-xs font-semibold uppercase tracking-wide text-foreground-muted/70">
@@ -100,6 +107,27 @@ export default function SettingsAdminPage() {
           <Field label={t("phoneLabel")} value={s.phone ?? ""} onChange={(v) => set("phone", v)} />
         </div>
         <Field label={t("editorLabel")} value={s.editor ?? ""} onChange={(v) => set("editor", v)} />
+
+        <p className="mt-2 font-ui text-xs font-semibold uppercase tracking-wide text-foreground-muted/70">
+          {t("footerBlocks")}
+        </p>
+        <p className="-mt-2 font-ui text-xs text-foreground-muted">
+          {t("footerBlocksNote")}
+        </p>
+        <ul className="flex flex-col divide-y divide-border rounded-lg border border-border">
+          {FOOTER_BLOCKS.map((b) => (
+            <li key={b} className="flex items-center justify-between gap-4 px-3.5 py-2.5">
+              <span className="font-ui text-sm text-foreground">
+                {t(`footerBlock_${b}` as AdminKey)}
+              </span>
+              <Toggle
+                checked={shows(b)}
+                onChange={(on) => toggleBlock(b, on)}
+                title={t(`footerBlock_${b}` as AdminKey)}
+              />
+            </li>
+          ))}
+        </ul>
 
         <div className="mt-2 flex items-center gap-3">
           <button

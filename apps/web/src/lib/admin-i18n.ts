@@ -307,6 +307,21 @@ export const adminDict = {
   dashLast24Total: { bn: "মোট {n} ভিজিট", en: "{n} visits in total" },
   chartOther: { bn: "অন্যান্য", en: "Other" },
 
+  // --- footer blocks (Settings) ---
+  footerBlocks: { bn: "ফুটারে কী কী দেখাবে", en: "What the footer shows" },
+  footerBlocksNote: {
+    bn: "বন্ধ করলে অংশটি সাইটের ফুটার থেকে সরে যাবে। একটি কলামের সব অংশ বন্ধ করলে কলামটিই থাকবে না।",
+    en: "Switching one off removes it from the site's footer. Turn off everything in a column and the column goes too.",
+  },
+  footerBlock_tagline: { bn: "ট্যাগলাইন", en: "Tagline" },
+  footerBlock_social: { bn: "সোশ্যাল আইকন", en: "Social icons" },
+  footerBlock_app: { bn: "অ্যাপ ব্যাজ (Google Play / App Store)", en: "App badges" },
+  footerBlock_categories: { bn: "ক্যাটাগরি তালিকা", en: "Category list" },
+  footerBlock_company: { bn: "প্রতিষ্ঠান লিংক", en: "Company links" },
+  footerBlock_newsletter: { bn: "নিউজলেটার ফর্ম", en: "Newsletter form" },
+  footerBlock_contact: { bn: "যোগাযোগের তথ্য", en: "Contact details" },
+  footerBlock_editor: { bn: "সম্পাদক ও প্রকাশক", en: "Editor & publisher" },
+
   // --- SEO page ---
   seoIntro: {
     bn: "এখানকার প্রতিটি সেটিং সরাসরি সাইটের <head>, robots.txt আর sitemap.xml-এ যায় — সার্চ ইঞ্জিন ঠিক এটাই পড়ে।",
