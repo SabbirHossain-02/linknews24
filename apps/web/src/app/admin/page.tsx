@@ -19,8 +19,7 @@ import { apiFetch } from "@/lib/admin-api";
 import { getSocket } from "@/lib/socket";
 import { useAdminAuth } from "@/components/admin/AdminAuthProvider";
 import { useAdminT } from "@/lib/admin-i18n";
-import { LineChart } from "@/components/admin/charts/LineChart";
-import { DonutChart } from "@/components/admin/charts/DonutChart";
+import { ColumnChart } from "@/components/admin/charts/ColumnChart";
 import { BarList } from "@/components/admin/charts/BarList";
 
 interface Analytics {
@@ -268,13 +267,29 @@ export default function AdminDashboard() {
         })}
       </div>
 
-      {/* Hourly line chart */}
+{/* Visits per hour. One column per hour, because that is what the data is:
+          24 separate counts. A line sloping between two hours drew traffic that
+          never happened, and an empty stretch became a flat rule with a spike. */}
       <div className="mt-6 rounded-xl border border-border bg-background p-5">
-        <h2 className="font-ui text-sm font-semibold text-heading">{t("dashHourly")}</h2>
-        <div className="mt-3">
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <h2 className="font-ui text-sm font-semibold text-heading">
+            {t("dashHourly")}
+          </h2>
+          {data && (
+            <p className="font-ui text-xs text-foreground-muted">
+              {t("dashLast24Total", {
+                n: String(data.hourly.reduce((s, h) => s + h.count, 0)),
+              })}
+            </p>
+          )}
+        </div>
+        <div className="mt-4">
           {data && data.hourly.some((h) => h.count > 0) ? (
-            <LineChart
+            <ColumnChart
               data={data.hourly.map((h) => ({ label: h.hour, value: h.count }))}
+              color="#d81f26"
+              height={180}
+              valueLabel={t("dashHourly")}
             />
           ) : (
             <p className="py-10 text-center font-ui text-sm text-foreground-muted">
@@ -287,26 +302,23 @@ export default function AdminDashboard() {
       {/* Breakdown grid */}
       <div className="mt-6 grid gap-4 lg:grid-cols-2">
         <div className="rounded-xl border border-border bg-background p-5">
-          <h2 className="font-ui text-sm font-semibold text-heading">{t("dashDevices")}</h2>
-          <div className="mt-4">
-            <DonutChart
-              data={(data?.devices ?? []).map((d) => ({ label: d.label, value: d.count }))}
-            />
-          </div>
+          <h2 className="mb-3 font-ui text-sm font-semibold text-heading">
+            {t("dashDevices")}
+          </h2>
+          <BarList rows={data?.devices ?? []} showShare />
         </div>
         <div className="rounded-xl border border-border bg-background p-5">
-          <h2 className="font-ui text-sm font-semibold text-heading">{t("dashBrowsers")}</h2>
-          <div className="mt-4">
-            <DonutChart
-              data={(data?.browsers ?? []).map((d) => ({ label: d.label, value: d.count }))}
-            />
-          </div>
+          <h2 className="mb-3 font-ui text-sm font-semibold text-heading">
+            {t("dashBrowsers")}
+          </h2>
+          <BarList rows={data?.browsers ?? []} showShare />
         </div>
         <div className="rounded-xl border border-border bg-background p-5">
           <h2 className="mb-3 font-ui text-sm font-semibold text-heading">
             {t("dashCountries")}
           </h2>
           <BarList
+            showShare
             rows={(data?.countries ?? []).map((c) => ({
               label: `${flag(c.label === "—" ? null : c.label)}  ${c.label}`,
               count: c.count,
@@ -317,7 +329,7 @@ export default function AdminDashboard() {
           <h2 className="mb-3 font-ui text-sm font-semibold text-heading">
             {t("dashReferrers")}
           </h2>
-          <BarList rows={data?.referrers ?? []} />
+          <BarList showShare rows={data?.referrers ?? []} />
         </div>
       </div>
 
