@@ -23,7 +23,9 @@ export function TopUtilityBar() {
 
   return (
     <div className="border-b border-white/10 bg-brand-navy-soft">
-      <div className="mx-auto flex max-w-[1600px] flex-wrap items-center justify-between gap-x-4 gap-y-1 px-6 py-1.5 font-ui text-xs text-white/60">
+      {/* On a phone the two halves wrap onto separate lines; centring them
+          keeps each line balanced instead of hugging the left edge. */}
+      <div className="mx-auto flex max-w-[1600px] flex-wrap items-center justify-center gap-x-4 gap-y-1 px-4 py-1.5 text-center font-ui text-[11px] text-white/60 sm:justify-between sm:px-6 sm:text-left sm:text-xs">
         <span>
           {gregorianDate}
           {locale === "bn" && (
@@ -33,7 +35,7 @@ export function TopUtilityBar() {
             </>
           )}
         </span>
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
           <FontSizeControl />
           <LanguageToggle />
           <Link href="/epaper" className="transition-colors hover:text-white">

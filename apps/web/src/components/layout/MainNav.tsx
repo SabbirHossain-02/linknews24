@@ -34,7 +34,7 @@ export function MainNav({ items }: { items: NavEntry[] }) {
       className="border-b border-border bg-background"
       onMouseLeave={() => setOpenDesktopDropdown(null)}
     >
-      <div className="mx-auto flex max-w-[1600px] items-center justify-between gap-6 px-6 py-3">
+      <div className="mx-auto flex max-w-[1600px] items-center justify-between gap-4 px-4 py-2.5 sm:gap-6 sm:px-6 sm:py-3">
         <Link href="/" className="flex shrink-0 items-center">
           <Image
             src="/logo.png"
@@ -147,7 +147,7 @@ export function MainNav({ items }: { items: NavEntry[] }) {
       <div
         className={`${mobileOpen ? "block" : "hidden"} border-t border-border md:hidden`}
       >
-        <ul className="mx-auto flex max-w-[1600px] flex-col gap-1 px-6 py-3">
+        <ul className="mx-auto flex max-w-[1600px] flex-col gap-1 px-4 py-3 sm:px-6">
           {items.map((item) => (
             <li key={item.key}>
               {item.children ? (

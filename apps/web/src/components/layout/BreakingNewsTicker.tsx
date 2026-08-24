@@ -47,11 +47,11 @@ export function BreakingNewsTicker() {
 
   return (
     <div className="flex items-stretch bg-brand-crimson text-white">
-      <span className="flex shrink-0 items-center bg-brand-crimson-dark px-4 py-2 font-ui text-xs font-bold uppercase tracking-wider">
+      <span className="flex shrink-0 items-center bg-brand-crimson-dark px-3 py-2 font-ui text-[10px] font-bold uppercase tracking-wider sm:px-4 sm:text-xs">
         {t("breaking")}
       </span>
       <div className="group relative flex flex-1 items-center overflow-hidden">
-        <div className="flex shrink-0 animate-ticker items-center gap-16 whitespace-nowrap py-2 pl-6 group-hover:[animation-play-state:paused]">
+        <div className="flex shrink-0 animate-ticker items-center gap-10 whitespace-nowrap py-2 pl-4 group-hover:[animation-play-state:paused] sm:gap-16 sm:pl-6">
           {[...items, ...items].map((item, i) =>
             item.href ? (
               <Link

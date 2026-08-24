@@ -63,14 +63,16 @@ export function SiteFooter({ categories }: { categories: NavChild[] }) {
     <footer className="border-t border-border bg-surface text-foreground-muted">
       <AdSlot
         placement="FOOTER"
-        className="mx-auto flex max-w-[1600px] justify-center px-6 pt-6"
+        className="mx-auto flex max-w-[1600px] justify-center px-4 pt-6 sm:px-6"
         imgClassName="max-h-[120px] w-auto object-contain"
       />
-      <div className="mx-auto grid max-w-[1600px] gap-10 px-6 py-12 md:grid-cols-2 lg:grid-cols-4">
+      {/* Two columns from the smallest screen up. Stacked in one column the
+          footer ran on for several screenfuls on a phone. */}
+      <div className="mx-auto grid max-w-[1600px] grid-cols-2 gap-x-6 gap-y-8 px-4 py-8 sm:px-6 md:gap-10 lg:grid-cols-4 lg:py-12">
         {/* Brand + social + app. The masthead itself, not a text imitation of
             it — the same file the header and the editor use. */}
         {showBrand && (
-          <div>
+          <div className="col-span-2 lg:col-span-1">
             <Link href="/" aria-label={t("home")} className="inline-block">
               <Image
                 src="/logo.png"
@@ -85,8 +87,9 @@ export function SiteFooter({ categories }: { categories: NavChild[] }) {
                 {cfg.tagline || t("footerTagline")}
               </p>
             )}
+            <div className="mt-4 grid grid-cols-2 items-start gap-4 lg:block">
             {show("social") && (
-              <div className="mt-4 flex gap-4">
+              <div className="flex gap-4 lg:mt-4">
                 <a href={cfg.facebook || "#"} aria-label="Facebook" className="hover:text-brand-crimson">
                   <FacebookIcon className="h-5 w-5" />
                 </a>
@@ -100,7 +103,7 @@ export function SiteFooter({ categories }: { categories: NavChild[] }) {
             )}
 
             {show("app") && (
-              <div className="mt-6">
+              <div className="lg:mt-6">
                 <h3 className="font-ui text-xs font-semibold uppercase tracking-wider text-foreground-muted/70">
                   {t("footerApp")}
                 </h3>
@@ -109,6 +112,7 @@ export function SiteFooter({ categories }: { categories: NavChild[] }) {
                 </div>
               </div>
             )}
+            </div>
           </div>
         )}
 
@@ -118,7 +122,7 @@ export function SiteFooter({ categories }: { categories: NavChild[] }) {
           <h3 className="font-ui text-xs font-semibold uppercase tracking-wider text-foreground-muted/70">
             {t("footerCategories")}
           </h3>
-          <ul className="mt-3 grid grid-cols-2 gap-2 font-ui text-sm">
+          <ul className="mt-3 grid grid-cols-1 gap-2 font-ui text-sm sm:grid-cols-2 lg:grid-cols-2">
             {categories.map((cat) => (
               <li key={cat.key}>
                 <Link href={cat.href} className="hover:text-brand-crimson">
@@ -136,7 +140,7 @@ export function SiteFooter({ categories }: { categories: NavChild[] }) {
           <h3 className="font-ui text-xs font-semibold uppercase tracking-wider text-foreground-muted/70">
             {t("footerCompany")}
           </h3>
-          <ul className="mt-3 grid grid-cols-2 gap-2 font-ui text-sm lg:grid-cols-1">
+          <ul className="mt-3 grid grid-cols-1 gap-2 font-ui text-sm sm:grid-cols-2 lg:grid-cols-1">
             {companyLinks.map((link) => (
               <li key={link.href}>
                 <Link href={link.href} className="hover:text-brand-crimson">
@@ -150,7 +154,7 @@ export function SiteFooter({ categories }: { categories: NavChild[] }) {
 
         {/* Newsletter + contact */}
         {showLast && (
-        <div id="newsletter">
+        <div id="newsletter" className="col-span-2 lg:col-span-1">
           {show("newsletter") && (
             <>
               <h3 className="font-ui text-xs font-semibold uppercase tracking-wider text-foreground-muted/70">
@@ -200,7 +204,7 @@ export function SiteFooter({ categories }: { categories: NavChild[] }) {
 
       {/* Bottom bar */}
       <div className="border-t border-border">
-        <div className="mx-auto flex max-w-[1600px] flex-col items-center gap-2 px-6 py-4 text-center font-ui text-xs text-foreground-muted/70 sm:flex-row sm:justify-between sm:text-left">
+        <div className="mx-auto flex max-w-[1600px] flex-col items-center gap-2 px-4 py-4 text-center font-ui text-[11px] text-foreground-muted/70 sm:flex-row sm:justify-between sm:px-6 sm:text-left sm:text-xs">
           <span>{show("editor") ? cfg.editor || t("footerEditor") : ""}</span>
           <span>
             © {new Date().getFullYear()} LinkNews24. {t("footerRights")}
