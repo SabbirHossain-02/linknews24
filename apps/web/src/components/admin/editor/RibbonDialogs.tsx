@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { Editor } from "@tiptap/react";
 import { X } from "lucide-react";
 import { FONTS, FONT_SIZES, LINE_HEIGHTS } from "./extensions";
+import { useAdminText } from "@/lib/admin-strings";
 
 /** Word-style dialog shell: title bar, body, and OK / Cancel footer. */
 function DialogShell({
@@ -17,6 +18,7 @@ function DialogShell({
   onApply: () => void;
   children: React.ReactNode;
 }) {
+  const ax = useAdminText();
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/30 p-4">
       <div className="w-full max-w-md overflow-hidden rounded border border-[#d4d4d4] bg-white shadow-2xl">
@@ -41,7 +43,7 @@ function DialogShell({
             onClick={onClose}
             className="rounded-sm border border-[#d4d4d4] bg-white px-4 py-1 font-ui text-[11px] text-[#333] hover:bg-[#e1dfdd]"
           >
-            বাতিল
+            {ax("বাতিল")}
           </button>
           <button
             type="button"
@@ -51,7 +53,7 @@ function DialogShell({
             }}
             className="rounded-sm bg-[#14181f] px-4 py-1 font-ui text-[11px] font-semibold text-white hover:bg-[#2a3240]"
           >
-            ঠিক আছে
+            {ax("ঠিক আছে")}
           </button>
         </div>
       </div>
@@ -71,6 +73,7 @@ export function FontDialog({
   editor: Editor;
   onClose: () => void;
 }) {
+  const ax = useAdminText();
   const current = editor.getAttributes("textStyle");
   const [family, setFamily] = useState<string>(current.fontFamily ?? "");
   const [size, setSize] = useState<string>(
@@ -127,16 +130,16 @@ export function FontDialog({
   );
 
   return (
-    <DialogShell title="ফন্ট" onClose={onClose} onApply={apply}>
+    <DialogShell title={ax("ফন্ট")} onClose={onClose} onApply={apply}>
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <p className={labelCls}>ফন্ট</p>
+          <p className={labelCls}>{ax("ফন্ট")}</p>
           <select
             value={family}
             onChange={(e) => setFamily(e.target.value)}
             className={`${fieldCls} mt-1`}
           >
-            <option value="">ডিফল্ট</option>
+            <option value="">{ax("ডিফল্ট")}</option>
             {FONTS.map((f) => (
               <option key={f.label} value={f.value}>
                 {f.label}
@@ -145,13 +148,13 @@ export function FontDialog({
           </select>
         </div>
         <div>
-          <p className={labelCls}>সাইজ</p>
+          <p className={labelCls}>{ax("সাইজ")}</p>
           <select
             value={size}
             onChange={(e) => setSize(e.target.value)}
             className={`${fieldCls} mt-1`}
           >
-            <option value="">ডিফল্ট</option>
+            <option value="">{ax("ডিফল্ট")}</option>
             {FONT_SIZES.map((s) => (
               <option key={s} value={s}>
                 {s}
@@ -162,7 +165,7 @@ export function FontDialog({
       </div>
 
       <div>
-        <p className={labelCls}>ফন্টের রঙ</p>
+        <p className={labelCls}>{ax("ফন্টের রঙ")}</p>
         <div className="mt-1 flex items-center gap-2">
           <input
             type="color"
@@ -175,7 +178,7 @@ export function FontDialog({
       </div>
 
       <div>
-        <p className={labelCls}>স্টাইল ও ইফেক্ট</p>
+        <p className={labelCls}>{ax("স্টাইল ও ইফেক্ট")}</p>
         <div className="mt-1.5 grid grid-cols-3 gap-y-1.5">
           <Check label="Bold" checked={bold} onChange={setBold} />
           <Check label="Italic" checked={italic} onChange={setItalic} />
@@ -187,7 +190,7 @@ export function FontDialog({
       </div>
 
       <div>
-        <p className={labelCls}>প্রিভিউ</p>
+        <p className={labelCls}>{ax("প্রিভিউ")}</p>
         <div className="mt-1 flex h-14 items-center justify-center rounded-sm border border-[#d4d4d4] bg-[#f9f9f9]">
           <span
             style={{
@@ -204,7 +207,7 @@ export function FontDialog({
                 .join(" "),
             }}
           >
-            আমার সোনার বাংলা — AaBbCcD
+            {ax("আমার সোনার বাংলা — AaBbCcD")}
           </span>
         </div>
       </div>
@@ -220,6 +223,7 @@ export function ParagraphDialog({
   editor: Editor;
   onClose: () => void;
 }) {
+  const ax = useAdminText();
   const blockName = editor.isActive("heading") ? "heading" : "paragraph";
   const attrs = editor.getAttributes(blockName);
 
@@ -251,38 +255,38 @@ export function ParagraphDialog({
   };
 
   return (
-    <DialogShell title="প্যারাগ্রাফ" onClose={onClose} onApply={apply}>
+    <DialogShell title={ax("প্যারাগ্রাফ")} onClose={onClose} onApply={apply}>
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <p className={labelCls}>অ্যালাইনমেন্ট</p>
+          <p className={labelCls}>{ax("অ্যালাইনমেন্ট")}</p>
           <select
             value={align}
             onChange={(e) => setAlign(e.target.value)}
             className={`${fieldCls} mt-1`}
           >
-            <option value="left">বাম</option>
-            <option value="center">মাঝ</option>
-            <option value="right">ডান</option>
-            <option value="justify">জাস্টিফাই</option>
+            <option value="left">{ax("বাম")}</option>
+            <option value="center">{ax("মাঝ")}</option>
+            <option value="right">{ax("ডান")}</option>
+            <option value="justify">{ax("জাস্টিফাই")}</option>
           </select>
         </div>
         <div>
-          <p className={labelCls}>লেখার দিক</p>
+          <p className={labelCls}>{ax("লেখার দিক")}</p>
           <select
             value={dir}
             onChange={(e) => setDir(e.target.value)}
             className={`${fieldCls} mt-1`}
           >
-            <option value="">ডিফল্ট</option>
-            <option value="ltr">বাম → ডান</option>
-            <option value="rtl">ডান → বাম</option>
+            <option value="">{ax("ডিফল্ট")}</option>
+            <option value="ltr">{ax("বাম → ডান")}</option>
+            <option value="rtl">{ax("ডান → বাম")}</option>
           </select>
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <p className={labelCls}>ইনডেন্ট (ধাপ)</p>
+          <p className={labelCls}>{ax("ইনডেন্ট (ধাপ)")}</p>
           <input
             type="number"
             min={0}
@@ -293,13 +297,13 @@ export function ParagraphDialog({
           />
         </div>
         <div>
-          <p className={labelCls}>লাইন স্পেসিং</p>
+          <p className={labelCls}>{ax("লাইন স্পেসিং")}</p>
           <select
             value={lineHeight}
             onChange={(e) => setLineHeight(e.target.value)}
             className={`${fieldCls} mt-1`}
           >
-            <option value="">ডিফল্ট</option>
+            <option value="">{ax("ডিফল্ট")}</option>
             {LINE_HEIGHTS.map((h) => (
               <option key={h} value={h}>
                 {h}
@@ -310,14 +314,14 @@ export function ParagraphDialog({
       </div>
 
       <div>
-        <p className={labelCls}>প্যারার পরে ফাঁকা</p>
+        <p className={labelCls}>{ax("প্যারার পরে ফাঁকা")}</p>
         <select
           value={spacing}
           onChange={(e) => setSpacing(e.target.value)}
           className={`${fieldCls} mt-1`}
         >
-          <option value="">ডিফল্ট</option>
-          <option value="0">নেই</option>
+          <option value="">{ax("ডিফল্ট")}</option>
+          <option value="0">{ax("নেই")}</option>
           <option value="0.5em">0.5em</option>
           <option value="1em">1em</option>
           <option value="1.5em">1.5em</option>

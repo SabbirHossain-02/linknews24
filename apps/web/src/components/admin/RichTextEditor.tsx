@@ -34,6 +34,7 @@ import { Outline } from "./editor/Outline";
 import { FontDialog, ParagraphDialog } from "./editor/RibbonDialogs";
 import { ViewTab, type ViewState } from "./editor/ViewTab";
 import { WordTitleBar } from "./editor/WordTitleBar";
+import { useAdminText } from "@/lib/admin-strings";
 
 const TABS = [
   { id: "home", label: "Home" },
@@ -69,6 +70,7 @@ export function RichTextEditor({
   placeholder?: string;
   documentName?: string;
 }) {
+  const ax = useAdminText();
   const [tab, setTab] = useState<TabId>("home");
   const [ribbonOpen, setRibbonOpen] = useState(true);
   const [findOpen, setFindOpen] = useState(false);
@@ -231,7 +233,7 @@ export function RichTextEditor({
         ))}
         <button
           type="button"
-          title={ribbonOpen ? "রিবন গুটিয়ে ফেলুন" : "রিবন দেখান"}
+          title={ribbonOpen ? ax("রিবন গুটিয়ে ফেলুন") : ax("রিবন দেখান")}
           onMouseDown={(e) => e.preventDefault()}
           onClick={() => setRibbonOpen((v) => !v)}
           className="ml-auto mr-1 flex h-[44px] w-6 items-center justify-center text-[#666] hover:bg-[#e1dfdd] hover:text-[#111]"
@@ -354,7 +356,7 @@ export function RichTextEditor({
         <div className="ml-auto flex items-center gap-2">
           <button
             type="button"
-            title="জুম কমান"
+            title={ax("জুম কমান")}
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => setView({ zoom: Math.max(view.zoom - 10, 50) })}
             className="flex h-4 w-4 items-center justify-center rounded-sm hover:bg-white/20"
@@ -373,7 +375,7 @@ export function RichTextEditor({
           />
           <button
             type="button"
-            title="জুম বাড়ান"
+            title={ax("জুম বাড়ান")}
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => setView({ zoom: Math.min(view.zoom + 10, 200) })}
             className="flex h-4 w-4 items-center justify-center rounded-sm hover:bg-white/20"

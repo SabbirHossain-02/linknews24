@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { BigBtn, Btn, Group, IconCombo, MenuHeading, MenuItem, Row, Stack } from "./ui";
 import type { FigureAlign } from "./figure";
+import { useAdminText } from "@/lib/admin-strings";
 
 const WRAPS: { value: FigureAlign; label: string }[] = [
   { value: "center", label: "মাঝে, নিজের লাইনে" },
@@ -33,6 +34,7 @@ const WIDTHS = [25, 33, 50, 66, 75, 100];
  * the reader.
  */
 export function LayoutTab({ editor }: { editor: Editor }) {
+  const ax = useAdminText();
   const inFigure = editor.isActive("figure");
   const figureWidth = (editor.getAttributes("figure").width as number) ?? 100;
 
@@ -41,21 +43,21 @@ export function LayoutTab({ editor }: { editor: Editor }) {
       {/* ---------------- Columns ---------------- */}
       <Group label="Columns">
         <BigBtn
-          title="এক কলাম — স্বাভাবিক"
+          title={ax("এক কলাম — স্বাভাবিক")}
           label="One"
           active={!editor.isActive("columnBlock")}
           icon={<Square className="h-5 w-5" />}
           onClick={() => editor.chain().focus().setColumnCount(1).run()}
         />
         <BigBtn
-          title="বাছাই করা লেখাটি দুই কলামে সাজান"
+          title={ax("বাছাই করা লেখাটি দুই কলামে সাজান")}
           label="Two"
           active={editor.isActive("columnBlock", { count: 2 })}
           icon={<Columns2 className="h-5 w-5" />}
           onClick={() => editor.chain().focus().setColumnCount(2).run()}
         />
         <BigBtn
-          title="বাছাই করা লেখাটি তিন কলামে সাজান"
+          title={ax("বাছাই করা লেখাটি তিন কলামে সাজান")}
           label="Three"
           active={editor.isActive("columnBlock", { count: 3 })}
           icon={<Columns3 className="h-5 w-5" />}
@@ -68,25 +70,25 @@ export function LayoutTab({ editor }: { editor: Editor }) {
         <Stack>
           <Row>
             <Btn
-              title="ইনডেন্ট কমান"
+              title={ax("ইনডেন্ট কমান")}
               onClick={() => editor.chain().focus().outdent().run()}
             >
               <IndentDecrease className="h-3.5 w-3.5" />
             </Btn>
             <Btn
-              title="ইনডেন্ট বাড়ান"
+              title={ax("ইনডেন্ট বাড়ান")}
               onClick={() => editor.chain().focus().indent().run()}
             >
               <IndentIncrease className="h-3.5 w-3.5" />
             </Btn>
             <IconCombo
-              title="প্যারার পরে ফাঁকা"
+              title={ax("প্যারার পরে ফাঁকা")}
               icon={<AlignHorizontalSpaceAround className="h-3.5 w-3.5" />}
               panelWidth={168}
             >
               {(close) => (
                 <>
-                  <MenuHeading>প্যারার পরে ফাঁকা</MenuHeading>
+                  <MenuHeading>{ax("প্যারার পরে ফাঁকা")}</MenuHeading>
                   {["0", "0.5em", "1em", "1.5em", "2em", "3em"].map((s) => (
                     <MenuItem
                       key={s}
@@ -104,7 +106,7 @@ export function LayoutTab({ editor }: { editor: Editor }) {
           </Row>
           <Row>
             <Btn
-              title="হাইফেনেশন — লাইনের শেষে শব্দ ভাঙা"
+              title={ax("হাইফেনেশন — লাইনের শেষে শব্দ ভাঙা")}
               active={editor.isActive("paragraph", { hyphens: true })}
               onClick={() => editor.chain().focus().toggleHyphenation().run()}
             >
@@ -119,8 +121,8 @@ export function LayoutTab({ editor }: { editor: Editor }) {
         <IconCombo
           title={
             inFigure
-              ? "ছবির অবস্থান ও চারপাশে লেখা"
-              : "আগে একটি ছবি সিলেক্ট করুন"
+              ? ax("ছবির অবস্থান ও চারপাশে লেখা")
+              : ax("আগে একটি ছবি সিলেক্ট করুন")
           }
           panelWidth={220}
           icon={
@@ -137,11 +139,11 @@ export function LayoutTab({ editor }: { editor: Editor }) {
           {(close) =>
             !inFigure ? (
               <p className="px-3 py-3 font-ui text-[11px] leading-snug text-[#666]">
-                ছবির অবস্থান বদলাতে আগে খবরের ভেতরের একটি ছবিতে ক্লিক করুন।
+                {ax("ছবির অবস্থান বদলাতে আগে খবরের ভেতরের একটি ছবিতে ক্লিক করুন।")}
               </p>
             ) : (
               <>
-                <MenuHeading>ছবির অবস্থান</MenuHeading>
+                <MenuHeading>{ax("ছবির অবস্থান")}</MenuHeading>
                 {WRAPS.map((w) => (
                   <MenuItem
                     key={w.value}
@@ -154,7 +156,7 @@ export function LayoutTab({ editor }: { editor: Editor }) {
                     {w.label}
                   </MenuItem>
                 ))}
-                <MenuHeading>চওড়া</MenuHeading>
+                <MenuHeading>{ax("চওড়া")}</MenuHeading>
                 {WIDTHS.map((w) => (
                   <MenuItem
                     key={w}

@@ -6,6 +6,7 @@ import { apiFetch } from "@/lib/admin-api";
 import { Modal } from "@/components/admin/Modal";
 import { Toggle } from "@/components/admin/Toggle";
 import { useAdminT } from "@/lib/admin-i18n";
+import { useAdminText } from "@/lib/admin-strings";
 
 interface Category {
   id: string;
@@ -21,6 +22,7 @@ const inputCls =
   "w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-brand-crimson focus:outline-none";
 
 export default function CategoriesAdminPage() {
+  const ax = useAdminText();
   const t = useAdminT();
   const [cats, setCats] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -226,10 +228,10 @@ export default function CategoriesAdminPage() {
                           <button
                             type="button"
                             onClick={() => update(sub.id, { parentId: null })}
-                            title="মূল মেনুতে ফিরিয়ে নিন"
+                            title={ax("মূল মেনুতে ফিরিয়ে নিন")}
                             className="shrink-0 rounded px-2 py-1 font-ui text-[11px] text-foreground-muted hover:bg-surface hover:text-foreground"
                           >
-                            বের করুন
+                            {ax("বের করুন")}
                           </button>
                           <DeleteBtn c={sub} />
                         </div>
@@ -257,14 +259,14 @@ export default function CategoriesAdminPage() {
                         onClick={() => addSub(main.id)}
                         className="shrink-0 rounded-lg bg-brand-crimson px-4 py-2 font-ui text-sm font-semibold text-white hover:bg-brand-crimson-dark"
                       >
-                        যোগ করুন
+                        {ax("যোগ করুন")}
                       </button>
                       <button
                         onClick={() => {
                           setAddingUnder(null);
                           setAddError(null);
                         }}
-                        title="বাতিল"
+                        title={ax("বাতিল")}
                         className="shrink-0 rounded-lg border border-border px-2 py-2 text-foreground-muted hover:bg-surface"
                       >
                         <X className="h-4 w-4" />
@@ -282,7 +284,7 @@ export default function CategoriesAdminPage() {
                       className="mt-2 flex items-center gap-1.5 rounded-lg border border-dashed border-border px-3 py-1.5 font-ui text-xs text-foreground-muted hover:border-brand-crimson hover:text-brand-crimson"
                     >
                       <Plus className="h-3.5 w-3.5" />
-                      সাব-ক্যাটাগরি
+                      {ax("সাব-ক্যাটাগরি")}
                     </button>
                   )}
 
@@ -306,7 +308,7 @@ export default function CategoriesAdminPage() {
             <Modal title={`"${target?.name}" মুছে ফেলুন`} onClose={closeDelete}>
               {count === 0 ? (
                 <p className="font-ui text-sm text-foreground-muted">
-                  এই ক্যাটাগরিতে কোনো আর্টিকেল নেই। মুছে ফেলবেন?
+                  {ax("এই ক্যাটাগরিতে কোনো আর্টিকেল নেই। মুছে ফেলবেন?")}
                 </p>
               ) : (
                 <>
@@ -318,10 +320,10 @@ export default function CategoriesAdminPage() {
 
                   <div className="mt-4 rounded-lg border border-border p-3">
                     <p className="font-ui text-xs font-semibold text-foreground">
-                      অন্য ক্যাটাগরিতে সরিয়ে নিন
+                      {ax("অন্য ক্যাটাগরিতে সরিয়ে নিন")}
                     </p>
                     <p className="mt-0.5 font-ui text-[11px] text-foreground-muted">
-                      আর্টিকেলগুলো থেকে যাবে, শুধু ক্যাটাগরিটা বদলাবে।
+                      {ax("আর্টিকেলগুলো থেকে যাবে, শুধু ক্যাটাগরিটা বদলাবে।")}
                     </p>
                     <div className="mt-2 flex gap-2">
                       <select
@@ -329,7 +331,7 @@ export default function CategoriesAdminPage() {
                         onChange={(e) => setMoveTo(e.target.value)}
                         className={`${inputCls} flex-1`}
                       >
-                        <option value="">ক্যাটাগরি বাছুন…</option>
+                        <option value="">{ax("ক্যাটাগরি বাছুন…")}</option>
                         {others.map((c) => (
                           <option key={c.id} value={c.id}>
                             {c.name}
@@ -342,18 +344,18 @@ export default function CategoriesAdminPage() {
                         onClick={() => remove(deleteId, { moveTo })}
                         className="shrink-0 rounded-lg border border-border px-3 py-2 font-ui text-xs font-medium text-foreground hover:bg-surface disabled:opacity-40"
                       >
-                        সরিয়ে মুছুন
+                        {ax("সরিয়ে মুছুন")}
                       </button>
                     </div>
                   </div>
 
                   <div className="mt-3 rounded-lg border border-brand-crimson/40 bg-brand-crimson/5 p-3">
                     <p className="font-ui text-xs font-semibold text-brand-crimson">
-                      আর্টিকেলসহ মুছে ফেলুন
+                      {ax("আর্টিকেলসহ মুছে ফেলুন")}
                     </p>
                     <p className="mt-0.5 font-ui text-[11px] leading-relaxed text-foreground-muted">
                       {count}টি আর্টিকেল ও সেগুলোর সব কমেন্ট চিরতরে মুছে যাবে।
-                      <b> ফেরত আনা যাবে না।</b>
+                      <b> {ax("ফেরত আনা যাবে না।")}</b>
                     </p>
                   </div>
                 </>
@@ -371,7 +373,7 @@ export default function CategoriesAdminPage() {
                   onClick={closeDelete}
                   className="rounded-lg border border-border px-4 py-2 font-ui text-sm text-foreground hover:bg-surface"
                 >
-                  বাতিল
+                  {ax("বাতিল")}
                 </button>
                 <button
                   type="button"

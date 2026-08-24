@@ -9,6 +9,7 @@ import {
   SpellCheck,
 } from "lucide-react";
 import { BigBtn, Combo, Group, MenuItem } from "./ui";
+import { useAdminText } from "@/lib/admin-strings";
 
 export interface ViewState {
   pageMode: boolean;
@@ -29,18 +30,19 @@ export function ViewTab({
   setView: (patch: Partial<ViewState>) => void;
   onToggleSpellcheck: () => void;
 }) {
+  const ax = useAdminText();
   return (
     <div className="flex h-[92px] items-stretch overflow-x-auto bg-white">
       <Group label="Views">
         <BigBtn
-          title="পেজ ভিউ — Word-এর মতো সাদা কাগজে"
+          title={ax("পেজ ভিউ — Word-এর মতো সাদা কাগজে")}
           label="Print Layout"
           active={view.pageMode}
           icon={<FileText className="h-5 w-5" />}
           onClick={() => setView({ pageMode: true })}
         />
         <BigBtn
-          title="ওয়েব ভিউ — সাইটে যে প্রস্থে দেখাবে"
+          title={ax("ওয়েব ভিউ — সাইটে যে প্রস্থে দেখাবে")}
           label="Web Layout"
           active={!view.pageMode}
           icon={<ScrollText className="h-5 w-5" />}
@@ -49,7 +51,7 @@ export function ViewTab({
       </Group>
 
       <Group label="Zoom">
-        <Combo label={`${view.zoom}%`} width="w-20" title="জুম">
+        <Combo label={`${view.zoom}%`} width="w-20" title={ax("জুম")}>
           {(close) =>
             ZOOMS.map((z) => (
               <MenuItem
@@ -69,21 +71,21 @@ export function ViewTab({
 
       <Group label="Show">
         <BigBtn
-          title="ডকুমেন্ট আউটলাইন — শিরোনামের তালিকা"
+          title={ax("ডকুমেন্ট আউটলাইন — শিরোনামের তালিকা")}
           label="Outline"
           active={view.outline}
           icon={<PanelLeft className="h-5 w-5" />}
           onClick={() => setView({ outline: !view.outline })}
         />
         <BigBtn
-          title="বানান পরীক্ষা চালু/বন্ধ"
+          title={ax("বানান পরীক্ষা চালু/বন্ধ")}
           label="Spelling"
           active={view.spellcheck}
           icon={<SpellCheck className="h-5 w-5" />}
           onClick={onToggleSpellcheck}
         />
         <BigBtn
-          title="ফুল স্ক্রিন (Esc দিয়ে বেরোন)"
+          title={ax("ফুল স্ক্রিন (Esc দিয়ে বেরোন)")}
           label="Full Screen"
           active={view.fullscreen}
           icon={

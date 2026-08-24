@@ -340,6 +340,29 @@ const EN: Record<string, string> = {
   "লাইভ টিভি": "Live TV",
   "নাম, ইমেইল ও কমপক্ষে ৬ অক্ষরের পাসওয়ার্ড দিন":
     "Enter a name, an email and a password of at least 6 characters",
+  // --- longer prose and remaining labels ---
+  "আপলোড": "Upload",
+  "অন্য রঙ…": "Other colour…",
+  "সেগুলোর কী হবে?": "What should happen to them?",
+  "চওড়া — {n}%": "Width — {n}%",
+  "এই কম্পিউটারে ইনস্টল করা ({n})": "Installed on this computer ({n})",
+  "অনুমতি পাওয়া যায়নি। ঠিকানা বারের 🔒 আইকনে গিয়ে ফন্টের অনুমতি দিন, তারপর আবার চেষ্টা করুন।":
+    "Permission was refused. Allow fonts from the 🔒 icon in the address bar, then try again.",
+  "কম্পিউটারে ইনস্টল করা ফন্ট আনার সুবিধাটি Chrome/Edge ডেস্কটপে পাওয়া যায়।":
+    "Reading the computer’s installed fonts works in Chrome and Edge on the desktop.",
+  "YouTube-এর সাধারণ লিংক বা youtu.be দুটোই চলবে। ভিডিওটি খবরের ভেতরে বসে যাবে, পাঠক সেখানেই দেখতে পারবে।":
+    "An ordinary YouTube link or a youtu.be one both work. The video sits inside the story and plays there.",
+  "এই অনুচ্ছেদে একটি নাম বসবে, যাতে খবরের ভেতরেই সরাসরি এখানে লিংক করা যায় — লম্বা প্রতিবেদনে কাজে লাগে।":
+    "This paragraph gets a name, so the story can link straight to it — useful in a long report.",
+  "লাল = ঠিক করা দরকার · হলুদ = ভেবে দেখুন। alt লেখা যোগ করতে ছবিতে ক্লিক করে Insert → Picture খুলুন।":
+    "Red = must fix · amber = worth a look. To add alt text, click the picture and open Insert → Picture.",
+  "টেবিলের উপরে-বাঁয়ের ⊞ ধরে টানলে টেবিলটি অন্য জায়গায় যাবে, নিচে-ডানের কোণা ধরে টানলে আকার বদলাবে, আর দুই কলামের মাঝের দাগ টানলে কলামের চওড়া বদলাবে।":
+    "Drag the ⊞ at the top left to move the table, the bottom-right corner to resize it, and the line between two columns to change a column width.",
+  "মিনিট": "min",
+  "এখানে": "here",
+  "এখানে ক্লিক": "click here",
+  "ক্লিক করুন": "click",
+  "-এর ভেতরে — নাম (বাংলা)": " — name inside (Bengali)",
 };
 
 /** Translate one admin string for a known locale. */

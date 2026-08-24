@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { ChevronDown, CornerDownRight } from "lucide-react";
 import { Popover } from "./Popover";
+import { useAdminText } from "@/lib/admin-strings";
 
 /**
  * Ribbon primitives laid out like the Microsoft Word desktop ribbon, but
@@ -321,6 +322,8 @@ export function ColorGrid({
   resetLabel: string;
   current?: string;
 }) {
+  const ax = useAdminText();
+
   return (
     <div className="p-2">
       <button
@@ -352,7 +355,7 @@ export function ColorGrid({
         onMouseDown={keepFocus}
         className="mt-1.5 flex cursor-pointer items-center justify-center rounded-sm border border-[#d4d4d4] px-2 py-1 font-ui text-[11px] text-[#333] hover:bg-[#e1dfdd]"
       >
-        অন্য রঙ…
+        {ax("অন্য রঙ…")}
         <input
           type="color"
           onChange={(e) => onPick(e.target.value)}

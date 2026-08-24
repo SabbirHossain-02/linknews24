@@ -7,8 +7,10 @@ import {
   useAdminAuth,
 } from "@/components/admin/AdminAuthProvider";
 import { AdminShell } from "@/components/admin/AdminShell";
+import { useAdminText } from "@/lib/admin-strings";
 
 function Gate({ children }: { children: React.ReactNode }) {
+  const ax = useAdminText();
   const { user, loading } = useAdminAuth();
   const pathname = usePathname();
   const router = useRouter();
@@ -25,7 +27,7 @@ function Gate({ children }: { children: React.ReactNode }) {
   if (loading || !user) {
     return (
       <div className="grid min-h-screen place-items-center bg-surface font-ui text-sm text-foreground-muted">
-        লোড হচ্ছে…
+        {ax("লোড হচ্ছে…")}
       </div>
     );
   }

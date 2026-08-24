@@ -3,6 +3,7 @@
 import type { Editor } from "@tiptap/react";
 import { Printer, Redo2, Save, Search, Undo2 } from "lucide-react";
 import { keepFocus } from "./ui";
+import { useAdminText } from "@/lib/admin-strings";
 
 /**
  * Word's blue title bar with the Quick Access Toolbar on the left and the
@@ -22,6 +23,7 @@ export function WordTitleBar({
   saveState?: string | null;
   onSave?: () => void;
 }) {
+  const ax = useAdminText();
   const Item = ({
     title,
     disabled,
@@ -48,28 +50,28 @@ export function WordTitleBar({
   return (
     <div className="flex h-8 items-center gap-0.5 bg-[#14181f] px-1.5">
       {onSave && (
-        <Item title="খসড়া সেভ করুন (Ctrl+S)" onClick={onSave}>
+        <Item title={ax("খসড়া সেভ করুন (Ctrl+S)")} onClick={onSave}>
           <Save className="h-3.5 w-3.5" />
         </Item>
       )}
       <Item
-        title="আন্ডু (Ctrl+Z)"
+        title={ax("আন্ডু (Ctrl+Z)")}
         disabled={!editor.can().undo()}
         onClick={() => editor.chain().focus().undo().run()}
       >
         <Undo2 className="h-3.5 w-3.5" />
       </Item>
       <Item
-        title="রিডু (Ctrl+Y)"
+        title={ax("রিডু (Ctrl+Y)")}
         disabled={!editor.can().redo()}
         onClick={() => editor.chain().focus().redo().run()}
       >
         <Redo2 className="h-3.5 w-3.5" />
       </Item>
-      <Item title="খুঁজুন ও বদলান (Ctrl+F)" onClick={onOpenFind}>
+      <Item title={ax("খুঁজুন ও বদলান (Ctrl+F)")} onClick={onOpenFind}>
         <Search className="h-3.5 w-3.5" />
       </Item>
-      <Item title="প্রিন্ট (Ctrl+P)" onClick={() => window.print()}>
+      <Item title={ax("প্রিন্ট (Ctrl+P)")} onClick={() => window.print()}>
         <Printer className="h-3.5 w-3.5" />
       </Item>
 

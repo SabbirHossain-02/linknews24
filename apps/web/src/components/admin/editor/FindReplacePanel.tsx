@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import type { Editor } from "@tiptap/react";
 import { ChevronDown, ChevronUp, X } from "lucide-react";
 import { keepFocus } from "./ui";
+import { useAdminText } from "@/lib/admin-strings";
 
 export function FindReplacePanel({
   editor,
@@ -12,6 +13,7 @@ export function FindReplacePanel({
   editor: Editor;
   onClose: () => void;
 }) {
+  const ax = useAdminText();
   const [term, setTerm] = useState("");
   const [replacement, setReplacement] = useState("");
   const [caseSensitive, setCaseSensitive] = useState(false);
@@ -67,7 +69,7 @@ export function FindReplacePanel({
             }
             if (e.key === "Escape") onClose();
           }}
-          placeholder="যা খুঁজবেন…"
+          placeholder={ax("যা খুঁজবেন…")}
           className="h-8 w-48 rounded border border-[#d4d4d4] bg-white px-2 font-ui text-xs text-[#333] outline-none focus:border-[#d81f26]"
         />
         <span className="w-14 shrink-0 text-center font-ui text-[11px] text-[#666]">
@@ -75,7 +77,7 @@ export function FindReplacePanel({
         </span>
         <button
           type="button"
-          title="আগেরটি (Shift+Enter)"
+          title={ax("আগেরটি (Shift+Enter)")}
           disabled={!total}
           onMouseDown={keepFocus}
           onClick={() => run(() => editor.commands.findPrevious())}
@@ -85,7 +87,7 @@ export function FindReplacePanel({
         </button>
         <button
           type="button"
-          title="পরেরটি (Enter)"
+          title={ax("পরেরটি (Enter)")}
           disabled={!total}
           onMouseDown={keepFocus}
           onClick={() => run(() => editor.commands.findNext())}
@@ -99,7 +101,7 @@ export function FindReplacePanel({
         <input
           value={replacement}
           onChange={(e) => setReplacement(e.target.value)}
-          placeholder="যা বসাবেন…"
+          placeholder={ax("যা বসাবেন…")}
           className="h-8 w-48 rounded border border-[#d4d4d4] bg-white px-2 font-ui text-xs text-[#333] outline-none focus:border-[#d81f26]"
         />
         <button
@@ -109,7 +111,7 @@ export function FindReplacePanel({
           onClick={() => run(() => editor.commands.replaceCurrent(replacement))}
           className="h-8 rounded border border-[#d4d4d4] px-2 font-ui text-[11px] text-[#333] hover:bg-white disabled:opacity-30"
         >
-          বদলান
+          {ax("বদলান")}
         </button>
         <button
           type="button"
@@ -118,7 +120,7 @@ export function FindReplacePanel({
           onClick={() => run(() => editor.commands.replaceAll(replacement))}
           className="h-8 rounded bg-[#14181f] px-2 font-ui text-[11px] font-semibold text-white hover:bg-[#2a3240] disabled:opacity-30"
         >
-          সব বদলান
+          {ax("সব বদলান")}
         </button>
       </div>
 
@@ -129,7 +131,7 @@ export function FindReplacePanel({
           onChange={(e) => setCaseSensitive(e.target.checked)}
           className="accent-[#d81f26]"
         />
-        ছোট/বড় হাতের মিল
+        {ax("ছোট/বড় হাতের মিল")}
       </label>
       <label className="flex cursor-pointer items-center gap-1 font-ui text-[11px] text-[#666]">
         <input
@@ -138,12 +140,12 @@ export function FindReplacePanel({
           onChange={(e) => setWholeWord(e.target.checked)}
           className="accent-[#d81f26]"
         />
-        পুরো শব্দ
+        {ax("পুরো শব্দ")}
       </label>
 
       <button
         type="button"
-        title="বন্ধ করুন (Esc)"
+        title={ax("বন্ধ করুন (Esc)")}
         onMouseDown={keepFocus}
         onClick={onClose}
         className="ml-auto flex h-8 w-8 items-center justify-center rounded text-[#666] hover:bg-white"

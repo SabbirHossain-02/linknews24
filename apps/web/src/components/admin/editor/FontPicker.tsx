@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { Editor } from "@tiptap/react";
 import { Combo, MenuHeading, MenuItem, keepFocus } from "./ui";
+import { useAdminText } from "@/lib/admin-strings";
 import {
   BUNDLED_FONTS,
   SYSTEM_BANGLA_FONTS,
@@ -25,6 +26,7 @@ import {
  * the menu is more useful than a flat alphabetical list that hides it.
  */
 export function FontPicker({ editor }: { editor: Editor }) {
+  const ax = useAdminText();
   const [installed, setInstalled] = useState<FontOption[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [denied, setDenied] = useState(false);
@@ -85,33 +87,33 @@ export function FontPicker({ editor }: { editor: Editor }) {
       label={active?.label ?? "Default"}
       width="w-40"
       panelWidth={260}
-      title="ফন্ট"
+      title={ax("ফন্ট")}
     >
       {(close) => (
         <>
           <MenuItem active={!current} onClick={() => apply(null, close)}>
-            Default (সাইটের ফন্ট)
+            {ax("Default (সাইটের ফন্ট)")}
           </MenuItem>
 
           <Section
-            heading="সাইটের নিজের ফন্ট — সব পাঠক দেখবে"
+            heading={ax("সাইটের নিজের ফন্ট — সব পাঠক দেখবে")}
             fonts={BUNDLED_FONTS}
             close={close}
           />
           <Section
-            heading="বাংলা — পাঠকের কম্পিউটারে থাকলে দেখাবে"
+            heading={ax("বাংলা — পাঠকের কম্পিউটারে থাকলে দেখাবে")}
             fonts={SYSTEM_BANGLA_FONTS}
             close={close}
           />
           <Section
-            heading="ইংরেজি — পাঠকের কম্পিউটারে থাকলে দেখাবে"
+            heading={ax("ইংরেজি — পাঠকের কম্পিউটারে থাকলে দেখাবে")}
             fonts={SYSTEM_LATIN_FONTS}
             close={close}
           />
 
           {installed && installed.length > 0 && (
             <Section
-              heading={`এই কম্পিউটারে ইনস্টল করা (${installed.length})`}
+              heading={ax("এই কম্পিউটারে ইনস্টল করা ({n})").replace("{n}", String(installed.length))}
               fonts={installed}
               close={close}
             />
@@ -128,13 +130,14 @@ export function FontPicker({ editor }: { editor: Editor }) {
                 className="w-full rounded-sm border border-[#d4d4d4] px-2 py-1 font-ui text-[11px] text-[#333] hover:bg-[#e1dfdd] disabled:opacity-50"
               >
                 {loading
-                  ? "আনা হচ্ছে…"
-                  : "＋ এই কম্পিউটারের সব ফন্ট আনুন"}
+                  ? ax("আনা হচ্ছে…")
+                  : ax("＋ এই কম্পিউটারের সব ফন্ট আনুন")}
               </button>
               {denied && (
                 <p className="mt-1.5 font-ui text-[10px] leading-snug text-[#a8151b]">
-                  অনুমতি পাওয়া যায়নি। ঠিকানা বারের 🔒 আইকনে গিয়ে ফন্টের অনুমতি
-                  দিন, তারপর আবার চেষ্টা করুন।
+                  {ax(
+                    "অনুমতি পাওয়া যায়নি। ঠিকানা বারের 🔒 আইকনে গিয়ে ফন্টের অনুমতি দিন, তারপর আবার চেষ্টা করুন।",
+                  )}
                 </p>
               )}
             </div>
@@ -142,8 +145,9 @@ export function FontPicker({ editor }: { editor: Editor }) {
 
           {!canReadInstalledFonts() && (
             <p className="border-t border-[#e1dfdd] px-3 py-2 font-ui text-[10px] leading-snug text-[#666]">
-              কম্পিউটারে ইনস্টল করা ফন্ট আনার সুবিধাটি Chrome/Edge ডেস্কটপে
-              পাওয়া যায়।
+              {ax(
+                "কম্পিউটারে ইনস্টল করা ফন্ট আনার সুবিধাটি Chrome/Edge ডেস্কটপে পাওয়া যায়।",
+              )}
             </p>
           )}
         </>

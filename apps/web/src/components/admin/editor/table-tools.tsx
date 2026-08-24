@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import type { Editor } from "@tiptap/react";
 import type { Node as PMNode } from "@tiptap/pm/model";
 import { NodeSelection, TextSelection } from "@tiptap/pm/state";
+import { useAdminText } from "@/lib/admin-strings";
 
 /** The table the cursor is standing in, if any. */
 export function findTable(
@@ -150,6 +151,7 @@ const MIN_COL = 30;
  * prosemirror-tables and is left alone.
  */
 export function TableHandles({ editor }: { editor: Editor }) {
+  const ax = useAdminText();
   const [rect, setRect] = useState<DOMRect | null>(null);
   const [dropY, setDropY] = useState<number | null>(null);
   const posRef = useRef<number>(-1);
@@ -279,7 +281,7 @@ export function TableHandles({ editor }: { editor: Editor }) {
     <>
       <button
         type="button"
-        title="টেবিলটি ধরে অন্য জায়গায় নিন"
+        title={ax("টেবিলটি ধরে অন্য জায়গায় নিন")}
         onMouseDown={startMove}
         style={{ top: rect.top - 11, left: rect.left - 11 }}
         className="fixed z-[60] flex h-[18px] w-[18px] cursor-move items-center justify-center rounded-sm border border-[#8a8886] bg-white text-[#333] shadow-sm hover:border-[#d81f26] hover:text-[#d81f26]"
@@ -294,7 +296,7 @@ export function TableHandles({ editor }: { editor: Editor }) {
 
       <button
         type="button"
-        title="টেবিলের আকার বদলাতে টানুন"
+        title={ax("টেবিলের আকার বদলাতে টানুন")}
         onMouseDown={startResize}
         style={{ top: rect.bottom - 5, left: rect.right - 5 }}
         className="fixed z-[60] h-[11px] w-[11px] cursor-nwse-resize rounded-[2px] border border-[#8a8886] bg-white hover:border-[#d81f26] hover:bg-[#fbe3e4]"

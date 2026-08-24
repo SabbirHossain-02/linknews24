@@ -32,6 +32,7 @@ import { getSocket } from "@/lib/socket";
 import { useLocale } from "@/components/providers/LocaleProvider";
 import { useAdminT, type AdminKey } from "@/lib/admin-i18n";
 import { NotificationBell } from "./NotificationBell";
+import { useAdminText } from "@/lib/admin-strings";
 
 interface NavItem {
   key: AdminKey;
@@ -107,6 +108,7 @@ function usePendingCounts(): Partial<Record<AdminKey, number>> {
 const FONT_KEY = "linknews24-font-scale";
 
 function FontScale() {
+  const ax = useAdminText();
   const [scale, setScale] = useState(1);
   useEffect(() => {
     const s = Number(localStorage.getItem(FONT_KEY));
@@ -124,17 +126,17 @@ function FontScale() {
         onClick={() => adjust(-0.1)}
         disabled={scale <= 0.9}
         className="flex h-7 w-7 items-center justify-center rounded border border-border text-xs font-bold text-foreground hover:bg-surface disabled:opacity-30"
-        aria-label="ফন্ট ছোট"
+        aria-label={ax("ফন্ট ছোট")}
       >
-        অ−
+        {ax("অ−")}
       </button>
       <button
         onClick={() => adjust(0.1)}
         disabled={scale >= 1.3}
         className="flex h-7 w-7 items-center justify-center rounded border border-border text-sm font-bold text-foreground hover:bg-surface disabled:opacity-30"
-        aria-label="ফন্ট বড়"
+        aria-label={ax("ফন্ট বড়")}
       >
-        অ+
+        {ax("অ+")}
       </button>
     </div>
   );

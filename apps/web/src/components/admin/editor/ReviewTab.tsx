@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { BigBtn, Group } from "./ui";
 import { useDictate, type ReadAloud } from "./use-speech";
+import { useAdminText } from "@/lib/admin-strings";
 
 export type ReviewDialogKind = "wordcount" | "accessibility";
 
@@ -36,19 +37,20 @@ export function ReviewTab({
   /** Owned by the editor shell, so the right-click menu can read it too. */
   read: ReadAloud;
 }) {
+  const ax = useAdminText();
   const dictate = useDictate(editor);
 
   return (
     <div className="flex h-[92px] items-stretch overflow-x-auto bg-white">
       <Group label="Proofing">
         <BigBtn
-          title="শব্দ, অক্ষর, অনুচ্ছেদ ও পড়ার সময়"
+          title={ax("শব্দ, অক্ষর, অনুচ্ছেদ ও পড়ার সময়")}
           label="Word Count"
           icon={<Calculator className="h-5 w-5" />}
           onClick={() => openDialog("wordcount")}
         />
         <BigBtn
-          title="বানান পরীক্ষা চালু/বন্ধ"
+          title={ax("বানান পরীক্ষা চালু/বন্ধ")}
           label="Spelling"
           active={spellcheck}
           icon={<SpellCheck className="h-5 w-5" />}
@@ -60,7 +62,7 @@ export function ReviewTab({
         <Group label="Speech">
           {read.supported && (
             <BigBtn
-              title="লেখা পড়ে শোনাবে — সিলেক্ট করা থাকলে শুধু সেটুকু"
+              title={ax("লেখা পড়ে শোনাবে — সিলেক্ট করা থাকলে শুধু সেটুকু")}
               label={read.speaking ? "Stop" : "Read Aloud"}
               active={read.speaking}
               icon={
@@ -76,7 +78,7 @@ export function ReviewTab({
           {read.notice && (
             <button
               type="button"
-              title="বন্ধ করুন"
+              title={ax("বন্ধ করুন")}
               onMouseDown={(e) => e.preventDefault()}
               onClick={read.dismissNotice}
               className="max-w-[300px] self-center rounded-sm border border-[#f0c36d] bg-[#fdf6e3] px-2 py-1 text-left font-ui text-[10px] leading-snug text-[#7a5b12]"
@@ -86,7 +88,7 @@ export function ReviewTab({
           )}
           {dictate.supported && (
             <BigBtn
-              title="মুখে বলুন, লেখা হয়ে যাবে (বাংলা)"
+              title={ax("মুখে বলুন, লেখা হয়ে যাবে (বাংলা)")}
               label={dictate.listening ? "Stop" : "Dictate"}
               active={dictate.listening}
               icon={
@@ -104,7 +106,7 @@ export function ReviewTab({
 
       <Group label="Accessibility">
         <BigBtn
-          title="ছবিতে alt আছে কি না, শিরোনামের ক্রম ঠিক কি না — পরীক্ষা করুন"
+          title={ax("ছবিতে alt আছে কি না, শিরোনামের ক্রম ঠিক কি না — পরীক্ষা করুন")}
           label="Check"
           icon={<Accessibility className="h-5 w-5" />}
           onClick={() => openDialog("accessibility")}

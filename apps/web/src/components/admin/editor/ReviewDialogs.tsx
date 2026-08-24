@@ -2,6 +2,7 @@
 
 import type { Editor } from "@tiptap/react";
 import { AlertTriangle, CheckCircle2, X } from "lucide-react";
+import { useAdminText } from "@/lib/admin-strings";
 
 function Shell({
   title,
@@ -12,6 +13,7 @@ function Shell({
   onClose: () => void;
   children: React.ReactNode;
 }) {
+  const ax = useAdminText();
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/30 p-4">
       <div className="w-full max-w-md overflow-hidden rounded border border-[#d4d4d4] bg-white shadow-2xl">
@@ -32,7 +34,7 @@ function Shell({
             onClick={onClose}
             className="rounded-sm bg-[#14181f] px-4 py-1 font-ui text-[11px] font-semibold text-white hover:bg-[#2a3240]"
           >
-            বন্ধ করুন
+            {ax("বন্ধ করুন")}
           </button>
         </div>
       </div>
@@ -49,6 +51,7 @@ export function WordCountDialog({
   editor: Editor;
   onClose: () => void;
 }) {
+  const ax = useAdminText();
   const text = editor.state.doc.textBetween(
     0,
     editor.state.doc.content.size,
@@ -84,7 +87,7 @@ export function WordCountDialog({
   ];
 
   return (
-    <Shell title="শব্দ গণনা" onClose={onClose}>
+    <Shell title={ax("শব্দ গণনা")} onClose={onClose}>
       <table className="w-full font-ui text-[12px]">
         <tbody>
           {rows.map(([label, value]) => (
@@ -98,7 +101,7 @@ export function WordCountDialog({
         </tbody>
       </table>
       <p className="mt-3 font-ui text-[10px] leading-snug text-[#666]">
-        পড়ার সময় বাংলা সংবাদের গড় গতি — মিনিটে ১৮০ শব্দ — ধরে হিসাব করা।
+        {ax("পড়ার সময় বাংলা সংবাদের গড় গতি — মিনিটে ১৮০ শব্দ — ধরে হিসাব করা।")}
       </p>
     </Shell>
   );
@@ -180,15 +183,16 @@ export function AccessibilityDialog({
   editor: Editor;
   onClose: () => void;
 }) {
+  const ax = useAdminText();
   const issues = findIssues(editor);
 
   return (
-    <Shell title="অ্যাক্সেসিবিলিটি পরীক্ষা" onClose={onClose}>
+    <Shell title={ax("অ্যাক্সেসিবিলিটি পরীক্ষা")} onClose={onClose}>
       {issues.length === 0 ? (
         <div className="flex items-start gap-2 rounded border border-green-300 bg-green-50 p-3">
           <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-700" />
           <p className="font-ui text-[12px] text-green-900">
-            কোনো সমস্যা পাওয়া যায়নি — খবরটি প্রকাশের জন্য প্রস্তুত।
+            {ax("কোনো সমস্যা পাওয়া যায়নি — খবরটি প্রকাশের জন্য প্রস্তুত।")}
           </p>
         </div>
       ) : (

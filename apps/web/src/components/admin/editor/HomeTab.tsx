@@ -50,6 +50,7 @@ import { FontPicker } from "./FontPicker";
 import { StyleGallery } from "./StyleGallery";
 import { useFormatPainter } from "./use-format-painter";
 import { copySelection, pasteIntoEditor } from "./clipboard";
+import { useAdminText } from "@/lib/admin-strings";
 
 /**
  * Rewrites the selected text through `fn` one text node at a time, so the
@@ -111,6 +112,7 @@ export function HomeTab({
   onOpenFontDialog: () => void;
   onOpenParagraphDialog: () => void;
 }) {
+  const ax = useAdminText();
   const { armed, copyFormat } = useFormatPainter(editor);
   const [note, setNote] = useState<string | null>(null);
 
@@ -150,20 +152,20 @@ export function HomeTab({
           don't have, and pointing it at Paste would just duplicate the button. */}
       <Group label="Clipboard">
         <BigBtn
-          title="পেস্ট (Ctrl+V)"
+          title={ax("পেস্ট (Ctrl+V)")}
           label="Paste"
           icon={<ClipboardPaste className="h-5 w-5" />}
           onClick={() => doPaste(false)}
           menu={(close) => (
             <>
-              <MenuHeading>পেস্ট করার ধরন</MenuHeading>
+              <MenuHeading>{ax("পেস্ট করার ধরন")}</MenuHeading>
               <MenuItem
                 onClick={() => {
                   doPaste(false);
                   close();
                 }}
               >
-                ফরম্যাট সহ
+                {ax("ফরম্যাট সহ")}
               </MenuItem>
               <MenuItem
                 onClick={() => {
@@ -178,19 +180,19 @@ export function HomeTab({
         />
         <Stack>
           <LabelBtn
-            title="কাট (Ctrl+X)"
+            title={ax("কাট (Ctrl+X)")}
             label="Cut"
             icon={<Scissors className="h-3.5 w-3.5" />}
             onClick={() => doCopy(true)}
           />
           <LabelBtn
-            title="কপি (Ctrl+C)"
+            title={ax("কপি (Ctrl+C)")}
             label="Copy"
             icon={<Copy className="h-3.5 w-3.5" />}
             onClick={() => doCopy(false)}
           />
           <LabelBtn
-            title="ফরম্যাট পেইন্টার — চাপুন, তারপর যেখানে বসাবেন সিলেক্ট করুন"
+            title={ax("ফরম্যাট পেইন্টার — চাপুন, তারপর যেখানে বসাবেন সিলেক্ট করুন")}
             label="Format Painter"
             icon={<Brush className="h-3.5 w-3.5" />}
             active={armed}
@@ -200,7 +202,7 @@ export function HomeTab({
       </Group>
 
       {/* ---------------- Font ---------------- */}
-      <Group label="Font" launchTitle="ফন্ট ডায়ালগ" onLaunch={onOpenFontDialog}>
+      <Group label="Font" launchTitle={ax("ফন্ট ডায়ালগ")} onLaunch={onOpenFontDialog}>
         <Stack>
           <Row>
             <FontPicker editor={editor} />
@@ -208,7 +210,7 @@ export function HomeTab({
               label={activeSize ? parseInt(activeSize, 10) : 17}
               width="w-14"
               panelWidth={92}
-              title="ফন্ট সাইজ"
+              title={ax("ফন্ট সাইজ")}
             >
               {(close) => (
                 <>
@@ -218,7 +220,7 @@ export function HomeTab({
                       close();
                     }}
                   >
-                    ডিফল্ট
+                    {ax("ডিফল্ট")}
                   </MenuItem>
                   {FONT_SIZES.map((s) => (
                     <MenuItem
@@ -234,14 +236,14 @@ export function HomeTab({
                 </>
               )}
             </Combo>
-            <Btn title="ফন্ট বড় করুন" onClick={() => stepFontSize(1)}>
+            <Btn title={ax("ফন্ট বড় করুন")} onClick={() => stepFontSize(1)}>
               <span className="text-[13px] font-bold leading-none">A</span>
             </Btn>
-            <Btn title="ফন্ট ছোট করুন" onClick={() => stepFontSize(-1)}>
+            <Btn title={ax("ফন্ট ছোট করুন")} onClick={() => stepFontSize(-1)}>
               <span className="text-[9px] font-bold leading-none">A</span>
             </Btn>
             <IconCombo
-              title="ছোট/বড় হাতের অক্ষর"
+              title={ax("ছোট/বড় হাতের অক্ষর")}
               icon={<span className="px-0.5 text-[11px] font-semibold">Aa</span>}
               panelWidth={192}
             >
@@ -260,7 +262,7 @@ export function HomeTab({
               }
             </IconCombo>
             <Btn
-              title="সব ফরম্যাট মুছুন"
+              title={ax("সব ফরম্যাট মুছুন")}
               onClick={() =>
                 editor.chain().focus().unsetAllMarks().clearNodes().run()
               }
@@ -313,12 +315,12 @@ export function HomeTab({
               <SupIcon className="h-3.5 w-3.5" />
             </Btn>
             <IconCombo
-              title="হাইলাইট"
+              title={ax("হাইলাইট")}
               icon={<Highlighter className="h-3.5 w-3.5" />}
             >
               {(close) => (
                 <ColorGrid
-                  resetLabel="হাইলাইট মুছুন"
+                  resetLabel={ax("হাইলাইট মুছুন")}
                   current={editor.getAttributes("highlight").color as string}
                   onPick={(c) => {
                     editor.chain().focus().setHighlight({ color: c }).run();
@@ -332,7 +334,7 @@ export function HomeTab({
               )}
             </IconCombo>
             <IconCombo
-              title="ফন্টের রঙ"
+              title={ax("ফন্টের রঙ")}
               icon={
                 <span
                   className="flex h-3.5 w-3.5 flex-col items-center justify-center text-[10px] font-bold leading-none"
@@ -348,7 +350,7 @@ export function HomeTab({
             >
               {(close) => (
                 <ColorGrid
-                  resetLabel="স্বয়ংক্রিয় রঙ"
+                  resetLabel={ax("স্বয়ংক্রিয় রঙ")}
                   current={editor.getAttributes("textStyle").color as string}
                   onPick={(c) => {
                     editor.chain().focus().setColor(c).run();
@@ -368,46 +370,46 @@ export function HomeTab({
       {/* ---------------- Paragraph ---------------- */}
       <Group
         label="Paragraph"
-        launchTitle="প্যারাগ্রাফ ডায়ালগ"
+        launchTitle={ax("প্যারাগ্রাফ ডায়ালগ")}
         onLaunch={onOpenParagraphDialog}
       >
         <Stack>
           <Row>
             <Btn
-              title="বুলেট তালিকা"
+              title={ax("বুলেট তালিকা")}
               active={editor.isActive("bulletList")}
               onClick={() => editor.chain().focus().toggleBulletList().run()}
             >
               <List className="h-3.5 w-3.5" />
             </Btn>
             <Btn
-              title="নম্বর তালিকা"
+              title={ax("নম্বর তালিকা")}
               active={editor.isActive("orderedList")}
               onClick={() => editor.chain().focus().toggleOrderedList().run()}
             >
               <ListOrdered className="h-3.5 w-3.5" />
             </Btn>
             <Btn
-              title="চেকলিস্ট"
+              title={ax("চেকলিস্ট")}
               active={editor.isActive("taskList")}
               onClick={() => editor.chain().focus().toggleTaskList().run()}
             >
               <ListChecks className="h-3.5 w-3.5" />
             </Btn>
             <Btn
-              title="ইনডেন্ট কমান (Shift+Tab)"
+              title={ax("ইনডেন্ট কমান (Shift+Tab)")}
               onClick={() => editor.chain().focus().outdent().run()}
             >
               <IndentDecrease className="h-3.5 w-3.5" />
             </Btn>
             <Btn
-              title="ইনডেন্ট বাড়ান (Tab)"
+              title={ax("ইনডেন্ট বাড়ান (Tab)")}
               onClick={() => editor.chain().focus().indent().run()}
             >
               <IndentIncrease className="h-3.5 w-3.5" />
             </Btn>
             <Btn
-              title="উদ্ধৃতি"
+              title={ax("উদ্ধৃতি")}
               active={editor.isActive("blockquote")}
               onClick={() => editor.chain().focus().toggleBlockquote().run()}
             >
@@ -416,28 +418,28 @@ export function HomeTab({
           </Row>
           <Row>
             <Btn
-              title="বাম"
+              title={ax("বাম")}
               active={editor.isActive({ textAlign: "left" })}
               onClick={() => editor.chain().focus().setTextAlign("left").run()}
             >
               <AlignLeft className="h-3.5 w-3.5" />
             </Btn>
             <Btn
-              title="মাঝ"
+              title={ax("মাঝ")}
               active={editor.isActive({ textAlign: "center" })}
               onClick={() => editor.chain().focus().setTextAlign("center").run()}
             >
               <AlignCenter className="h-3.5 w-3.5" />
             </Btn>
             <Btn
-              title="ডান"
+              title={ax("ডান")}
               active={editor.isActive({ textAlign: "right" })}
               onClick={() => editor.chain().focus().setTextAlign("right").run()}
             >
               <AlignRight className="h-3.5 w-3.5" />
             </Btn>
             <Btn
-              title="জাস্টিফাই"
+              title={ax("জাস্টিফাই")}
               active={editor.isActive({ textAlign: "justify" })}
               onClick={() =>
                 editor.chain().focus().setTextAlign("justify").run()
@@ -446,13 +448,13 @@ export function HomeTab({
               <AlignJustify className="h-3.5 w-3.5" />
             </Btn>
             <IconCombo
-              title="লাইন ও প্যারা স্পেসিং"
+              title={ax("লাইন ও প্যারা স্পেসিং")}
               icon={<UnfoldVertical className="h-3.5 w-3.5" />}
               panelWidth={176}
             >
               {(close) => (
                 <>
-                  <MenuHeading>লাইন স্পেসিং</MenuHeading>
+                  <MenuHeading>{ax("লাইন স্পেসিং")}</MenuHeading>
                   {LINE_HEIGHTS.map((h) => (
                     <MenuItem
                       key={h}
@@ -471,9 +473,9 @@ export function HomeTab({
                       close();
                     }}
                   >
-                    ডিফল্ট
+                    {ax("ডিফল্ট")}
                   </MenuItem>
-                  <MenuHeading>প্যারার পরে ফাঁকা</MenuHeading>
+                  <MenuHeading>{ax("প্যারার পরে ফাঁকা")}</MenuHeading>
                   {["0", "0.5em", "1em", "1.5em", "2em"].map((s) => (
                     <MenuItem
                       key={s}
@@ -489,7 +491,7 @@ export function HomeTab({
               )}
             </IconCombo>
             <IconCombo
-              title="লেখার দিক"
+              title={ax("লেখার দিক")}
               icon={<ChevronsLeftRight className="h-3.5 w-3.5" />}
               panelWidth={160}
             >
@@ -517,7 +519,7 @@ export function HomeTab({
                       close();
                     }}
                   >
-                    ডিফল্ট
+                    {ax("ডিফল্ট")}
                   </MenuItem>
                 </>
               )}
@@ -535,19 +537,19 @@ export function HomeTab({
       <Group label="Editing">
         <Stack>
           <LabelBtn
-            title="খুঁজুন (Ctrl+F)"
+            title={ax("খুঁজুন (Ctrl+F)")}
             label="Find"
             icon={<Search className="h-3.5 w-3.5" />}
             onClick={() => onOpenFind(false)}
           />
           <LabelBtn
-            title="বদলান (Ctrl+H)"
+            title={ax("বদলান (Ctrl+H)")}
             label="Replace"
             icon={<Replace className="h-3.5 w-3.5" />}
             onClick={() => onOpenFind(true)}
           />
           <LabelBtn
-            title="সব সিলেক্ট করুন (Ctrl+A)"
+            title={ax("সব সিলেক্ট করুন (Ctrl+A)")}
             label="Select All"
             icon={<MousePointerSquareDashed className="h-3.5 w-3.5" />}
             onClick={() => editor.chain().focus().selectAll().run()}

@@ -5,6 +5,7 @@ import type { Editor } from "@tiptap/react";
 import { Loader2, Upload, X } from "lucide-react";
 import { uploadFile } from "@/lib/admin-api";
 import type { FigureAlign } from "./figure";
+import { useAdminText } from "@/lib/admin-strings";
 
 export type InsertDialogKind =
   | "image"
@@ -19,7 +20,7 @@ function Shell({
   title,
   onClose,
   onApply,
-  applyLabel = "ঠিক আছে",
+  applyLabel,
   applyDisabled,
   children,
   wide,
@@ -32,6 +33,7 @@ function Shell({
   children: React.ReactNode;
   wide?: boolean;
 }) {
+  const ax = useAdminText();
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/30 p-4">
       <div
@@ -60,7 +62,7 @@ function Shell({
             onClick={onClose}
             className="rounded-sm border border-[#d4d4d4] bg-white px-4 py-1 font-ui text-[11px] text-[#333] hover:bg-[#e1dfdd]"
           >
-            বাতিল
+            {ax("বাতিল")}
           </button>
           <button
             type="button"
@@ -100,6 +102,7 @@ export function ImageDialog({
   editor: Editor;
   onClose: () => void;
 }) {
+  const ax = useAdminText();
   const existing = editor.isActive("figure")
     ? editor.getAttributes("figure")
     : null;
@@ -119,7 +122,7 @@ export function ImageDialog({
     try {
       setSrc(await uploadFile(file));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "আপলোড ব্যর্থ");
+      setError(err instanceof Error ? err.message : ax("আপলোড ব্যর্থ"));
     } finally {
       setUploading(false);
     }
@@ -134,19 +137,19 @@ export function ImageDialog({
 
   return (
     <Shell
-      title={existing ? "ছবির সেটিংস" : "ছবি যোগ করুন"}
+      title={ax(existing ? ax("ছবির সেটিংস") : ax("ছবি যোগ করুন"))}
       onClose={onClose}
       onApply={apply}
       applyDisabled={!src || uploading}
       wide
     >
       <div>
-        <p className={label}>ছবি</p>
+        <p className={label}>{ax("ছবি")}</p>
         <div className="mt-1 flex gap-2">
           <input
             value={src}
             onChange={(e) => setSrc(e.target.value)}
-            placeholder="ছবির URL"
+            placeholder={ax("ছবির URL")}
             className={field}
           />
           <label
@@ -159,7 +162,7 @@ export function ImageDialog({
             ) : (
               <Upload className="h-3.5 w-3.5" />
             )}
-            আপলোড
+            {ax("আপলোড")}
             <input
               type="file"
               accept="image/*"
@@ -187,31 +190,31 @@ export function ImageDialog({
       )}
 
       <div>
-        <p className={label}>ক্যাপশন — ছবির নিচে ছাপা হবে</p>
+        <p className={label}>{ax("ক্যাপশন — ছবির নিচে ছাপা হবে")}</p>
         <input
           value={caption}
           onChange={(e) => setCaption(e.target.value)}
-          placeholder="যেমন: রাজধানীর মিরপুরে নতুন উড়ালসড়ক"
+          placeholder={ax("যেমন: রাজধানীর মিরপুরে নতুন উড়ালসড়ক")}
           className={`${field} mt-1`}
         />
       </div>
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <p className={label}>ছবির কৃতিত্ব</p>
+          <p className={label}>{ax("ছবির কৃতিত্ব")}</p>
           <input
             value={credit}
             onChange={(e) => setCredit(e.target.value)}
-            placeholder="ছবি: LinkNews24"
+            placeholder={ax("ছবি: LinkNews24")}
             className={`${field} mt-1`}
           />
         </div>
         <div>
-          <p className={label}>Alt লেখা — SEO ও অন্ধ পাঠকের জন্য</p>
+          <p className={label}>{ax("Alt লেখা — SEO ও অন্ধ পাঠকের জন্য")}</p>
           <input
             value={alt}
             onChange={(e) => setAlt(e.target.value)}
-            placeholder="ছবিতে যা দেখা যাচ্ছে"
+            placeholder={ax("ছবিতে যা দেখা যাচ্ছে")}
             className={`${field} mt-1`}
           />
         </div>
@@ -219,7 +222,7 @@ export function ImageDialog({
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <p className={label}>অবস্থান</p>
+          <p className={label}>{ax("অবস্থান")}</p>
           <select
             value={align}
             onChange={(e) => setAlign(e.target.value as FigureAlign)}
@@ -233,7 +236,7 @@ export function ImageDialog({
           </select>
         </div>
         <div>
-          <p className={label}>চওড়া — {width}%</p>
+          <p className={label}>{ax("চওড়া")} — {width}%</p>
           <input
             type="range"
             min={25}
@@ -258,11 +261,12 @@ export function VideoDialog({
   editor: Editor;
   onClose: () => void;
 }) {
+  const ax = useAdminText();
   const [url, setUrl] = useState("");
 
   return (
     <Shell
-      title="YouTube ভিডিও যোগ করুন"
+      title={ax("YouTube ভিডিও যোগ করুন")}
       onClose={onClose}
       onApply={() =>
         editor.chain().focus().setYoutubeVideo({ src: url.trim() }).run()
@@ -270,7 +274,7 @@ export function VideoDialog({
       applyDisabled={!url.trim()}
     >
       <div>
-        <p className={label}>ভিডিওর লিংক</p>
+        <p className={label}>{ax("ভিডিওর লিংক")}</p>
         <input
           value={url}
           onChange={(e) => setUrl(e.target.value)}
@@ -279,8 +283,9 @@ export function VideoDialog({
           autoFocus
         />
         <p className="mt-1.5 font-ui text-[10px] leading-snug text-[#666]">
-          YouTube-এর সাধারণ লিংক বা youtu.be দুটোই চলবে। ভিডিওটি খবরের ভেতরে
-          বসে যাবে, পাঠক সেখানেই দেখতে পারবে।
+          {ax(
+            "YouTube-এর সাধারণ লিংক বা youtu.be দুটোই চলবে। ভিডিওটি খবরের ভেতরে বসে যাবে, পাঠক সেখানেই দেখতে পারবে।",
+          )}
         </p>
       </div>
     </Shell>
@@ -296,6 +301,7 @@ export function LinkDialog({
   editor: Editor;
   onClose: () => void;
 }) {
+  const ax = useAdminText();
   const current = (editor.getAttributes("link").href as string) ?? "";
   const [href, setHref] = useState(current || "https://");
   const [newTab, setNewTab] = useState(true);
@@ -316,13 +322,13 @@ export function LinkDialog({
 
   return (
     <Shell
-      title={current ? "লিংক সম্পাদনা" : "লিংক যোগ করুন"}
+      title={ax(current ? ax("লিংক সম্পাদনা") : ax("লিংক যোগ করুন"))}
       onClose={onClose}
       onApply={apply}
-      applyLabel={current ? "সংরক্ষণ" : "যোগ করুন"}
+      applyLabel={ax(current ? ax("সংরক্ষণ") : ax("যোগ করুন"))}
     >
       <div>
-        <p className={label}>ঠিকানা</p>
+        <p className={label}>{ax("ঠিকানা")}</p>
         <input
           value={href}
           onChange={(e) => setHref(e.target.value)}
@@ -337,7 +343,7 @@ export function LinkDialog({
           onChange={(e) => setNewTab(e.target.checked)}
           className="accent-[#d81f26]"
         />
-        নতুন ট্যাবে খুলবে
+        {ax("নতুন ট্যাবে খুলবে")}
       </label>
       {current && (
         <button
@@ -348,7 +354,7 @@ export function LinkDialog({
           }}
           className="self-start rounded-sm border border-[#d4d4d4] px-3 py-1 font-ui text-[11px] text-[#a8151b] hover:bg-[#fbe3e4]"
         >
-          লিংক মুছে ফেলুন
+          {ax("লিংক মুছে ফেলুন")}
         </button>
       )}
     </Shell>
@@ -364,6 +370,7 @@ export function BookmarkDialog({
   editor: Editor;
   onClose: () => void;
 }) {
+  const ax = useAdminText();
   const [name, setName] = useState("");
 
   const apply = () => {
@@ -380,23 +387,24 @@ export function BookmarkDialog({
 
   return (
     <Shell
-      title="বুকমার্ক (অ্যাংকর) বসান"
+      title={ax("বুকমার্ক (অ্যাংকর) বসান")}
       onClose={onClose}
       onApply={apply}
       applyDisabled={!name.trim()}
     >
       <div>
-        <p className={label}>বুকমার্কের নাম</p>
+        <p className={label}>{ax("বুকমার্কের নাম")}</p>
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="যেমন: ঘটনার-বিবরণ"
+          placeholder={ax("যেমন: ঘটনার-বিবরণ")}
           className={`${field} mt-1`}
           autoFocus
         />
         <p className="mt-1.5 font-ui text-[10px] leading-snug text-[#666]">
-          এই অনুচ্ছেদে একটি নাম বসবে, যাতে খবরের ভেতরেই সরাসরি এখানে লিংক করা
-          যায় — লম্বা প্রতিবেদনে কাজে লাগে।
+          {ax(
+            "এই অনুচ্ছেদে একটি নাম বসবে, যাতে খবরের ভেতরেই সরাসরি এখানে লিংক করা যায় — লম্বা প্রতিবেদনে কাজে লাগে।",
+          )}
         </p>
       </div>
     </Shell>
@@ -419,11 +427,12 @@ export function EquationDialog({
   editor: Editor;
   onClose: () => void;
 }) {
+  const ax = useAdminText();
   const [tex, setTex] = useState("");
 
   return (
     <Shell
-      title="ইকুয়েশন যোগ করুন"
+      title={ax("ইকুয়েশন যোগ করুন")}
       onClose={onClose}
       onApply={() =>
         editor.chain().focus().insertInlineMath({ latex: tex.trim() }).run()
@@ -441,7 +450,7 @@ export function EquationDialog({
         />
       </div>
       <div>
-        <p className={label}>নমুনা — চাপলে বসে যাবে</p>
+        <p className={label}>{ax("নমুনা — চাপলে বসে যাবে")}</p>
         <div className="mt-1 flex flex-wrap gap-1.5">
           {EQUATION_SAMPLES.map((s) => (
             <button
@@ -468,13 +477,14 @@ export function TableDialog({
   editor: Editor;
   onClose: () => void;
 }) {
+  const ax = useAdminText();
   const [rows, setRows] = useState(3);
   const [cols, setCols] = useState(3);
   const [header, setHeader] = useState(true);
 
   return (
     <Shell
-      title="টেবিল যোগ করুন"
+      title={ax("টেবিল যোগ করুন")}
       onClose={onClose}
       onApply={() =>
         editor
@@ -486,7 +496,7 @@ export function TableDialog({
     >
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <p className={label}>সারি (rows)</p>
+          <p className={label}>{ax("সারি (rows)")}</p>
           <input
             type="number"
             min={1}
@@ -497,7 +507,7 @@ export function TableDialog({
           />
         </div>
         <div>
-          <p className={label}>কলাম (columns)</p>
+          <p className={label}>{ax("কলাম (columns)")}</p>
           <input
             type="number"
             min={1}
@@ -515,7 +525,7 @@ export function TableDialog({
           onChange={(e) => setHeader(e.target.checked)}
           className="accent-[#d81f26]"
         />
-        প্রথম সারিটি হেডার হবে
+        {ax("প্রথম সারিটি হেডার হবে")}
       </label>
     </Shell>
   );
