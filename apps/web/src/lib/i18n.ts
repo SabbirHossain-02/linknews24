@@ -26,6 +26,12 @@ export const translations = {
   relatedNews: { bn: "সম্পর্কিত সংবাদ", en: "Related News" },
   breaking: { bn: "ব্রেকিং", en: "Breaking" },
   shareThis: { bn: "শেয়ার করুন", en: "Share" },
+  shareCopyLink: { bn: "লিংক কপি করুন", en: "Copy link" },
+  shareLinkCopied: { bn: "লিংক কপি হয়েছে ✓", en: "Link copied ✓" },
+  shareCopyFailed: { bn: "কপি করা যায়নি", en: "Could not copy" },
+  shareWhatsapp: { bn: "হোয়াটসঅ্যাপ", en: "WhatsApp" },
+  shareTelegram: { bn: "টেলিগ্রাম", en: "Telegram" },
+  shareEmail: { bn: "ইমেইলে পাঠান", en: "Send by email" },
   save: { bn: "সংরক্ষণ করুন", en: "Save" },
   saved: { bn: "সংরক্ষিত", en: "Saved" },
 
