@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { ChevronDown, ChevronUp, ListOrdered, Plus, Trash2 } from "lucide-react";
 import { apiFetch } from "@/lib/admin-api";
 import { ConfirmModal } from "@/components/admin/Modal";
+import { Toggle } from "@/components/admin/Toggle";
 import { SectionArticles } from "@/components/admin/SectionArticles";
 import { useAdminT } from "@/lib/admin-i18n";
 
@@ -175,22 +176,11 @@ export default function HomepageBuilderPage() {
                   ))}
                 </select>
               </label>
-              <button
-                type="button"
-                role="switch"
-                aria-checked={s.visible}
-                onClick={() => update(s.id, { visible: !s.visible })}
+              <Toggle
+                checked={s.visible}
+                onChange={(next) => update(s.id, { visible: next })}
                 title={t("visible")}
-                className={`relative h-5 w-9 shrink-0 rounded-full transition-colors ${
-                  s.visible ? "bg-brand-crimson" : "bg-border"
-                }`}
-              >
-                <span
-                  className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition-transform ${
-                    s.visible ? "translate-x-4" : "translate-x-0.5"
-                  }`}
-                />
-              </button>
+              />
               <button
                 onClick={() =>
                   s.categoryId &&

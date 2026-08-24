@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ChevronLeft, ChevronRight, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { apiFetch } from "@/lib/admin-api";
 import { ConfirmModal } from "@/components/admin/Modal";
+import { Toggle } from "@/components/admin/Toggle";
 import { useAdminT, type AdminKey } from "@/lib/admin-i18n";
 
 interface AdminArticle {
@@ -205,20 +206,11 @@ export default function AdminArticlesPage() {
                     </button>
                   </td>
                   <td className="px-4 py-3">
-                    <button
-                      onClick={() => patchFlags(a.id, { isBreaking: !a.isBreaking })}
-                      role="switch"
-                      aria-checked={a.isBreaking}
-                      className={`relative h-5 w-9 rounded-full transition-colors ${
-                        a.isBreaking ? "bg-brand-crimson" : "bg-border"
-                      }`}
-                    >
-                      <span
-                        className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition-transform ${
-                          a.isBreaking ? "translate-x-4" : "translate-x-0.5"
-                        }`}
-                      />
-                    </button>
+                    <Toggle
+                      checked={a.isBreaking}
+                      onChange={(next) => patchFlags(a.id, { isBreaking: next })}
+                      title={t("breakingNews")}
+                    />
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-2">

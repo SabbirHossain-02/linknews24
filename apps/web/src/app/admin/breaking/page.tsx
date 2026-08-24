@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { apiFetch } from "@/lib/admin-api";
 import { ConfirmModal } from "@/components/admin/Modal";
+import { Toggle } from "@/components/admin/Toggle";
 import { useAdminT } from "@/lib/admin-i18n";
 
 interface BreakingItem {
@@ -112,22 +113,11 @@ export default function BreakingAdminPage() {
                 }
                 className={inputCls}
               />
-              <button
-                type="button"
-                role="switch"
-                aria-checked={item.active}
-                onClick={() => update(item.id, { active: !item.active })}
+              <Toggle
+                checked={item.active}
+                onChange={(next) => update(item.id, { active: next })}
                 title={t("active")}
-                className={`relative h-5 w-9 shrink-0 rounded-full transition-colors ${
-                  item.active ? "bg-brand-crimson" : "bg-border"
-                }`}
-              >
-                <span
-                  className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition-transform ${
-                    item.active ? "translate-x-4" : "translate-x-0.5"
-                  }`}
-                />
-              </button>
+              />
               <button
                 onClick={() => setDeleteId(item.id)}
                 className="shrink-0 rounded p-1.5 text-foreground-muted hover:bg-surface hover:text-brand-crimson"

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { apiFetch } from "@/lib/admin-api";
 import { ConfirmModal } from "@/components/admin/Modal";
+import { Toggle } from "@/components/admin/Toggle";
 import { useAdminT, type AdminKey } from "@/lib/admin-i18n";
 
 interface User {
@@ -148,21 +149,11 @@ export default function UsersAdminPage() {
                     </select>
                   </td>
                   <td className="px-4 py-3">
-                    <button
-                      type="button"
-                      role="switch"
-                      aria-checked={u.active}
-                      onClick={() => update(u.id, { active: !u.active })}
-                      className={`relative h-5 w-9 rounded-full transition-colors ${
-                        u.active ? "bg-brand-crimson" : "bg-border"
-                      }`}
-                    >
-                      <span
-                        className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition-transform ${
-                          u.active ? "translate-x-4" : "translate-x-0.5"
-                        }`}
-                      />
-                    </button>
+                    <Toggle
+                      checked={u.active}
+                      onChange={(next) => update(u.id, { active: next })}
+                      title={t("active")}
+                    />
                   </td>
                   <td className="px-4 py-3 text-right">
                     <button

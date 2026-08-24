@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { CornerDownRight, Plus, Trash2, X } from "lucide-react";
 import { apiFetch } from "@/lib/admin-api";
 import { Modal } from "@/components/admin/Modal";
+import { Toggle } from "@/components/admin/Toggle";
 import { useAdminT } from "@/lib/admin-i18n";
 
 interface Category {
@@ -146,22 +147,11 @@ export default function CategoriesAdminPage() {
   );
 
   const VisibleToggle = ({ c }: { c: Category }) => (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={c.visible}
-      onClick={() => update(c.id, { visible: !c.visible })}
+    <Toggle
+      checked={c.visible}
+      onChange={(next) => update(c.id, { visible: next })}
       title={t("visible")}
-      className={`relative h-5 w-9 shrink-0 rounded-full transition-colors ${
-        c.visible ? "bg-brand-crimson" : "bg-border"
-      }`}
-    >
-      <span
-        className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition-transform ${
-          c.visible ? "translate-x-4" : "translate-x-0.5"
-        }`}
-      />
-    </button>
+    />
   );
 
   const DeleteBtn = ({ c }: { c: Category }) => (

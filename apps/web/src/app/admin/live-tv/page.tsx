@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Toggle } from "@/components/admin/Toggle";
 import { apiFetch } from "@/lib/admin-api";
 import { useAdminT } from "@/lib/admin-i18n";
 
@@ -90,21 +91,12 @@ export default function LiveTvAdminPage() {
         </div>
         <label className="flex cursor-pointer items-center justify-between">
           <span className="font-ui text-sm text-foreground">{t("liveActive")}</span>
-          <button
-            type="button"
-            role="switch"
-            aria-checked={live.active}
-            onClick={() => setLive({ ...live, active: !live.active })}
-            className={`relative h-6 w-11 rounded-full transition-colors ${
-              live.active ? "bg-brand-crimson" : "bg-border"
-            }`}
-          >
-            <span
-              className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform ${
-                live.active ? "translate-x-5" : "translate-x-0.5"
-              }`}
-            />
-          </button>
+          <Toggle
+            size="md"
+            checked={live.active}
+            onChange={(next) => setLive({ ...live, active: next })}
+            title={t("liveActive")}
+          />
         </label>
 
         <div className="flex items-center gap-3">
