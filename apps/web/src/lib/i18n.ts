@@ -31,7 +31,11 @@ export const translations = {
   shareCopyFailed: { bn: "কপি করা যায়নি", en: "Could not copy" },
   shareWhatsapp: { bn: "হোয়াটসঅ্যাপ", en: "WhatsApp" },
   shareTelegram: { bn: "টেলিগ্রাম", en: "Telegram" },
-  shareEmail: { bn: "ইমেইলে পাঠান", en: "Send by email" },
+  shareEmail: { bn: "ইমেইল", en: "Email" },
+  shareMessenger: { bn: "মেসেঞ্জার", en: "Messenger" },
+  shareLinkedin: { bn: "লিংকডইন", en: "LinkedIn" },
+  shareSms: { bn: "এসএমএস", en: "SMS" },
+  shareMore: { bn: "অন্য অ্যাপে পাঠান", en: "Send to another app" },
   save: { bn: "সংরক্ষণ করুন", en: "Save" },
   saved: { bn: "সংরক্ষিত", en: "Saved" },
 

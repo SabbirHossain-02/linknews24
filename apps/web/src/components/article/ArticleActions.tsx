@@ -1,8 +1,22 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Bookmark, Link2, Mail, Printer, Send, Share2 } from "lucide-react";
-import { FacebookIcon, XIcon } from "@/components/icons/SocialIcons";
+import {
+  Bookmark,
+  Link2,
+  Mail,
+  MessageSquare,
+  Printer,
+  Share2,
+} from "lucide-react";
+import {
+  FacebookIcon,
+  LinkedinIcon,
+  MessengerIcon,
+  TelegramIcon,
+  WhatsappIcon,
+  XIcon,
+} from "@/components/icons/SocialIcons";
 import { isBookmarked, toggleBookmark } from "@/lib/auth-storage";
 import { copyText } from "@/lib/media-clipboard";
 import { useLocale } from "@/components/providers/LocaleProvider";
@@ -22,22 +36,27 @@ function ShareLink({
   label,
   icon,
   href,
+  color,
   onDone,
+  sameTab,
 }: {
   label: string;
   icon: React.ReactNode;
   href: string;
+  /** The service's own colour, so the row is recognised at a glance. */
+  color: string;
   onDone: () => void;
+  /** mailto:, sms: and app links must not open an empty tab. */
+  sameTab?: boolean;
 }) {
   return (
     <a
       href={href}
-      target="_blank"
-      rel="noopener noreferrer"
+      {...(sameTab ? {} : { target: "_blank", rel: "noopener noreferrer" })}
       onClick={onDone}
       className="flex items-center gap-2.5 px-3 py-2 font-ui text-sm text-foreground transition-colors hover:bg-surface"
     >
-      <span className="text-brand-crimson">{icon}</span>
+      <span style={{ color }}>{icon}</span>
       {label}
     </a>
   );
@@ -55,7 +74,13 @@ export function ArticleActions({
   const [scale, setScale] = useState(1);
   const [shareOpen, setShareOpen] = useState(false);
   const [flash, setFlash] = useState<string | null>(null);
+  const [canNativeShare, setCanNativeShare] = useState(false);
   const shareBox = useRef<HTMLDivElement>(null);
+
+  // Only knowable in the browser, and only true over HTTPS.
+  useEffect(() => {
+    setCanNativeShare(typeof navigator.share === "function");
+  }, []);
 
   useEffect(() => {
     setSaved(isBookmarked(article.slug));
@@ -171,33 +196,99 @@ export function ArticleActions({
         </button>
 
         {shareOpen && (
-          <div className="absolute left-1/2 z-40 mt-2 w-52 -translate-x-1/2 overflow-hidden rounded-xl border border-border bg-background py-1 shadow-[0_12px_40px_rgba(20,24,31,0.18)]">
+          <div className="absolute left-1/2 z-40 mt-2 w-60 -translate-x-1/2 overflow-hidden rounded-xl border border-border bg-background py-1.5 shadow-[0_12px_40px_rgba(20,24,31,0.18)]">
+            {/* Each destination in its own colours, so a row is recognised
+                before it is read. */}
             <ShareLink
               label={t("shareWhatsapp")}
-              icon={<Send className="h-3.5 w-3.5" />}
-              href={`https://wa.me/?text=${encodeURIComponent(`${title} ${shareUrl()}`)}`}
+              color="#25D366"
+              icon={<WhatsappIcon className="h-4 w-4" />}
+              href={`https://wa.me/?text=${encodeURIComponent(title + " " + shareUrl())}`}
               onDone={() => setShareOpen(false)}
             />
             <ShareLink
+              label="Facebook"
+              color="#1877F2"
+              icon={<FacebookIcon className="h-4 w-4" />}
+              href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl())}`}
+              onDone={() => setShareOpen(false)}
+            />
+            <ShareLink
+              label={t("shareMessenger")}
+              color="#0084FF"
+              icon={<MessengerIcon className="h-4 w-4" />}
+              href={`fb-messenger://share?link=${encodeURIComponent(shareUrl())}`}
+              onDone={() => setShareOpen(false)}
+              sameTab
+            />
+            <ShareLink
               label={t("shareTelegram")}
-              icon={<Send className="h-3.5 w-3.5" />}
+              color="#26A5E4"
+              icon={<TelegramIcon className="h-4 w-4" />}
               href={`https://t.me/share/url?url=${encodeURIComponent(shareUrl())}&text=${encodeURIComponent(title)}`}
               onDone={() => setShareOpen(false)}
             />
             <ShareLink
+              label="X"
+              color="#000000"
+              icon={<XIcon className="h-4 w-4" />}
+              href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl())}&text=${encodeURIComponent(title)}`}
+              onDone={() => setShareOpen(false)}
+            />
+            <ShareLink
+              label={t("shareLinkedin")}
+              color="#0A66C2"
+              icon={<LinkedinIcon className="h-4 w-4" />}
+              href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl())}`}
+              onDone={() => setShareOpen(false)}
+            />
+
+            <span className="my-1 block border-t border-border" />
+
+            <ShareLink
+              label={t("shareSms")}
+              color="#16a34a"
+              icon={<MessageSquare className="h-4 w-4" />}
+              href={`sms:?&body=${encodeURIComponent(title + " " + shareUrl())}`}
+              onDone={() => setShareOpen(false)}
+              sameTab
+            />
+            <ShareLink
               label={t("shareEmail")}
-              icon={<Mail className="h-3.5 w-3.5" />}
+              color="#6b7280"
+              icon={<Mail className="h-4 w-4" />}
               href={`mailto:?subject=${encodeURIComponent(title)}&body=${encodeURIComponent(shareUrl())}`}
               onDone={() => setShareOpen(false)}
+              sameTab
             />
             <button
               type="button"
               onClick={copyLink}
               className="flex w-full items-center gap-2.5 px-3 py-2 text-left font-ui text-sm text-foreground transition-colors hover:bg-surface"
             >
-              <Link2 className="h-3.5 w-3.5 text-brand-crimson" />
+              <span style={{ color: "#d81f26" }}>
+                <Link2 className="h-4 w-4" />
+              </span>
               {t("shareCopyLink")}
             </button>
+
+            {/* The phone's own sheet reaches every app installed on it, but it
+                only exists over HTTPS — so it is offered, never assumed. */}
+            {canNativeShare && (
+              <button
+                type="button"
+                onClick={() => {
+                  setShareOpen(false);
+                  void navigator.share({ title, url: shareUrl() }).catch(() => {});
+                }}
+                className="flex w-full items-center gap-2.5 px-3 py-2 text-left font-ui text-sm text-foreground transition-colors hover:bg-surface"
+              >
+                <span style={{ color: "#14181f" }}>
+                  <Share2 className="h-4 w-4" />
+                </span>
+                {t("shareMore")}
+              </button>
+            )}
           </div>
         )}
 
