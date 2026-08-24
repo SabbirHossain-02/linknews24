@@ -75,23 +75,38 @@ export function SiteFooter({ categories }: { categories: NavChild[] }) {
             it — the same file the header and the editor use. */}
         {showBrand && (
           <div className="col-span-3 lg:col-span-1">
-            <Link href="/" aria-label={t("home")} className="inline-block">
-              <Image
-                src="/logo.png"
-                alt="LinkNews24"
-                width={2048}
-                height={656}
-                className="h-11 w-auto"
-              />
-            </Link>
+            {/* On a phone the masthead and the app badges share the top line,
+                which is otherwise empty to the right of the logo. */}
+            <div className="flex flex-wrap items-center justify-between gap-4 lg:block">
+              <Link href="/" aria-label={t("home")} className="inline-block">
+                <Image
+                  src="/logo.png"
+                  alt="LinkNews24"
+                  width={2048}
+                  height={656}
+                  className="h-11 w-auto"
+                />
+              </Link>
+
+              {show("app") && (
+                <div className="lg:mt-6">
+                  <h3 className="font-ui text-xs font-semibold uppercase tracking-wider text-foreground-muted/70">
+                    {t("footerApp")}
+                  </h3>
+                  <div className="mt-2 lg:mt-3">
+                    <StoreBadges soonLabel={t("footerAppSoon")} />
+                  </div>
+                </div>
+              )}
+            </div>
+
             {show("tagline") && (
               <p className="mt-4 max-w-xs font-ui text-sm text-foreground-muted">
                 {cfg.tagline || t("footerTagline")}
               </p>
             )}
-            <div className="mt-4 flex flex-wrap items-start justify-between gap-4 lg:block">
             {show("social") && (
-              <div className="flex gap-4 lg:mt-4">
+              <div className="mt-4 flex gap-4">
                 <a href={cfg.facebook || "#"} aria-label="Facebook" className="hover:text-brand-crimson">
                   <FacebookIcon className="h-5 w-5" />
                 </a>
@@ -103,18 +118,6 @@ export function SiteFooter({ categories }: { categories: NavChild[] }) {
                 </a>
               </div>
             )}
-
-            {show("app") && (
-              <div className="lg:mt-6">
-                <h3 className="font-ui text-xs font-semibold uppercase tracking-wider text-foreground-muted/70">
-                  {t("footerApp")}
-                </h3>
-                <div className="mt-3">
-                  <StoreBadges soonLabel={t("footerAppSoon")} />
-                </div>
-              </div>
-            )}
-            </div>
           </div>
         )}
 
@@ -213,7 +216,9 @@ export function SiteFooter({ categories }: { categories: NavChild[] }) {
 
       {/* Bottom bar */}
       <div className="border-t border-border">
-        <div className="mx-auto flex max-w-[1600px] flex-col items-center gap-x-4 gap-y-2 px-4 py-4 text-center font-ui text-[11px] text-foreground-muted/70 sm:flex-row sm:flex-wrap sm:justify-between sm:px-6 sm:text-left sm:text-xs">
+        {/* Four short items, so they flow and wrap rather than each taking a
+            line of its own on a phone. */}
+        <div className="mx-auto flex max-w-[1600px] flex-wrap items-center justify-center gap-x-3 gap-y-1 px-4 py-3 text-center font-ui text-[11px] text-foreground-muted/70 sm:justify-between sm:gap-x-4 sm:px-6 sm:py-4 sm:text-left sm:text-xs">
           <span>{show("editor") ? cfg.editor || t("footerEditor") : ""}</span>
           <span>
             © {new Date().getFullYear()} LinkNews24. {t("footerRights")}
