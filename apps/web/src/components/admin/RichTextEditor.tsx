@@ -202,13 +202,13 @@ export function RichTextEditor({
       {/* ---------- ribbon tabs ---------- */}
       <div className="flex shrink-0 items-end gap-0 border-b border-[#d4d4d4] bg-[#f3f2f1] pl-1">
         {/* Word puts "File" here; ours carries the masthead instead. */}
-        <span className="mb-0 mr-1.5 flex h-[34px] items-center bg-white px-3">
+        <span className="mb-0 mr-1.5 flex h-[44px] items-center bg-white px-3">
           <Image
             src="/logo.png"
             alt="LinkNews24"
             width={2048}
             height={656}
-            className="h-[26px] w-auto"
+            className="h-[34px] w-auto"
           />
         </span>
         {tabs.map((t) => (
@@ -220,7 +220,7 @@ export function RichTextEditor({
               setTab(t.id);
               setRibbonOpen(true);
             }}
-            className={`h-[34px] px-4 font-ui text-[11px] transition-colors ${
+            className={`h-[44px] px-4 font-ui text-[11px] transition-colors ${
               activeTab === t.id && ribbonOpen
                 ? "border-x border-t border-[#d4d4d4] bg-white font-semibold text-[#d81f26]"
                 : "text-[#444] hover:bg-[#e1dfdd]"
@@ -234,7 +234,7 @@ export function RichTextEditor({
           title={ribbonOpen ? "রিবন গুটিয়ে ফেলুন" : "রিবন দেখান"}
           onMouseDown={(e) => e.preventDefault()}
           onClick={() => setRibbonOpen((v) => !v)}
-          className="ml-auto mr-1 flex h-[34px] w-6 items-center justify-center text-[#666] hover:bg-[#e1dfdd] hover:text-[#111]"
+          className="ml-auto mr-1 flex h-[44px] w-6 items-center justify-center text-[#666] hover:bg-[#e1dfdd] hover:text-[#111]"
         >
           <ChevronUp
             className={`h-3.5 w-3.5 transition-transform ${

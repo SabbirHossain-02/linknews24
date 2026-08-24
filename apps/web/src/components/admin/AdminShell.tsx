@@ -159,14 +159,14 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       >
         {/* The masthead is a dark-on-light lockup, so the whole header block is
             white rather than a small plate floating in the navy rail. */}
-        <div className="flex h-16 shrink-0 items-center gap-3 border-b border-border bg-white px-5">
+        <div className="flex h-20 shrink-0 items-center gap-3 border-b border-border bg-white px-5">
           <Image
             src="/logo.png"
             alt="LinkNews24"
             width={2048}
             height={656}
             priority
-            className="h-8 w-auto"
+            className="h-11 w-auto"
           />
           <span className="font-ui text-[10px] uppercase tracking-widest text-foreground-muted">
             Admin
