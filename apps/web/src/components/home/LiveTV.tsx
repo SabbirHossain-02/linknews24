@@ -18,6 +18,7 @@ export function LiveTV() {
   const [muted, setMuted] = useState(true);
   const overlayRef = useRef<HTMLDivElement>(null);
   const cardFrame = useRef<HTMLIFrameElement>(null);
+  const overlayFrame = useRef<HTMLIFrameElement>(null);
 
   // The player URL is built once per stream. Rebuilding it on unmute would
   // reload the iframe and start the video over.
@@ -67,10 +68,53 @@ export function LiveTV() {
     locale === "en" ? i.textEn || i.text : i.text,
   );
 
+  /**
+   * Every way out of the overlay goes through here — the close button, Esc,
+   * leaving native full screen, and browser Back — so the history entry that
+   * Back relies on is always tidied up exactly once. After a `popstate` the
+   * entry is already gone, and the guard sees that.
+   */
   const closeLive = () => {
     setOpen(false);
     if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    if (history.state?.ln24Live) history.back();
   };
+
+  /**
+   * Only one of the two players may make sound.
+   *
+   * The card keeps playing behind the overlay, so opening full screen while the
+   * card had its sound on left two copies of the broadcast talking over each
+   * other. The card is paused for as long as the overlay is up and picked back
+   * up — at the same mute setting — when it closes.
+   */
+  useEffect(() => {
+    if (!embedUrl) return;
+    if (open) {
+      youtubeCommand(cardFrame.current, "pauseVideo");
+    } else {
+      youtubeCommand(cardFrame.current, muted ? "mute" : "unMute");
+      youtubeCommand(cardFrame.current, "playVideo");
+    }
+  }, [open, embedUrl, muted]);
+
+  /**
+   * Browser Back closes the overlay instead of leaving the site.
+   *
+   * A full-screen player with no way back is a trap: Esc never reaches us once
+   * the pointer has been inside the video (the player is a cross-origin frame
+   * and keeps the keystrokes), and Back used to navigate off the page. Opening
+   * full screen now pushes a history entry, so Back pops it and lands right
+   * back on the article list.
+   */
+  useEffect(() => {
+    if (!open) return;
+
+    history.pushState({ ln24Live: true }, "");
+    const onPop = () => closeLive();
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, [open]);
 
   // Request native fullscreen once the overlay is mounted, and keep state in
   // sync with Esc / native fullscreen exit.
@@ -81,10 +125,10 @@ export function LiveTV() {
     overlayRef.current?.requestFullscreen?.().catch(() => {});
 
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key === "Escape") closeLive();
     };
     const onFsChange = () => {
-      if (!document.fullscreenElement) setOpen(false);
+      if (!document.fullscreenElement) closeLive();
     };
 
     document.addEventListener("keydown", onKey);
@@ -178,8 +222,9 @@ export function LiveTV() {
           ref={overlayRef}
           className="fixed inset-0 z-[100] flex flex-col bg-black"
         >
-          {/* Top broadcast bar */}
-          <div className="flex items-center justify-between gap-3 bg-gradient-to-b from-black/90 to-transparent px-4 py-3 sm:px-6">
+          {/* Top broadcast bar. `relative z-10` keeps it above the player, so
+              the way out is never covered by the video. */}
+          <div className="relative z-10 flex shrink-0 items-center justify-between gap-3 bg-black px-4 py-3 sm:px-6">
             <div className="flex items-center gap-3">
               <span className="flex items-center gap-1.5 rounded bg-brand-crimson px-2 py-1">
                 <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" />
@@ -200,9 +245,10 @@ export function LiveTV() {
                 type="button"
                 onClick={closeLive}
                 aria-label={t("close")}
-                className="grid h-9 w-9 place-items-center rounded-full bg-white/10 text-white transition hover:bg-white/20"
+                className="flex h-9 items-center gap-1.5 rounded-full bg-white/15 px-3 font-ui text-xs font-semibold text-white transition hover:bg-brand-crimson"
               >
-                <X className="h-5 w-5" />
+                <X className="h-4 w-4" />
+                {t("close")}
               </button>
             </div>
           </div>
@@ -211,10 +257,25 @@ export function LiveTV() {
           <div className="relative flex min-h-0 flex-1 items-center justify-center">
             {fullscreenUrl ? (
               <iframe
+                ref={overlayFrame}
                 src={fullscreenUrl}
                 title={t("liveTv")}
-                allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
-                allowFullScreen
+                // No `allowFullScreen`: the overlay is already the whole
+                // screen, and the player's own full screen would cover the
+                // close button.
+                allow="autoplay; encrypted-media; picture-in-picture"
+                // Browsers can still start a gesture-opened video muted. Asking
+                // the player to unmute once it is ready makes sure full screen
+                // actually has sound.
+                onLoad={() => {
+                  // The frame loads before the player inside it is ready to
+                  // take commands, so give it a moment.
+                  const frame = overlayFrame.current;
+                  setTimeout(() => {
+                    youtubeCommand(frame, "unMute");
+                    youtubeCommand(frame, "playVideo");
+                  }, 700);
+                }}
                 className="h-full w-full"
               />
             ) : (

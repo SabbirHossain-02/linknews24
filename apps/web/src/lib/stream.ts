@@ -31,7 +31,7 @@ export function youtubeId(url: string): string | null {
  */
 export function liveEmbedUrl(
   url: string,
-  { muted = true, controls = false } = {},
+  { muted = true, controls = false, allowPlayerFullscreen = false } = {},
 ): string | null {
   const id = youtubeId(url);
   if (!id) return url.trim() || null;
@@ -43,6 +43,9 @@ export function liveEmbedUrl(
     loop: "1",
     playlist: id,
     controls: controls ? "1" : "0",
+    // YouTube's own full-screen button would put the player itself over the
+    // whole screen, hiding our close button with no way back to it.
+    fs: allowPlayerFullscreen ? "1" : "0",
     modestbranding: "1",
     playsinline: "1",
     rel: "0",
