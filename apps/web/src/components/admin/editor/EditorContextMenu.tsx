@@ -43,11 +43,11 @@ import { findTable, moveTableBy } from "./table-tools";
 import type { FigureAlign } from "./figure";
 
 const WRAPS: { value: FigureAlign; label: string }[] = [
-  { value: "center", label: "মাঝে, নিজের লাইনে" },
-  { value: "left", label: "বামে" },
-  { value: "right", label: "ডানে" },
-  { value: "wrap-left", label: "বামে, চারপাশে লেখা" },
-  { value: "wrap-right", label: "ডানে, চারপাশে লেখা" },
+  { value: "center", label: "In Line, Centred" },
+  { value: "left", label: "Left" },
+  { value: "right", label: "Right" },
+  { value: "wrap-left", label: "Left, Wrap Text" },
+  { value: "wrap-right", label: "Right, Wrap Text" },
 ];
 
 /**
@@ -63,6 +63,7 @@ export function EditorContextMenu({
   editor,
   x,
   y,
+  bounds,
   onClose,
   onOpenFind,
   onOpenDialog,
@@ -73,6 +74,8 @@ export function EditorContextMenu({
   editor: Editor;
   x: number;
   y: number;
+  /** The editor page area — the menu never leaves it. */
+  bounds: HTMLElement | null;
   onClose: () => void;
   onOpenFind: () => void;
   onOpenDialog: (kind: "font" | "paragraph" | "link" | "image" | "table") => void;
@@ -101,30 +104,30 @@ export function EditorContextMenu({
   const chain = () => editor.chain().focus();
 
   return (
-    <ContextMenu x={x} y={y} onClose={onClose}>
+    <ContextMenu x={x} y={y} bounds={bounds} onClose={onClose}>
       {/* ---------------- clipboard ---------------- */}
       <CmdItem
-        label="কাট"
+        label="Cut"
         shortcut="Ctrl+X"
         icon={<Scissors className="h-3.5 w-3.5" />}
         disabled={!hasSelection}
         onClick={clipboard(() => copySelection(editor, true))}
       />
       <CmdItem
-        label="কপি"
+        label="Copy"
         shortcut="Ctrl+C"
         icon={<Copy className="h-3.5 w-3.5" />}
         disabled={!hasSelection}
         onClick={clipboard(() => copySelection(editor, false))}
       />
       <CmdItem
-        label="পেস্ট"
+        label="Paste"
         shortcut="Ctrl+V"
         icon={<ClipboardPaste className="h-3.5 w-3.5" />}
         onClick={clipboard(() => pasteIntoEditor(editor, false))}
       />
       <CmdItem
-        label="সাদা লেখা হিসেবে পেস্ট"
+        label="Paste as Plain Text"
         icon={<Type className="h-3.5 w-3.5" />}
         onClick={clipboard(() => pasteIntoEditor(editor, true))}
       />
@@ -132,114 +135,114 @@ export function EditorContextMenu({
       <CmdSep />
 
       {/* ---------------- formatting ---------------- */}
-      <CmdSub label="ফরম্যাট" icon={<Bold className="h-3.5 w-3.5" />}>
+      <CmdSub label="Format" icon={<Bold className="h-3.5 w-3.5" />}>
         <CmdItem
-          label="মোটা"
+          label="Bold"
           shortcut="Ctrl+B"
           icon={<Bold className="h-3.5 w-3.5" />}
           onClick={run(() => chain().toggleBold().run())}
         />
         <CmdItem
-          label="বাঁকা"
+          label="Italic"
           shortcut="Ctrl+I"
           icon={<Italic className="h-3.5 w-3.5" />}
           onClick={run(() => chain().toggleItalic().run())}
         />
         <CmdItem
-          label="আন্ডারলাইন"
+          label="Underline"
           shortcut="Ctrl+U"
           icon={<UnderlineIcon className="h-3.5 w-3.5" />}
           onClick={run(() => chain().toggleUnderline().run())}
         />
         <CmdItem
-          label="কাটা দাগ"
+          label="Strikethrough"
           icon={<Strikethrough className="h-3.5 w-3.5" />}
           onClick={run(() => chain().toggleStrike().run())}
         />
         <CmdItem
-          label="হাইলাইট"
+          label="Highlight"
           icon={<Highlighter className="h-3.5 w-3.5" />}
           onClick={run(() => chain().toggleHighlight().run())}
         />
         <CmdSep />
         <CmdItem
-          label="নিচের ঘর"
+          label="Subscript"
           icon={<Subscript className="h-3.5 w-3.5" />}
           onClick={run(() => chain().toggleSubscript().run())}
         />
         <CmdItem
-          label="উপরের ঘর"
+          label="Superscript"
           icon={<Superscript className="h-3.5 w-3.5" />}
           onClick={run(() => chain().toggleSuperscript().run())}
         />
       </CmdSub>
 
-      <CmdSub label="সাজানো" icon={<AlignLeft className="h-3.5 w-3.5" />}>
+      <CmdSub label="Align" icon={<AlignLeft className="h-3.5 w-3.5" />}>
         <CmdItem
-          label="বাঁ দিকে"
+          label="Align Left"
           icon={<AlignLeft className="h-3.5 w-3.5" />}
           onClick={run(() => chain().setTextAlign("left").run())}
         />
         <CmdItem
-          label="মাঝে"
+          label="Center"
           icon={<AlignCenter className="h-3.5 w-3.5" />}
           onClick={run(() => chain().setTextAlign("center").run())}
         />
         <CmdItem
-          label="ডান দিকে"
+          label="Align Right"
           icon={<AlignRight className="h-3.5 w-3.5" />}
           onClick={run(() => chain().setTextAlign("right").run())}
         />
         <CmdItem
-          label="দুই পাশ সমান"
+          label="Justify"
           icon={<AlignJustify className="h-3.5 w-3.5" />}
           onClick={run(() => chain().setTextAlign("justify").run())}
         />
         <CmdSep />
         <CmdItem
-          label="ইনডেন্ট বাড়ান"
+          label="Increase Indent"
           shortcut="Tab"
           icon={<IndentIncrease className="h-3.5 w-3.5" />}
           onClick={run(() => chain().indent().run())}
         />
         <CmdItem
-          label="ইনডেন্ট কমান"
+          label="Decrease Indent"
           shortcut="Shift+Tab"
           icon={<IndentDecrease className="h-3.5 w-3.5" />}
           onClick={run(() => chain().outdent().run())}
         />
       </CmdSub>
 
-      <CmdSub label="তালিকা" icon={<List className="h-3.5 w-3.5" />}>
+      <CmdSub label="Lists" icon={<List className="h-3.5 w-3.5" />}>
         <CmdItem
-          label="বুলেট তালিকা"
+          label="Bulleted List"
           icon={<List className="h-3.5 w-3.5" />}
           onClick={run(() => chain().toggleBulletList().run())}
         />
         <CmdItem
-          label="নম্বর তালিকা"
+          label="Numbered List"
           icon={<ListOrdered className="h-3.5 w-3.5" />}
           onClick={run(() => chain().toggleOrderedList().run())}
         />
         <CmdItem
-          label="টিক-বক্স তালিকা"
+          label="Checklist"
           icon={<ListTodo className="h-3.5 w-3.5" />}
           onClick={run(() => chain().toggleTaskList().run())}
         />
       </CmdSub>
 
       <CmdItem
-        label="ফন্ট…"
+        label="Font…"
         icon={<Type className="h-3.5 w-3.5" />}
         onClick={run(() => onOpenDialog("font"))}
       />
       <CmdItem
-        label="অনুচ্ছেদ…"
+        label="Paragraph…"
         icon={<AlignJustify className="h-3.5 w-3.5" />}
         onClick={run(() => onOpenDialog("paragraph"))}
       />
       <CmdItem
-        label="সব ফরম্যাট মুছুন"
+        label="Clear Formatting"
         icon={<Eraser className="h-3.5 w-3.5" />}
         onClick={run(() => chain().unsetAllMarks().clearNodes().run())}
       />
@@ -248,14 +251,14 @@ export function EditorContextMenu({
 
       {/* ---------------- link ---------------- */}
       <CmdItem
-        label={inLink ? "লিংক বদলান…" : "লিংক দিন…"}
+        label={inLink ? "Edit Link…" : "Insert Link…"}
         shortcut="Ctrl+K"
         icon={<LinkIcon className="h-3.5 w-3.5" />}
         onClick={run(() => onOpenDialog("link"))}
       />
       {inLink && (
         <CmdItem
-          label="লিংক তুলে দিন"
+          label="Remove Link"
           icon={<Unlink className="h-3.5 w-3.5" />}
           onClick={run(() => chain().unsetLink().run())}
         />
@@ -265,8 +268,8 @@ export function EditorContextMenu({
       {inFigure && (
         <>
           <CmdSep />
-          <CmdHeading>ছবি</CmdHeading>
-          <CmdSub label="অবস্থান" icon={<ImageIcon className="h-3.5 w-3.5" />}>
+          <CmdHeading>Picture</CmdHeading>
+          <CmdSub label="Position" icon={<ImageIcon className="h-3.5 w-3.5" />}>
             {WRAPS.map((w) => (
               <CmdItem
                 key={w.value}
@@ -275,7 +278,7 @@ export function EditorContextMenu({
               />
             ))}
           </CmdSub>
-          <CmdSub label={`চওড়া — ${figureWidth}%`}>
+          <CmdSub label={`Width — ${figureWidth}%`}>
             {[25, 33, 50, 66, 75, 100].map((w) => (
               <CmdItem
                 key={w}
@@ -285,12 +288,12 @@ export function EditorContextMenu({
             ))}
           </CmdSub>
           <CmdItem
-            label="ছবিটি বদলান…"
+            label="Replace Picture…"
             icon={<ImageIcon className="h-3.5 w-3.5" />}
             onClick={run(() => onOpenDialog("image"))}
           />
           <CmdItem
-            label="ছবিটি মুছুন"
+            label="Delete Picture"
             danger
             icon={<Trash2 className="h-3.5 w-3.5" />}
             onClick={run(() => chain().deleteSelection().run())}
@@ -302,63 +305,63 @@ export function EditorContextMenu({
       {inTable ? (
         <>
           <CmdSep />
-          <CmdHeading>টেবিল</CmdHeading>
-          <CmdSub label="সারি" icon={<Rows3 className="h-3.5 w-3.5" />}>
+          <CmdHeading>Table</CmdHeading>
+          <CmdSub label="Rows" icon={<Rows3 className="h-3.5 w-3.5" />}>
             <CmdItem
-              label="উপরে সারি যোগ করুন"
+              label="Insert Row Above"
               icon={<ArrowUp className="h-3.5 w-3.5" />}
               onClick={run(() => chain().addRowBefore().run())}
             />
             <CmdItem
-              label="নিচে সারি যোগ করুন"
+              label="Insert Row Below"
               icon={<ArrowDown className="h-3.5 w-3.5" />}
               onClick={run(() => chain().addRowAfter().run())}
             />
             <CmdItem
-              label="এই সারিটি মুছুন"
+              label="Delete Row"
               danger
               icon={<Trash2 className="h-3.5 w-3.5" />}
               onClick={run(() => chain().deleteRow().run())}
             />
           </CmdSub>
-          <CmdSub label="কলাম" icon={<Columns3 className="h-3.5 w-3.5" />}>
+          <CmdSub label="Columns" icon={<Columns3 className="h-3.5 w-3.5" />}>
             <CmdItem
-              label="বামে কলাম যোগ করুন"
+              label="Insert Column Left"
               onClick={run(() => chain().addColumnBefore().run())}
             />
             <CmdItem
-              label="ডানে কলাম যোগ করুন"
+              label="Insert Column Right"
               onClick={run(() => chain().addColumnAfter().run())}
             />
             <CmdItem
-              label="এই কলামটি মুছুন"
+              label="Delete Column"
               danger
               icon={<Trash2 className="h-3.5 w-3.5" />}
               onClick={run(() => chain().deleteColumn().run())}
             />
           </CmdSub>
           <CmdItem
-            label="ঘরগুলো জোড়া দিন"
+            label="Merge Cells"
             icon={<Combine className="h-3.5 w-3.5" />}
             onClick={run(() => chain().mergeCells().run())}
           />
           <CmdItem
-            label="ঘরটি আলাদা করুন"
+            label="Split Cell"
             icon={<Split className="h-3.5 w-3.5" />}
             onClick={run(() => chain().splitCell().run())}
           />
           <CmdItem
-            label="টেবিলটি উপরে সরান"
+            label="Move Table Up"
             icon={<ArrowUp className="h-3.5 w-3.5" />}
             onClick={run(() => moveTableBy(editor, -1))}
           />
           <CmdItem
-            label="টেবিলটি নিচে সরান"
+            label="Move Table Down"
             icon={<ArrowDown className="h-3.5 w-3.5" />}
             onClick={run(() => moveTableBy(editor, 1))}
           />
           <CmdItem
-            label="পুরো টেবিল মুছুন"
+            label="Delete Table"
             danger
             icon={<Trash2 className="h-3.5 w-3.5" />}
             onClick={run(() => chain().deleteTable().run())}
@@ -366,7 +369,7 @@ export function EditorContextMenu({
         </>
       ) : (
         <CmdItem
-          label="টেবিল বসান…"
+          label="Insert Table…"
           icon={<TableIcon className="h-3.5 w-3.5" />}
           onClick={run(() => onOpenDialog("table"))}
         />
@@ -376,13 +379,13 @@ export function EditorContextMenu({
 
       {canReadAloud && (
         <CmdItem
-          label="পড়ে শোনাও"
+          label="Read Aloud"
           icon={<Volume2 className="h-3.5 w-3.5" />}
           onClick={run(onReadAloud)}
         />
       )}
       <CmdItem
-        label="খুঁজুন ও বদলান…"
+        label="Find & Replace…"
         shortcut="Ctrl+F"
         icon={<Search className="h-3.5 w-3.5" />}
         onClick={run(onOpenFind)}

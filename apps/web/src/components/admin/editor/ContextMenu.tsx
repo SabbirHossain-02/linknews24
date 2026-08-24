@@ -1,58 +1,122 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { createPortal } from "react-dom";
 import { ChevronRight } from "lucide-react";
 
 /**
+ * The box the menu has to stay inside — the editor page area, so a menu never
+ * spills onto the form around it. Submenus read it from here too.
+ */
+const BoundsContext = createContext<HTMLElement | null>(null);
+
+const PAD = 6;
+
+function boundsRect(el: HTMLElement | null) {
+  if (el) {
+    const r = el.getBoundingClientRect();
+    // A container taller than the window is still limited by the window.
+    return {
+      left: Math.max(r.left, 0),
+      right: Math.min(r.right, window.innerWidth),
+      top: Math.max(r.top, 0),
+      bottom: Math.min(r.bottom, window.innerHeight),
+    };
+  }
+  return {
+    left: 0,
+    right: window.innerWidth,
+    top: 0,
+    bottom: window.innerHeight,
+  };
+}
+
+/** Places a panel of `width` at (x, y), kept inside `bounds`. */
+function place(
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  bounds: ReturnType<typeof boundsRect>,
+) {
+  const left = Math.max(
+    bounds.left + PAD,
+    Math.min(x, bounds.right - width - PAD),
+  );
+
+  const below = bounds.bottom - y - PAD;
+  const above = y - bounds.top - PAD;
+  // Open downwards unless there is clearly more room the other way.
+  const openUp = height > below && above > below;
+
+  const maxHeight = Math.max(120, openUp ? above : below);
+  const top = openUp
+    ? Math.max(bounds.top + PAD, y - Math.min(height || maxHeight, maxHeight))
+    : y;
+
+  return { top, left, maxHeight };
+}
+
+/**
  * A menu anchored to a point rather than to an element — what a right click
- * needs. Flips up and shifts sideways so it never opens off screen.
+ * needs. It is confined to the editor page and scrolls when the list is taller
+ * than the room available, so nothing is ever out of reach.
  */
 export function ContextMenu({
   x,
   y,
+  bounds,
   onClose,
-  width = 232,
+  width = 244,
   children,
 }: {
   x: number;
   y: number;
+  /** Element the menu must stay within. Falls back to the window. */
+  bounds?: HTMLElement | null;
   onClose: () => void;
   width?: number;
   children: React.ReactNode;
 }) {
   const panelRef = useRef<HTMLDivElement>(null);
-  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
+  const [pos, setPos] = useState<{
+    top: number;
+    left: number;
+    maxHeight: number;
+  } | null>(null);
 
   useLayoutEffect(() => {
-    const place = () => {
-      const height = panelRef.current?.offsetHeight ?? 0;
-      const left =
-        x + width > window.innerWidth - 8
-          ? Math.max(8, window.innerWidth - width - 8)
-          : x;
-      const top =
-        height && y + height > window.innerHeight - 8
-          ? Math.max(8, window.innerHeight - height - 8)
-          : y;
-      setPos({ top, left });
-    };
-    place();
-    // Measure again once the panel is on screen, so the flip is exact.
-    const raf = requestAnimationFrame(place);
+    const measure = () =>
+      setPos(
+        place(
+          x,
+          y,
+          width,
+          panelRef.current?.scrollHeight ?? 0,
+          boundsRect(bounds ?? null),
+        ),
+      );
+    measure();
+    // Measure again with the panel on screen, so an upward flip is exact.
+    const raf = requestAnimationFrame(measure);
     return () => cancelAnimationFrame(raf);
-  }, [x, y, width]);
+  }, [x, y, width, bounds]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
     };
     document.addEventListener("keydown", onKey);
-    window.addEventListener("scroll", onClose, true);
     window.addEventListener("resize", onClose);
     return () => {
       document.removeEventListener("keydown", onKey);
-      window.removeEventListener("scroll", onClose, true);
       window.removeEventListener("resize", onClose);
     };
   }, [onClose]);
@@ -60,10 +124,11 @@ export function ContextMenu({
   if (typeof document === "undefined" || !pos) return null;
 
   return createPortal(
-    <>
+    <BoundsContext.Provider value={bounds ?? null}>
       <div
         className="fixed inset-0 z-[80]"
         onMouseDown={onClose}
+        onWheel={onClose}
         onContextMenu={(e) => {
           e.preventDefault();
           onClose();
@@ -74,12 +139,17 @@ export function ContextMenu({
         // Never let the menu take the selection away from the editor.
         onMouseDown={(e) => e.preventDefault()}
         onContextMenu={(e) => e.preventDefault()}
-        style={{ top: pos.top, left: pos.left, width }}
-        className="fixed z-[81] max-h-[80vh] overflow-y-auto rounded border border-[#d4d4d4] bg-white py-1 shadow-[0_6px_28px_rgba(0,0,0,0.26)]"
+        style={{
+          top: pos.top,
+          left: pos.left,
+          width,
+          maxHeight: pos.maxHeight,
+        }}
+        className="fixed z-[81] overflow-y-auto overscroll-contain rounded border border-[#d4d4d4] bg-white py-1 shadow-[0_6px_28px_rgba(0,0,0,0.26)]"
       >
         {children}
       </div>
-    </>,
+    </BoundsContext.Provider>,
     document.body,
   );
 }
@@ -125,7 +195,15 @@ export function CmdItem({
   );
 }
 
-/** A nested menu, opened by hovering — Word's ▸ submenus. */
+const SUB_WIDTH = 216;
+
+/**
+ * A nested menu, opened by hovering — Word's ▸ submenus.
+ *
+ * The panel is portalled rather than nested, because the parent menu scrolls:
+ * a child positioned inside it would be clipped by that scroll box instead of
+ * opening beside it.
+ */
 export function CmdSub({
   label,
   icon,
@@ -135,19 +213,45 @@ export function CmdSub({
   icon?: React.ReactNode;
   children: React.ReactNode;
 }) {
-  const [open, setOpen] = useState(false);
+  const bounds = useContext(BoundsContext);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const closeTimer = useRef<number | undefined>(undefined);
+  const [pos, setPos] = useState<{
+    top: number;
+    left: number;
+    maxHeight: number;
+  } | null>(null);
+
+  const open = () => {
+    window.clearTimeout(closeTimer.current);
+    const r = triggerRef.current?.getBoundingClientRect();
+    if (!r) return;
+    const box = boundsRect(bounds);
+    // Prefer the right side; fall back to the left when there is no room.
+    const x =
+      r.right + SUB_WIDTH <= box.right - PAD ? r.right : r.left - SUB_WIDTH;
+    setPos(place(x, r.top - 4, SUB_WIDTH, panelRef.current?.scrollHeight ?? 0, box));
+  };
+
+  // A short delay lets the pointer cross the gap between item and panel.
+  const close = () => {
+    closeTimer.current = window.setTimeout(() => setPos(null), 140);
+  };
+
+  useEffect(() => () => window.clearTimeout(closeTimer.current), []);
 
   return (
-    <div
-      className="relative"
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={() => setOpen(false)}
-    >
+    <>
       <button
+        ref={triggerRef}
         type="button"
         onMouseDown={(e) => e.preventDefault()}
+        onMouseEnter={open}
+        onMouseLeave={close}
+        onClick={open}
         className={`flex w-full items-center gap-2.5 px-3 py-[5px] text-left font-ui text-[11.5px] text-[#222] transition-colors ${
-          open ? "bg-[#e1dfdd]" : ""
+          pos ? "bg-[#e1dfdd]" : "hover:bg-[#e1dfdd]"
         }`}
       >
         <span className="flex h-3.5 w-3.5 shrink-0 items-center justify-center text-[#555]">
@@ -156,13 +260,28 @@ export function CmdSub({
         <span className="min-w-0 flex-1 truncate">{label}</span>
         <ChevronRight className="h-3 w-3 shrink-0 text-[#888]" />
       </button>
-      {open && (
-        // Sits to the left when there is no room on the right.
-        <div className="absolute left-full top-0 z-[82] -mt-1 w-[210px] rounded border border-[#d4d4d4] bg-white py-1 shadow-[0_6px_28px_rgba(0,0,0,0.26)] max-[520px]:left-auto max-[520px]:right-full">
-          {children}
-        </div>
-      )}
-    </div>
+
+      {pos &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div
+            ref={panelRef}
+            onMouseDown={(e) => e.preventDefault()}
+            onMouseEnter={() => window.clearTimeout(closeTimer.current)}
+            onMouseLeave={close}
+            style={{
+              top: pos.top,
+              left: pos.left,
+              width: SUB_WIDTH,
+              maxHeight: pos.maxHeight,
+            }}
+            className="fixed z-[82] overflow-y-auto overscroll-contain rounded border border-[#d4d4d4] bg-white py-1 shadow-[0_6px_28px_rgba(0,0,0,0.26)]"
+          >
+            {children}
+          </div>,
+          document.body,
+        )}
+    </>
   );
 }
 

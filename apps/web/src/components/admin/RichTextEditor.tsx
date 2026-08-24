@@ -116,6 +116,8 @@ export function RichTextEditor({
   }, []);
 
   const editorRef = useRef<ReturnType<typeof useEditor>>(null);
+  // The scrolling page area. The right-click menu is kept inside it.
+  const canvasRef = useRef<HTMLDivElement>(null);
 
   /**
    * A clipboard command can legitimately fail — reading the clipboard needs
@@ -289,6 +291,7 @@ export function RichTextEditor({
           onClose={() => setMenuAt(null)}
           onOpenFind={() => setFindOpen(true)}
           onOpenDialog={setDialog}
+          bounds={canvasRef.current}
           onReadAloud={read.toggle}
           canReadAloud={read.supported}
           onNotice={showNotice}
@@ -303,6 +306,7 @@ export function RichTextEditor({
             whole editor when you zoomed out. Pinning the canvas keeps the
             window one size and lets only the sheet inside it grow or shrink. */}
         <div
+          ref={canvasRef}
           onContextMenu={(e) => {
             e.preventDefault();
             // Right-clicking outside the current selection should move the
