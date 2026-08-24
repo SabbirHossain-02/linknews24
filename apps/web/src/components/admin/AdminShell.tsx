@@ -20,6 +20,7 @@ import {
   Newspaper,
   Radio,
   Scale,
+  Search,
   Settings,
   Tv,
   Users,
@@ -51,6 +52,7 @@ const NAV: NavItem[] = [
   { key: "newsletter", href: "/admin/newsletter", icon: Mail },
   { key: "ads", href: "/admin/ads", icon: Megaphone },
   { key: "comments", href: "/admin/comments", icon: MessageSquare },
+  { key: "seo", href: "/admin/seo", icon: Search },
   { key: "settings", href: "/admin/settings", icon: Settings },
   { key: "usersRoles", href: "/admin/users", icon: Users },
 ];

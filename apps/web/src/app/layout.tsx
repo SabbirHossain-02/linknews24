@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Hind_Siliguri, Inter } from "next/font/google";
 import { SITE_URL } from "@/lib/site";
+import { getSeo } from "@/lib/seo";
 import localFont from "next/font/local";
 import { LocaleProvider } from "@/components/providers/LocaleProvider";
 import { AuthProvider } from "@/components/providers/AuthProvider";
@@ -33,26 +34,53 @@ const siyamRupali = localFont({
   display: "swap",
 });
 
-const title = "LinkNews24 — বাংলাদেশের নির্ভরযোগ্য অনলাইন নিউজ পোর্টাল";
-const description =
-  "জাতীয়, আন্তর্জাতিক, রাজনীতি, খেলা, বিনোদন ও প্রযুক্তির সর্বশেষ খবর — LinkNews24-এ।";
+/**
+ * Built from the SEO page's settings, so what is typed there is what search
+ * engines and social networks receive. Falls back to the shipped defaults if
+ * the API cannot be reached — never to an empty head.
+ */
+export async function generateMetadata(): Promise<Metadata> {
+  const seo = await getSeo();
+  const image = seo.defaultOgImage || undefined;
 
-export const metadata: Metadata = {
-  metadataBase: new URL(SITE_URL),
-  title: { default: title, template: "%s | LinkNews24" },
-  description,
-  applicationName: "LinkNews24",
-  openGraph: {
-    type: "website",
-    siteName: "LinkNews24",
-    locale: "bn_BD",
-    title,
-    description,
-    url: SITE_URL,
-  },
-  twitter: { card: "summary_large_image", title, description },
-  robots: { index: true, follow: true },
-};
+  return {
+    metadataBase: new URL(SITE_URL),
+    title: { default: seo.defaultTitle, template: seo.titleTemplate },
+    description: seo.defaultDescription,
+    applicationName: seo.siteName,
+    keywords: seo.keywords
+      ? seo.keywords.split(",").map((k) => k.trim()).filter(Boolean)
+      : undefined,
+    openGraph: {
+      type: "website",
+      siteName: seo.siteName,
+      locale: "bn_BD",
+      title: seo.defaultTitle,
+      description: seo.defaultDescription,
+      url: SITE_URL,
+      images: image ? [image] : undefined,
+    },
+    twitter: {
+      card: "summary_large_image",
+      site: seo.twitterHandle || undefined,
+      title: seo.defaultTitle,
+      description: seo.defaultDescription,
+      images: image ? [image] : undefined,
+    },
+    // Switching the site to "not indexable" has to reach the robots meta tag
+    // as well as robots.txt, or a page already known to Google stays listed.
+    robots: seo.indexable
+      ? { index: true, follow: true }
+      : { index: false, follow: false },
+    verification: {
+      google: seo.googleVerification || undefined,
+      other: seo.bingVerification
+        ? { "msvalidate.01": seo.bingVerification }
+        : undefined,
+    },
+    alternates: { canonical: SITE_URL },
+  };
+}
 
 export const viewport: Viewport = {
   themeColor: "#0f2c4d",

@@ -18,10 +18,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: path === "" ? 1 : 0.6,
   }));
 
-  const [categories, { articles }] = await Promise.all([
+  // Every published article, in pages of 50 — the cap meant a growing archive
+  // silently stopped being listed.
+  const [categories, first] = await Promise.all([
     getCategories(),
-    getArticles({ limit: 50 }),
+    getArticles({ limit: 50, page: 1 }),
   ]);
+
+  const articles = [...first.articles];
+  const pages = Math.ceil(first.total / 50);
+  for (let page = 2; page <= pages; page += 1) {
+    const next = await getArticles({ limit: 50, page });
+    if (!next.articles.length) break;
+    articles.push(...next.articles);
+  }
 
   const categoryRoutes: MetadataRoute.Sitemap = categories.map((c) => ({
     url: `${SITE_URL}/${c.slug}`,

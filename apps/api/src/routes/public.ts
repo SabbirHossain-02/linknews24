@@ -6,6 +6,7 @@ import { emitChange, emitAnalytics } from "../realtime";
 import { clientIp, geoLookup, parseUA } from "../lib/analytics";
 import { AD_SLOTS } from "../lib/adSlots";
 import { recordAdEvent } from "../lib/adTracking";
+import { readSeo } from "../lib/seo";
 import { readViewerAccount } from "../middleware/account";
 import { donorBadge, nextEligibleDate, isEligibleNow } from "../lib/donorBadge";
 
@@ -135,6 +136,14 @@ publicRouter.get("/donors", async (req, res) => {
   );
 
   res.json({ donors });
+});
+
+/**
+ * The SEO settings the site's own <head> and /robots.txt are built from. Public
+ * because the pages that need it are rendered before anyone has logged in.
+ */
+publicRouter.get("/seo", async (_req, res) => {
+  res.json({ seo: await readSeo() });
 });
 
 publicRouter.get("/settings", async (_req, res) => {

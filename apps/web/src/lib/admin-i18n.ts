@@ -306,6 +306,121 @@ export const adminDict = {
   adDays: { bn: "দিন", en: "days" },
   dashLast24Total: { bn: "মোট {n} ভিজিট", en: "{n} visits in total" },
   chartOther: { bn: "অন্যান্য", en: "Other" },
+
+  // --- SEO page ---
+  seoIntro: {
+    bn: "এখানকার প্রতিটি সেটিং সরাসরি সাইটের <head>, robots.txt আর sitemap.xml-এ যায় — সার্চ ইঞ্জিন ঠিক এটাই পড়ে।",
+    en: "Every setting here goes straight into the site's <head>, robots.txt and sitemap.xml — this is exactly what search engines read.",
+  },
+  seoScore: { bn: "SEO স্কোর", en: "SEO score" },
+  seoChecked: { bn: "যাচাই করা খবর", en: "Articles checked" },
+  seoErrors: { bn: "গুরুতর সমস্যা", en: "Errors" },
+  seoWarnings: { bn: "সতর্কতা", en: "Warnings" },
+
+  seoDefaults: { bn: "সাইটের ডিফল্ট", en: "Site defaults" },
+  seoDefaultsNote: {
+    bn: "হোমপেজে এবং যেসব পাতার নিজস্ব শিরোনাম-বর্ণনা নেই, সেখানে এগুলোই ব্যবহার হয়।",
+    en: "Used on the home page and on any page without its own title and description.",
+  },
+  seoSiteName: { bn: "সাইটের নাম", en: "Site name" },
+  seoTitleTemplate: { bn: "টাইটেল টেমপ্লেট", en: "Title template" },
+  seoTitleTemplateHint: {
+    bn: "%s-এর জায়গায় পাতার নিজের শিরোনাম বসবে। যেমন: %s | LinkNews24",
+    en: "%s is replaced by the page's own title, e.g. %s | LinkNews24",
+  },
+  seoDefaultTitle: { bn: "ডিফল্ট শিরোনাম", en: "Default title" },
+  seoDefaultDesc: { bn: "ডিফল্ট বর্ণনা", en: "Default description" },
+  seoKeywords: { bn: "কীওয়ার্ড", en: "Keywords" },
+  seoKeywordsHint: {
+    bn: "কমা দিয়ে আলাদা। গুগল এটি আর র‍্যাঙ্কিংয়ে ব্যবহার করে না, কিছু ছোট সার্চ ইঞ্জিন করে।",
+    en: "Comma separated. Google no longer uses this for ranking; some smaller engines still do.",
+  },
+  seoTwitter: { bn: "X / Twitter হ্যান্ডেল", en: "X / Twitter handle" },
+  seoPreview: { bn: "গুগলে যেভাবে দেখাবে", en: "How it will look in Google" },
+
+  seoImages: { bn: "শেয়ার করার ছবি", en: "Sharing images" },
+  seoImagesNote: {
+    bn: "ফেসবুক বা হোয়াটসঅ্যাপে লিংক দিলে যে ছবিটি দেখায়। নিজস্ব ছবি নেই এমন পাতায় এটিই যাবে। সুপারিশ: ১২০০×৬৩০ পিক্সেল।",
+    en: "The image shown when a link is shared on Facebook or WhatsApp, for any page without its own. 1200×630 recommended.",
+  },
+  seoOgImage: { bn: "ডিফল্ট শেয়ার ছবি", en: "Default share image" },
+  seoOrgLogo: { bn: "প্রতিষ্ঠানের লোগো", en: "Organisation logo" },
+  seoOrgName: { bn: "প্রতিষ্ঠানের নাম", en: "Organisation name" },
+
+  seoCrawling: { bn: "ক্রলিং ও যাচাই", en: "Crawling & verification" },
+  seoCrawlingNote: {
+    bn: "সার্চ ইঞ্জিন সাইটের কোন অংশ দেখবে, আর গুগল-বিং-এর মালিকানা যাচাই।",
+    en: "What search engines may crawl, and ownership verification for Google and Bing.",
+  },
+  seoIndexable: { bn: "সার্চ ইঞ্জিনে দেখাবে", en: "Allow search engines" },
+  seoIndexableOn: {
+    bn: "চালু — গুগল সাইটটি খুঁজে পাবে ও দেখাবে।",
+    en: "On — Google may find and list the site.",
+  },
+  seoIndexableOff: {
+    bn: "বন্ধ — robots.txt সবকিছু আটকাবে এবং প্রতিটি পাতায় noindex বসবে।",
+    en: "Off — robots.txt blocks everything and every page carries noindex.",
+  },
+  seoDisallow: { bn: "যেসব পাতা ক্রল করবে না", en: "Paths to disallow" },
+  seoDisallowHint: {
+    bn: "প্রতি লাইনে একটি পাথ। হুবহু robots.txt-এ Disallow হিসেবে যাবে।",
+    en: "One path per line, written into robots.txt as Disallow.",
+  },
+  seoGoogleVerify: { bn: "Google Search Console কোড", en: "Google Search Console code" },
+  seoVerifyHint: {
+    bn: "Search Console-এর HTML ট্যাগ পদ্ধতিতে যে content মানটি দেয়, শুধু সেটি।",
+    en: "Just the content value from Search Console's HTML tag method.",
+  },
+  seoBingVerify: { bn: "Bing Webmaster কোড", en: "Bing Webmaster code" },
+  seoUrls: { bn: "ঠিকানা", en: "URLs" },
+  seoSitemapBreakdown: {
+    bn: "{a} খবর · {c} ক্যাটাগরি · {s} স্থির পাতা",
+    en: "{a} articles · {c} categories · {s} static pages",
+  },
+
+  seoAudit: { bn: "প্রকাশিত খবরের SEO যাচাই", en: "Published article audit" },
+  seoAuditNote: {
+    bn: "প্রকাশিত প্রতিটি খবর সত্যিকারভাবে পরীক্ষা করা হয়েছে। খবর বদলালেই তালিকা নিজে থেকে হালনাগাদ হয়।",
+    en: "Every published article is really checked. The list updates itself whenever an article changes.",
+  },
+  seoAllClear: { bn: "কোনো সমস্যা পাওয়া যায়নি।", en: "No issues found." },
+  seoNoArticles: {
+    bn: "এখনো কোনো খবর প্রকাশিত হয়নি, তাই যাচাই করার কিছু নেই।",
+    en: "Nothing is published yet, so there is nothing to check.",
+  },
+  seoIssue_noDescription: {
+    bn: "মেটা বর্ণনা নেই — গুগল নিজে থেকে লেখা কেটে বসাবে",
+    en: "No meta description — Google will cut one from the body",
+  },
+  seoIssue_descriptionLong: {
+    bn: "বর্ণনা বেশি লম্বা, শেষটা কেটে যাবে",
+    en: "Description too long; the end will be cut off",
+  },
+  seoIssue_descriptionShort: {
+    bn: "বর্ণনা বেশি ছোট",
+    en: "Description is very short",
+  },
+  seoIssue_titleLong: {
+    bn: "শিরোনাম বেশি লম্বা, ফলাফলে কেটে যাবে",
+    en: "Title too long; it will be truncated in results",
+  },
+  seoIssue_titleShort: { bn: "শিরোনাম বেশি ছোট", en: "Title is very short" },
+  seoIssue_noImage: {
+    bn: "ফিচার্ড ইমেজ নেই — শেয়ার করলে ছবি ছাড়া লিংক যাবে",
+    en: "No featured image — shares will be a bare link",
+  },
+  seoIssue_noTitleEn: {
+    bn: "ইংরেজি শিরোনাম নেই — English ভিউতে ফাঁকা দেখাবে",
+    en: "No English title — the English view will be blank",
+  },
+  seoIssue_noPublishedAt: {
+    bn: "প্রকাশের তারিখ নেই",
+    en: "No publish date",
+  },
+  seoIssue_duplicateTitle: {
+    bn: "একই শিরোনামের আরেকটি খবর আছে — দুটি একে অন্যের সাথে প্রতিযোগিতা করবে",
+    en: "Another article shares this title; they will compete with each other",
+  },
   chartTotal: { bn: "মোট", en: "total" },
   adShowDaily: { bn: "প্রতিদিনের হিসাব দেখুন", en: "Show daily figures" },
   adHideDaily: { bn: "প্রতিদিনের হিসাব লুকান", en: "Hide daily figures" },

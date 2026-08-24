@@ -16,6 +16,7 @@ import {
 import { hashPassword } from "../lib/password";
 import { emitChange, emitAnalytics, onlineCount } from "../realtime";
 import { adReport } from "../lib/adTracking";
+import { auditArticles, readSeo, sitemapStats, writeSeo } from "../lib/seo";
 
 export const adminRouter = Router();
 
@@ -793,6 +794,47 @@ adminRouter.delete("/subscribers/:id", requireRole(...CAN_MANAGE), async (req, r
 });
 
 // ===================== SITE SETTINGS =====================
+// ===================== SEO =====================
+
+/**
+ * Everything the SEO page shows: the saved settings, what the sitemap will
+ * contain, and an audit of the published articles. All three are read from the
+ * same data the public site serves — none of it is illustrative.
+ */
+adminRouter.get("/seo", async (_req, res) => {
+  const [settings, sitemap, audit] = await Promise.all([
+    readSeo(),
+    sitemapStats(),
+    auditArticles(),
+  ]);
+  res.json({ settings, sitemap, audit });
+});
+
+adminRouter.put("/seo", requireRole(...CAN_MANAGE), async (req, res) => {
+  const body = (req.body ?? {}) as Record<string, unknown>;
+  const str = (k: string) =>
+    typeof body[k] === "string" ? (body[k] as string).trim() : undefined;
+
+  const settings = await writeSeo({
+    siteName: str("siteName"),
+    titleTemplate: str("titleTemplate"),
+    defaultTitle: str("defaultTitle"),
+    defaultTitleEn: str("defaultTitleEn"),
+    defaultDescription: str("defaultDescription"),
+    defaultDescriptionEn: str("defaultDescriptionEn"),
+    keywords: str("keywords"),
+    defaultOgImage: str("defaultOgImage"),
+    twitterHandle: str("twitterHandle"),
+    indexable: typeof body.indexable === "boolean" ? body.indexable : undefined,
+    robotsDisallow: str("robotsDisallow"),
+    googleVerification: str("googleVerification"),
+    bingVerification: str("bingVerification"),
+    organizationName: str("organizationName"),
+    organizationLogo: str("organizationLogo"),
+  });
+  res.json({ settings });
+});
+
 adminRouter.get("/settings", async (_req, res) => {
   const row = await prisma.siteSetting.findUnique({ where: { key: "site" } });
   res.json({ settings: row?.value ?? {} });
