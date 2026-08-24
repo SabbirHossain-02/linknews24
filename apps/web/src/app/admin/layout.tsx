@@ -14,7 +14,7 @@ import { AdminGate } from "@/components/admin/AdminGate";
  * indexable.
  */
 export const metadata: Metadata = {
-  title: { default: "LinkNews24 Admin", template: "%s | LinkNews24 Admin" },
+  title: { absolute: "LinkNews24 Admin", template: "%s | LinkNews24 Admin" },
   robots: { index: false, follow: false },
 };
 
