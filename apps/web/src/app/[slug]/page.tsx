@@ -12,6 +12,8 @@ import {
   getSidebar,
   toArticle,
 } from "@/lib/api";
+import { getSeo } from "@/lib/seo";
+import { SITE_URL } from "@/lib/site";
 
 const PER_PAGE = 12;
 
@@ -27,13 +29,42 @@ export async function generateMetadata({
 
   const article = await getArticleBySlug(slug);
   if (article) {
+    const seo = await getSeo();
+    // The SEO title and description typed in the editor are what the article
+    // is meant to show in search results; they were being collected and then
+    // ignored here, so the plain headline went out instead.
+    const title = article.seoTitle?.trim() || article.title;
+    const description = article.seoDescription?.trim() || article.excerpt;
+    // The story's own picture is what should appear when it is shared. Without
+    // one the share falls back to the site image, never to nothing.
+    const image = article.featuredImage || seo.defaultOgImage || undefined;
+    const url = `${SITE_URL}/${article.slug}`;
+
     return {
-      title: article.title,
-      description: article.excerpt,
+      title,
+      description,
+      alternates: { canonical: url },
       openGraph: {
-        title: article.title,
-        description: article.excerpt,
         type: "article",
+        url,
+        title,
+        description,
+        siteName: seo.siteName,
+        publishedTime: article.publishedAt ?? undefined,
+        section: article.category?.name,
+        authors: article.authorName
+          ? [article.authorName]
+          : article.author?.name
+            ? [article.author.name]
+            : undefined,
+        images: image ? [image] : undefined,
+      },
+      twitter: {
+        card: "summary_large_image",
+        site: seo.twitterHandle || undefined,
+        title,
+        description,
+        images: image ? [image] : undefined,
       },
     };
   }
@@ -41,9 +72,21 @@ export async function generateMetadata({
   const categories = await getCategories();
   const category = categories.find((c) => c.slug === slug);
   if (category) {
+    const seo = await getSeo();
+    const url = `${SITE_URL}/${category.slug}`;
+    const description = `${seo.siteName}-এ সর্বশেষ ${category.name} বিভাগের সংবাদ।`;
     return {
       title: category.name,
-      description: `LinkNews24-এ সর্বশেষ ${category.name} বিভাগের সংবাদ।`,
+      description,
+      alternates: { canonical: url },
+      openGraph: {
+        type: "website",
+        url,
+        title: category.name,
+        description,
+        siteName: seo.siteName,
+        images: seo.defaultOgImage ? [seo.defaultOgImage] : undefined,
+      },
     };
   }
   return {};

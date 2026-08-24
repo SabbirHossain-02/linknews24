@@ -16,6 +16,8 @@ export interface ApiArticle {
   bodyEn?: string;
   imageTone: string;
   featuredImage?: string | null;
+  seoTitle?: string | null;
+  seoDescription?: string | null;
   isBreaking: boolean;
   featured?: boolean;
   viewCount: number;
