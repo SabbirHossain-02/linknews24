@@ -152,6 +152,15 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const pending = usePendingCounts();
 
+  // Name the browser tab after the section being viewed, in whichever language
+  // the panel is set to. A row of admin tabs is otherwise indistinguishable.
+  const section = NAV.find((n) => n.href === pathname);
+  useEffect(() => {
+    document.title = section
+      ? `${t(section.key)} | LinkNews24 Admin`
+      : "LinkNews24 Admin";
+  }, [section, t, locale]);
+
   const handleLogout = async () => {
     await logout();
     router.replace("/admin/login");

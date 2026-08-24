@@ -1,44 +1,23 @@
-"use client";
+import type { Metadata } from "next";
+import { AdminGate } from "@/components/admin/AdminGate";
 
-import { useEffect } from "react";
-import { usePathname, useRouter } from "next/navigation";
-import {
-  AdminAuthProvider,
-  useAdminAuth,
-} from "@/components/admin/AdminAuthProvider";
-import { AdminShell } from "@/components/admin/AdminShell";
-import { useAdminText } from "@/lib/admin-strings";
-
-function Gate({ children }: { children: React.ReactNode }) {
-  const ax = useAdminText();
-  const { user, loading } = useAdminAuth();
-  const pathname = usePathname();
-  const router = useRouter();
-  const isLogin = pathname === "/admin/login";
-
-  useEffect(() => {
-    if (loading) return;
-    if (!user && !isLogin) router.replace("/admin/login");
-    if (user && isLogin) router.replace("/admin");
-  }, [loading, user, isLogin, router]);
-
-  if (isLogin) return <>{children}</>;
-
-  if (loading || !user) {
-    return (
-      <div className="grid min-h-screen place-items-center bg-surface font-ui text-sm text-foreground-muted">
-        {ax("লোড হচ্ছে…")}
-      </div>
-    );
-  }
-
-  return <AdminShell>{children}</AdminShell>;
-}
+/**
+ * The panel's own identity in the browser tab.
+ *
+ * Without this every admin page inherited the public site's title, so a row of
+ * open tabs all read "LinkNews24 — বাংলাদেশের নির্ভরযোগ্য…" and there was no
+ * telling the newsroom from the site. AdminShell narrows it further to the
+ * section being viewed once the page is running.
+ *
+ * Search engines are told to stay away as well: robots.txt already disallows
+ * /admin, but a page someone links to directly would otherwise still be
+ * indexable.
+ */
+export const metadata: Metadata = {
+  title: { default: "LinkNews24 Admin", template: "%s | LinkNews24 Admin" },
+  robots: { index: false, follow: false },
+};
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <AdminAuthProvider>
-      <Gate>{children}</Gate>
-    </AdminAuthProvider>
-  );
+  return <AdminGate>{children}</AdminGate>;
 }
