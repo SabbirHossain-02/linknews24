@@ -7,6 +7,7 @@ import { getSocket } from "@/lib/socket";
 import { ConfirmModal, Modal } from "@/components/admin/Modal";
 import { AdReport } from "@/components/admin/AdReport";
 import { useAdminT, type AdminKey } from "@/lib/admin-i18n";
+import { useAdminText } from "@/lib/admin-strings";
 
 type Placement = "HEADER" | "SIDEBAR" | "IN_ARTICLE" | "FOOTER" | "POPUP";
 
@@ -53,6 +54,7 @@ const EMPTY = {
 };
 
 export default function AdsAdminPage() {
+  const ax = useAdminText();
   const t = useAdminT();
   const [ads, setAds] = useState<Ad[]>([]);
   const [showForm, setShowForm] = useState(false);
@@ -122,7 +124,7 @@ export default function AdsAdminPage() {
     try {
       set("imageUrl", await uploadFile(file));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "আপলোড ব্যর্থ");
+      setError(err instanceof Error ? err.message : ax("আপলোড ব্যর্থ"));
     } finally {
       setUploading(false);
     }
@@ -216,7 +218,7 @@ export default function AdsAdminPage() {
                 </div>
                 {ad.account && (
                   <p className="mt-2 font-ui text-xs text-foreground-muted">
-                    {t("adAdvertiser")}: {ad.account.name} · ৳
+                    {t("adAdvertiser")}: {ad.account.name} · {ax("৳")}
                     {ad.amount.toLocaleString("en-US")} / {ad.days}d
                   </p>
                 )}

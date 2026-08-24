@@ -20,7 +20,7 @@ export function Outline({ editor }: { editor: Editor }) {
     if (node.type.name !== "heading") return;
     headings.push({
       level: (node.attrs.level as number) ?? 1,
-      text: node.textContent || "(শিরোনামহীন)",
+      text: node.textContent || "",
       pos,
     });
   });

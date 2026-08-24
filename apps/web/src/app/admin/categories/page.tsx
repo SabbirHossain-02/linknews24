@@ -74,7 +74,7 @@ export default function CategoriesAdminPage() {
       setAddingUnder(null);
       load();
     } catch (e) {
-      setAddError(e instanceof Error ? e.message : "যোগ করা গেল না");
+      setAddError(e instanceof Error ? e.message : ax("যোগ করা গেল না"));
     }
   };
 
@@ -116,7 +116,7 @@ export default function CategoriesAdminPage() {
       closeDelete();
       load();
     } catch (e) {
-      setDeleteError(e instanceof Error ? e.message : "মুছতে পারা গেল না");
+      setDeleteError(e instanceof Error ? e.message : ax("মুছতে পারা গেল না"));
     } finally {
       setBusy(false);
     }
@@ -246,7 +246,7 @@ export default function CategoriesAdminPage() {
                         autoFocus
                         value={subName}
                         onChange={(e) => setSubName(e.target.value)}
-                        placeholder={`${main.name}-এর ভেতরে — নাম (বাংলা)`}
+                        placeholder={`${main.name}${ax("-এর ভেতরে — নাম (বাংলা)")}`}
                         className={inputCls}
                       />
                       <input
@@ -305,7 +305,7 @@ export default function CategoriesAdminPage() {
           const others = cats.filter((c) => c.id !== deleteId);
 
           return (
-            <Modal title={`"${target?.name}" মুছে ফেলুন`} onClose={closeDelete}>
+            <Modal title={`"${target?.name}" ${ax("মুছে ফেলুন")}`} onClose={closeDelete}>
               {count === 0 ? (
                 <p className="font-ui text-sm text-foreground-muted">
                   {ax("এই ক্যাটাগরিতে কোনো আর্টিকেল নেই। মুছে ফেলবেন?")}
@@ -313,9 +313,12 @@ export default function CategoriesAdminPage() {
               ) : (
                 <>
                   <p className="font-ui text-sm text-foreground">
-                    এই ক্যাটাগরিতে{" "}
-                    <b className="text-brand-crimson">{count}টি আর্টিকেল</b> আছে।
-                    সেগুলোর কী হবে?
+                    {ax("এই ক্যাটাগরিতে")}{" "}
+                    <b className="text-brand-crimson">
+                      {count}
+                      {ax("টি আর্টিকেল")}
+                    </b>
+                    {ax("আছে।")} {ax("সেগুলোর কী হবে?")}
                   </p>
 
                   <div className="mt-4 rounded-lg border border-border p-3">
@@ -354,7 +357,8 @@ export default function CategoriesAdminPage() {
                       {ax("আর্টিকেলসহ মুছে ফেলুন")}
                     </p>
                     <p className="mt-0.5 font-ui text-[11px] leading-relaxed text-foreground-muted">
-                      {count}টি আর্টিকেল ও সেগুলোর সব কমেন্ট চিরতরে মুছে যাবে।
+                      {count}
+                {ax("টি আর্টিকেল ও সেগুলোর সব কমেন্ট চিরতরে মুছে যাবে।")}
                       <b> {ax("ফেরত আনা যাবে না।")}</b>
                     </p>
                   </div>
@@ -387,10 +391,10 @@ export default function CategoriesAdminPage() {
                   className="rounded-lg bg-brand-crimson px-4 py-2 font-ui text-sm font-semibold text-white hover:bg-brand-crimson-dark disabled:opacity-60"
                 >
                   {busy
-                    ? "মোছা হচ্ছে…"
+                    ? ax("মোছা হচ্ছে…")
                     : count > 0
-                      ? `আর্টিকেলসহ মুছুন (${count})`
-                      : "মুছে ফেলুন"}
+                      ? `${ax("আর্টিকেলসহ মুছুন")} (${count})`
+                      : ax("মুছে ফেলুন")}
                 </button>
               </div>
             </Modal>

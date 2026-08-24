@@ -94,10 +94,9 @@ export function useReadAloud(editor: Editor | null): ReadAloud {
     // Be straight about it rather than reading Bengali with an English engine
     // and letting it come out as silence.
     if (runs.some((r) => r.bangla) && !bn) {
+      // The shell turns this into the reader's language before showing it.
       setNotice(
-        "এই কম্পিউটারে বাংলা ভয়েস ইন্সটল করা নেই, তাই বাংলা অংশটুকু পড়া যাচ্ছে না। " +
-          "Windows Settings → Time & language → Speech → Manage voices → Add voices " +
-          "থেকে বাংলা যোগ করলে এখানেই কাজ করবে।",
+        "এই কম্পিউটারে বাংলা ভয়েস ইন্সটল করা নেই, তাই বাংলা অংশটুকু পড়া যাচ্ছে না। Windows Settings → Time & language → Speech → Manage voices → Add voices থেকে বাংলা যোগ করলে এখানেই কাজ করবে।",
       );
     } else {
       setNotice(null);

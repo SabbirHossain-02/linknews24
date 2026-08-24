@@ -21,6 +21,7 @@ import { useAdminAuth } from "@/components/admin/AdminAuthProvider";
 import { useAdminT } from "@/lib/admin-i18n";
 import { ColumnChart } from "@/components/admin/charts/ColumnChart";
 import { PieChart } from "@/components/admin/charts/PieChart";
+import { useAdminText } from "@/lib/admin-strings";
 
 interface Analytics {
   totals: {
@@ -67,6 +68,7 @@ function flag(cc: string | null) {
 }
 
 export default function AdminDashboard() {
+  const ax = useAdminText();
   const { user } = useAdminAuth();
   const t = useAdminT();
   const [data, setData] = useState<Analytics | null>(null);
@@ -228,7 +230,8 @@ export default function AdminDashboard() {
 
       {loadError && !data && (
         <p className="mt-4 rounded-lg bg-brand-crimson/10 px-3.5 py-2 font-ui text-sm text-brand-crimson">
-          ডেটা লোড করা যায়নি: {loadError} — কয়েক সেকেন্ডে আবার চেষ্টা হচ্ছে…
+          {ax("ডেটা লোড করা যায়নি")}: {loadError} —{" "}
+          {ax("কয়েক সেকেন্ডে আবার চেষ্টা হচ্ছে…")}
         </p>
       )}
 

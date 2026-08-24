@@ -20,7 +20,7 @@ export default function LiveTvAdminPage() {
   const [live, setLive] = useState<LiveTv>({
     streamUrl: "",
     active: false,
-    title: "লাইভ টিভি",
+    title: "Live TV",
     titleEn: "Live TV",
   });
   const [loading, setLoading] = useState(true);

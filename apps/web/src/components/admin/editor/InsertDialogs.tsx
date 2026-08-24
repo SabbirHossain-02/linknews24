@@ -230,7 +230,7 @@ export function ImageDialog({
           >
             {ALIGNS.map((a) => (
               <option key={a.value} value={a.value}>
-                {a.label}
+                {ax(a.label)}
               </option>
             ))}
           </select>
@@ -459,7 +459,7 @@ export function EquationDialog({
               onClick={() => setTex(s.tex)}
               className="rounded-sm border border-[#d4d4d4] px-2 py-1 font-ui text-[11px] text-[#333] hover:bg-[#e1dfdd]"
             >
-              {s.label}
+              {ax(s.label)}
             </button>
           ))}
         </div>

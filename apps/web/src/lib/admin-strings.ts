@@ -363,7 +363,50 @@ const EN: Record<string, string> = {
   "এখানে ক্লিক": "click here",
   "ক্লিক করুন": "click",
   "-এর ভেতরে — নাম (বাংলা)": " — name inside (Bengali)",
+  "কপি করা গেল না — Ctrl+C চাপুন": "Could not copy — press Ctrl+C",
+  "কপি করা গেল না — Ctrl+X চাপুন": "Could not cut — press Ctrl+X",
+  "০টি": "0",
+  "শিরোনামহীন": "untitled",
+  "ডেটা লোড করা যায়নি": "Could not load the data",
+  "কয়েক সেকেন্ডে আবার চেষ্টা হচ্ছে…": "trying again in a few seconds…",
+  "টি অনুমোদনের অপেক্ষায়": " awaiting approval",
+  "টি আর্টিকেল": " articles",
+  "এই ক্যাটাগরিতে": "This category holds",
+  "আছে।": ".",
+  "টি আর্টিকেল ও সেগুলোর সব কমেন্ট চিরতরে মুছে যাবে।":
+    " articles and all their comments will be gone for good.",
+  "আর্টিকেলসহ মুছুন": "Delete with articles",
+  "বাংলা": "Bengali",
+  "ভাষা প্যাক নামছে… {n}%": "Downloading the language pack… {n}%",
+  "অনুবাদ হচ্ছে… {a}/{b}": "Translating… {a}/{b}",
+  "শব্দ:": "Words:",
+  "অক্ষর:": "Characters:",
+  "পড়তে ~": "≈",
+  "বসবে:": "Inserts:",
+  "টেবিল": "table",
+  "৳": "BDT ",
+  "শিরোনাম {a} থেকে সরাসরি {b}-এ লাফ দিয়েছে — মাঝের ধাপ বাদ পড়েছে।":
+    "Heading {a} jumps straight to {b} — a level is missing in between.",
+  "“{a}” লেখা লিংক — কোথায় নিয়ে যাবে তা বোঝা যায় না।":
+    "A link reading “{a}” — there is no telling where it goes.",
+  "{n}টি ছবিতে alt লেখা নেই — অন্ধ পাঠক ও Google কিছুই বুঝবে না।":
+    "{n} pictures have no alt text — neither blind readers nor Google can tell what they show.",
+  "স্বয়ংক্রিয় অনুবাদ চলে Chrome ১৩৮+ (ডেস্কটপ)-এ। ইংরেজি ঘরগুলো হাতে লিখতে হবে।":
+    "Automatic translation needs Chrome 138+ on the desktop. Otherwise fill the English fields by hand.",
+  "বাংলা থেকে ইংরেজি করুন": "Translate Bengali to English",
+  "বিশেষ করে নাম, সংখ্যা ও উদ্ধৃতি মিলিয়ে নিন। আটক/গ্রেপ্তার, অভিযুক্ত/দোষী — এই শব্দগুলো ঠিক আছে কি না দেখুন।":
+    "Check names, numbers and quotations especially. Watch words like detained/arrested and accused/guilty.",
+  "এই কম্পিউটারে বাংলা ভয়েস ইন্সটল করা নেই, তাই বাংলা অংশটুকু পড়া যাচ্ছে না। Windows Settings → Time & language → Speech → Manage voices → Add voices থেকে বাংলা যোগ করলে এখানেই কাজ করবে।":
+    "This computer has no Bengali voice installed, so the Bengali cannot be read aloud. Add one from Windows Settings → Time & language → Speech → Manage voices → Add voices and it will work here.",
+  "¶ শিরোনাম {n}": "¶ Heading {n}",
 };
+
+/** Fills {name} placeholders after translating. */
+export function fill(text: string, vars: Record<string, string | number>) {
+  let out = text;
+  for (const k of Object.keys(vars)) out = out.replace(`{${k}}`, String(vars[k]));
+  return out;
+}
 
 /** Translate one admin string for a known locale. */
 export function adminText(bn: string, locale: "bn" | "en"): string {

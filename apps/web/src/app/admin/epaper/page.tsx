@@ -5,6 +5,7 @@ import { Download, FileText, Plus, Trash2, Upload } from "lucide-react";
 import { apiFetch, uploadPdf } from "@/lib/admin-api";
 import { ConfirmModal, Modal } from "@/components/admin/Modal";
 import { useAdminT } from "@/lib/admin-i18n";
+import { useAdminText } from "@/lib/admin-strings";
 
 interface Edition {
   id: string;
@@ -18,6 +19,7 @@ const inputCls =
   "w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-brand-crimson focus:outline-none focus:ring-2 focus:ring-brand-crimson/15";
 
 export default function EpaperAdminPage() {
+  const ax = useAdminText();
   const t = useAdminT();
   const [editions, setEditions] = useState<Edition[]>([]);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -60,7 +62,7 @@ export default function EpaperAdminPage() {
     try {
       setPdfUrl(await uploadPdf(file));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "আপলোড ব্যর্থ");
+      setError(err instanceof Error ? err.message : ax("আপলোড ব্যর্থ"));
     } finally {
       setUploading(false);
     }

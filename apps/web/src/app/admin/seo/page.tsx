@@ -14,6 +14,7 @@ import { apiFetch, uploadFile } from "@/lib/admin-api";
 import { getSocket } from "@/lib/socket";
 import { Toggle } from "@/components/admin/Toggle";
 import { useAdminT, type AdminKey } from "@/lib/admin-i18n";
+import { useAdminText } from "@/lib/admin-strings";
 
 interface SeoSettings {
   siteName: string;
@@ -66,6 +67,7 @@ const inputCls =
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "";
 
 export default function SeoAdminPage() {
+  const ax = useAdminText();
   const t = useAdminT();
   const [data, setData] = useState<Payload | null>(null);
   const [form, setForm] = useState<SeoSettings | null>(null);
@@ -218,7 +220,7 @@ export default function SeoAdminPage() {
               onChange={(e) => set("titleTemplate", e.target.value)}
             />
           </Field>
-          <Field label={`${t("seoDefaultTitle")} (বাংলা)`} count={form.defaultTitle.length} max={60}>
+          <Field label={`${t("seoDefaultTitle")} (${ax("বাংলা")})`} count={form.defaultTitle.length} max={60}>
             <input
               className={inputCls}
               value={form.defaultTitle}
@@ -233,7 +235,7 @@ export default function SeoAdminPage() {
             />
           </Field>
           <Field
-            label={`${t("seoDefaultDesc")} (বাংলা)`}
+            label={`${t("seoDefaultDesc")} (${ax("বাংলা")})`}
             count={form.defaultDescription.length}
             max={160}
           >

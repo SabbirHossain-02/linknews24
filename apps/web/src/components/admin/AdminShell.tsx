@@ -143,6 +143,7 @@ function FontScale() {
 }
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
+  const ax = useAdminText();
   const { user, logout } = useAdminAuth();
   const { locale, setLocale } = useLocale();
   const t = useAdminT();
@@ -207,7 +208,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                 {/* How many reader submissions are waiting on this section. */}
                 {waiting > 0 && (
                   <span
-                    title={`${waiting}টি অনুমোদনের অপেক্ষায়`}
+                    title={`${waiting}${ax("টি অনুমোদনের অপেক্ষায়")}`}
                     className={`min-w-[20px] rounded-full px-1.5 py-0.5 text-center font-ui text-[10px] font-bold ${
                       active ? "bg-white text-brand-crimson" : "bg-brand-crimson text-white"
                     }`}

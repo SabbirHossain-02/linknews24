@@ -23,12 +23,12 @@ const MAX_SLICES = HUES.length;
 
 export function PieChart({
   data,
-  otherLabel = "অন্যান্য",
+  otherLabel,
   totalLabel,
 }: {
   data: Slice[];
   /** Name for the folded tail once there are more categories than hues. */
-  otherLabel?: string;
+  otherLabel: string;
   /** Word under the number in the middle, e.g. "মোট". */
   totalLabel: string;
 }) {

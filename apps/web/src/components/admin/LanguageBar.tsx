@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { AlertTriangle, Info, Languages, Loader2 } from "lucide-react";
+import { fill, useAdminText } from "@/lib/admin-strings";
 import {
   translateArticle,
   translationAvailability,
@@ -37,6 +38,7 @@ export function LanguageBar({
   machineTranslated: boolean;
   onConfirm: () => void;
 }) {
+  const ax = useAdminText();
   const [availability, setAvailability] = useState<Availability | null>(null);
   const [progress, setProgress] = useState<TranslateProgress | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -59,8 +61,8 @@ export function LanguageBar({
     } catch (err) {
       setError(
         err instanceof Error && err.message === "UNSUPPORTED"
-          ? "এই ব্রাউজারে অনুবাদ সুবিধাটি নেই।"
-          : "অনুবাদ করা যায়নি। আবার চেষ্টা করুন।",
+          ? ax("এই ব্রাউজারে অনুবাদ সুবিধাটি নেই।")
+          : ax("অনুবাদ করা যায়নি। আবার চেষ্টা করুন।"),
       );
     } finally {
       setProgress(null);
@@ -70,10 +72,15 @@ export function LanguageBar({
   const statusText = () => {
     if (!progress) return null;
     if (progress.download !== null)
-      return `ভাষা প্যাক নামছে… ${Math.round(progress.download * 100)}%`;
+      return fill(ax("ভাষা প্যাক নামছে… {n}%"), {
+      n: Math.round(progress.download * 100),
+    });
     if (progress.total)
-      return `অনুবাদ হচ্ছে… ${progress.done}/${progress.total}`;
-    return "শুরু হচ্ছে…";
+      return fill(ax("অনুবাদ হচ্ছে… {a}/{b}"), {
+      a: progress.done,
+      b: progress.total,
+    });
+    return ax("শুরু হচ্ছে…");
   };
 
   return (
@@ -101,8 +108,9 @@ export function LanguageBar({
         {availability === "unsupported" || availability === "unavailable" ? (
           <span className="flex items-center gap-1.5 font-ui text-[11px] text-foreground-muted">
             <Info className="h-3.5 w-3.5 shrink-0" />
-            স্বয়ংক্রিয় অনুবাদ চলে Chrome ১৩৮+ (ডেস্কটপ)-এ। ইংরেজি ঘরগুলো হাতে
-            লিখতে হবে।
+            {ax(
+              "স্বয়ংক্রিয় অনুবাদ চলে Chrome ১৩৮+ (ডেস্কটপ)-এ। ইংরেজি ঘরগুলো হাতে লিখতে হবে।",
+            )}
           </span>
         ) : (
           <button
@@ -110,7 +118,7 @@ export function LanguageBar({
             onClick={runTranslation}
             disabled={busy || !hasBangla}
             title={
-              hasBangla ? "" : "আগে বাংলায় শিরোনাম ও লেখা দিন"
+              hasBangla ? "" : ax("আগে বাংলায় শিরোনাম ও লেখা দিন")
             }
             className="flex items-center gap-2 rounded-lg border border-brand-crimson bg-background px-3 py-1.5 font-ui text-xs font-semibold text-brand-crimson hover:bg-brand-crimson hover:text-white disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-background disabled:hover:text-brand-crimson"
           >
@@ -119,7 +127,7 @@ export function LanguageBar({
             ) : (
               <Languages className="h-3.5 w-3.5" />
             )}
-            বাংলা থেকে ইংরেজি করুন
+            {ax("বাংলা থেকে ইংরেজি করুন")}
           </button>
         )}
 
@@ -130,7 +138,7 @@ export function LanguageBar({
         )}
         {availability === "downloadable" && !busy && (
           <span className="font-ui text-[11px] text-foreground-muted">
-            প্রথমবার ভাষা প্যাক নামবে (একবারই)
+            {ax("প্রথমবার ভাষা প্যাক নামবে (একবারই)")}
           </span>
         )}
       </div>
@@ -145,11 +153,12 @@ export function LanguageBar({
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
           <div className="flex-1">
             <p className="font-ui text-[11px] font-semibold text-amber-900">
-              এটি যন্ত্রে করা অনুবাদ — প্রকাশের আগে পড়ে দেখুন
+              {ax("এটি যন্ত্রে করা অনুবাদ — প্রকাশের আগে পড়ে দেখুন")}
             </p>
             <p className="mt-0.5 font-ui text-[11px] leading-relaxed text-amber-800">
-              বিশেষ করে নাম, সংখ্যা ও উদ্ধৃতি মিলিয়ে নিন। আটক/গ্রেপ্তার,
-              অভিযুক্ত/দোষী — এই শব্দগুলো ঠিক আছে কি না দেখুন।
+              {ax(
+                "বিশেষ করে নাম, সংখ্যা ও উদ্ধৃতি মিলিয়ে নিন। আটক/গ্রেপ্তার, অভিযুক্ত/দোষী — এই শব্দগুলো ঠিক আছে কি না দেখুন।",
+              )}
             </p>
           </div>
           <button
@@ -157,7 +166,7 @@ export function LanguageBar({
             onClick={onConfirm}
             className="shrink-0 rounded-md border border-amber-400 px-2.5 py-1 font-ui text-[11px] font-semibold text-amber-900 hover:bg-amber-100"
           >
-            দেখেছি
+            {ax("দেখেছি")}
           </button>
         </div>
       )}

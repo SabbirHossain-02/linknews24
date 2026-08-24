@@ -97,7 +97,7 @@ export function LayoutTab({ editor }: { editor: Editor }) {
                         close();
                       }}
                     >
-                      {s === "0" ? "নেই" : s}
+                      {s === "0" ? ax("নেই") : s}
                     </MenuItem>
                   ))}
                 </>
@@ -153,7 +153,7 @@ export function LayoutTab({ editor }: { editor: Editor }) {
                       close();
                     }}
                   >
-                    {w.label}
+                    {ax(w.label)}
                   </MenuItem>
                 ))}
                 <MenuHeading>{ax("চওড়া")}</MenuHeading>

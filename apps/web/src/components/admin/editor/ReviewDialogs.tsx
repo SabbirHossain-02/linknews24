@@ -2,7 +2,7 @@
 
 import type { Editor } from "@tiptap/react";
 import { AlertTriangle, CheckCircle2, X } from "lucide-react";
-import { useAdminText } from "@/lib/admin-strings";
+import { fill, useAdminText } from "@/lib/admin-strings";
 
 function Shell({
   title,
@@ -83,7 +83,7 @@ export function WordCountDialog({
     ["শিরোনাম", bn(headings)],
     ["ছবি", bn(images)],
     ["লিংক", bn(links)],
-    ["পড়তে লাগবে", `~${bn(minutes)} মিনিট`],
+    ["পড়তে লাগবে", `~${bn(minutes)} ${ax("মিনিট")}`],
   ];
 
   return (
@@ -92,7 +92,7 @@ export function WordCountDialog({
         <tbody>
           {rows.map(([label, value]) => (
             <tr key={label} className="border-b border-[#e1dfdd] last:border-0">
-              <td className="py-1.5 text-[#555]">{label}</td>
+              <td className="py-1.5 text-[#555]">{ax(label)}</td>
               <td className="py-1.5 text-right font-semibold tabular-nums text-[#111]">
                 {value}
               </td>
@@ -134,7 +134,10 @@ function findIssues(editor: Editor): Issue[] {
       if (lastHeading && level > lastHeading + 1) {
         issues.push({
           level: "warn",
-          text: `শিরোনাম ${lastHeading} থেকে সরাসরি ${level}-এ লাফ দিয়েছে — মাঝের ধাপ বাদ পড়েছে।`,
+          text: fill("শিরোনাম {a} থেকে সরাসরি {b}-এ লাফ দিয়েছে — মাঝের ধাপ বাদ পড়েছে।", {
+          a: lastHeading,
+          b: level,
+        }),
         });
       }
       lastHeading = level;
@@ -153,7 +156,9 @@ function findIssues(editor: Editor): Issue[] {
       if (VAGUE_LINKS.includes(label))
         issues.push({
           level: "warn",
-          text: `“${node.textContent.trim()}” লেখা লিংক — কোথায় নিয়ে যাবে তা বোঝা যায় না।`,
+          text: fill("“{a}” লেখা লিংক — কোথায় নিয়ে যাবে তা বোঝা যায় না।", {
+          a: node.textContent.trim(),
+        }),
         });
     });
   });
@@ -161,7 +166,9 @@ function findIssues(editor: Editor): Issue[] {
   if (missingAlt)
     issues.push({
       level: "error",
-      text: `${missingAlt}টি ছবিতে alt লেখা নেই — অন্ধ পাঠক ও Google কিছুই বুঝবে না।`,
+      text: fill("{n}টি ছবিতে alt লেখা নেই — অন্ধ পাঠক ও Google কিছুই বুঝবে না।", {
+        n: missingAlt,
+      }),
     });
 
   if (!figures)
@@ -212,15 +219,16 @@ export function AccessibilityDialog({
                 }`}
               />
               <span className="font-ui text-[12px] leading-relaxed text-[#333]">
-                {issue.text}
+                {ax(issue.text)}
               </span>
             </li>
           ))}
         </ul>
       )}
       <p className="mt-3 font-ui text-[10px] leading-snug text-[#666]">
-        লাল = ঠিক করা দরকার · হলুদ = ভেবে দেখুন। alt লেখা যোগ করতে ছবিতে ক্লিক
-        করে Insert → Picture খুলুন।
+        {ax(
+          "লাল = ঠিক করা দরকার · হলুদ = ভেবে দেখুন। alt লেখা যোগ করতে ছবিতে ক্লিক করে Insert → Picture খুলুন।",
+        )}
       </p>
     </Shell>
   );

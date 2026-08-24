@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { keepFocus } from "./ui";
+import { useAdminText } from "@/lib/admin-strings";
 
 const MAX_ROWS = 8;
 const MAX_COLS = 10;
@@ -16,6 +17,7 @@ export function TableGrid({
 }: {
   onPick: (rows: number, cols: number) => void;
 }) {
+  const ax = useAdminText();
   const [hover, setHover] = useState<{ row: number; col: number } | null>(null);
 
   return (
@@ -46,8 +48,8 @@ export function TableGrid({
       </div>
       <p className="mt-2 text-center font-ui text-[11px] text-[#444]">
         {hover
-          ? `${hover.row + 1} × ${hover.col + 1} টেবিল`
-          : "মাউস ঘুরিয়ে মাপ বাছুন"}
+          ? `${hover.row + 1} × ${hover.col + 1} ${ax("টেবিল")}`
+          : ax("মাউস ঘুরিয়ে মাপ বাছুন")}
       </p>
     </div>
   );

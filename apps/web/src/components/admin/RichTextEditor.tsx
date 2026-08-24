@@ -35,6 +35,8 @@ import { FontDialog, ParagraphDialog } from "./editor/RibbonDialogs";
 import { ViewTab, type ViewState } from "./editor/ViewTab";
 import { WordTitleBar } from "./editor/WordTitleBar";
 import { useAdminText } from "@/lib/admin-strings";
+import { adminText } from "@/lib/admin-strings";
+import { useLocale } from "@/components/providers/LocaleProvider";
 
 const TABS = [
   { id: "home", label: "Home" },
@@ -71,6 +73,7 @@ export function RichTextEditor({
   documentName?: string;
 }) {
   const ax = useAdminText();
+  const { locale } = useLocale();
   const [tab, setTab] = useState<TabId>("home");
   const [ribbonOpen, setRibbonOpen] = useState(true);
   const [findOpen, setFindOpen] = useState(false);
@@ -126,16 +129,18 @@ export function RichTextEditor({
    * HTTPS — so the outcome is shown rather than swallowed.
    */
   const showNotice = useCallback((message: string) => {
-    setNotice(message);
+    // The clipboard helpers hand back the Bengali source string; it becomes
+    // the reader’s language here, where the hook is available.
+    setNotice(adminText(message, locale));
     window.setTimeout(() => setNotice(null), 4000);
-  }, []);
+  }, [locale]);
 
   const editor = useEditor({
     immediatelyRender: false,
     // The ribbon shows live active states, which only stay in sync if the
     // component re-renders per transaction.
     shouldRerenderOnTransaction: true,
-    extensions: [...buildExtensions(placeholder), FindReplace],
+    extensions: [...buildExtensions(ax(placeholder)), FindReplace],
     content: value,
     onUpdate: ({ editor }) => onChange(editor.getHTML()),
     editorProps,
@@ -183,7 +188,8 @@ export function RichTextEditor({
   const characters = editor.storage.characterCount.characters() as number;
   // Bangla news copy is read at roughly 180 words a minute.
   const minutes = Math.max(1, Math.round(words / 180));
-  const bn = (n: number) => n.toLocaleString("bn-BD");
+  const bn = (n: number) =>
+    n.toLocaleString(locale === "bn" ? "bn-BD" : "en-US");
 
   return (
     <div
@@ -196,7 +202,7 @@ export function RichTextEditor({
       <div className="relative shrink-0">
         <WordTitleBar
           editor={editor}
-          documentName={documentName}
+          documentName={ax(documentName)}
           onOpenFind={() => setFindOpen(true)}
         />
       </div>
@@ -349,9 +355,16 @@ export function RichTextEditor({
 
       {/* ---------- status bar ---------- */}
       <div className="flex shrink-0 flex-wrap items-center gap-4 border-t border-[#d4d4d4] bg-[#14181f] px-3 py-1 font-ui text-[11px] text-white/90">
-        <span>শব্দ: {bn(words)}</span>
-        <span>অক্ষর: {bn(characters)}</span>
-        <span>পড়তে ~{bn(minutes)} মিনিট</span>
+        <span>
+          {ax("শব্দ:")} {bn(words)}
+        </span>
+        <span>
+          {ax("অক্ষর:")} {bn(characters)}
+        </span>
+        <span>
+          {ax("পড়তে ~")}
+          {bn(minutes)} {ax("মিনিট")}
+        </span>
 
         <div className="ml-auto flex items-center gap-2">
           <button
@@ -370,7 +383,7 @@ export function RichTextEditor({
             step={10}
             value={view.zoom}
             onChange={(e) => setView({ zoom: Number(e.target.value) })}
-            title={`জুম ${view.zoom}%`}
+            title={`${ax("জুম")} ${view.zoom}%`}
             className="h-1 w-28 cursor-pointer accent-white"
           />
           <button

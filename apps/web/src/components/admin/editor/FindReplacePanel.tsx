@@ -73,7 +73,7 @@ export function FindReplacePanel({
           className="h-8 w-48 rounded border border-[#d4d4d4] bg-white px-2 font-ui text-xs text-[#333] outline-none focus:border-[#d81f26]"
         />
         <span className="w-14 shrink-0 text-center font-ui text-[11px] text-[#666]">
-          {total ? `${current} / ${total}` : term ? "০টি" : ""}
+          {total ? `${current} / ${total}` : term ? ax("০টি") : ""}
         </span>
         <button
           type="button"

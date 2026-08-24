@@ -173,7 +173,7 @@ export function HomeTab({
                   close();
                 }}
               >
-                শুধু লেখা (ফরম্যাট ছাড়া)
+                {ax("শুধু লেখা (ফরম্যাট ছাড়া)")}
               </MenuItem>
             </>
           )}
@@ -484,7 +484,7 @@ export function HomeTab({
                         close();
                       }}
                     >
-                      {s === "0" ? "নেই" : s}
+                      {s === "0" ? ax("নেই") : s}
                     </MenuItem>
                   ))}
                 </>
@@ -503,7 +503,7 @@ export function HomeTab({
                       close();
                     }}
                   >
-                    বাম → ডান (LTR)
+                    {ax("বাম → ডান (LTR)")}
                   </MenuItem>
                   <MenuItem
                     onClick={() => {
@@ -511,7 +511,7 @@ export function HomeTab({
                       close();
                     }}
                   >
-                    ডান → বাম (RTL)
+                    {ax("ডান → বাম (RTL)")}
                   </MenuItem>
                   <MenuItem
                     onClick={() => {

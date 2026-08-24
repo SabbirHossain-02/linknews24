@@ -86,7 +86,9 @@ export async function copySelection(
 
   return {
     ok: false,
-    message: `কপি করা গেল না — Ctrl+${cut ? "X" : "C"} চাপুন`,
+    message: cut
+      ? "কপি করা গেল না — Ctrl+X চাপুন"
+      : "কপি করা গেল না — Ctrl+C চাপুন",
   };
 }
 

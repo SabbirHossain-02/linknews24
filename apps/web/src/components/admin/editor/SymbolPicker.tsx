@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { keepFocus } from "./ui";
+import { useAdminText } from "@/lib/admin-strings";
 
 /**
  * Word's Symbol (Ω) and Emoji pickers.
@@ -61,6 +62,7 @@ function CharGrid({
   onPick: (char: string) => void;
   cols: number;
 }) {
+  const ax = useAdminText();
   const [preview, setPreview] = useState<string | null>(null);
 
   return (
@@ -69,7 +71,7 @@ function CharGrid({
         {sets.map((set) => (
           <div key={set.name}>
             <p className="mb-1 font-ui text-[9px] font-bold uppercase tracking-wide text-[#888]">
-              {set.name}
+              {ax(set.name)}
             </p>
             <div
               className="grid gap-[2px]"
@@ -93,7 +95,7 @@ function CharGrid({
         ))}
       </div>
       <p className="mt-2 border-t border-[#e1dfdd] pt-1.5 text-center font-ui text-[11px] text-[#666]">
-        {preview ? `বসবে: ${preview}` : "বেছে নিন"}
+        {preview ? `${ax("বসবে:")} ${preview}` : ax("বেছে নিন")}
       </p>
     </div>
   );

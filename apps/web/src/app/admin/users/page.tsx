@@ -8,6 +8,7 @@ import { ConfirmModal } from "@/components/admin/Modal";
 import { Toggle } from "@/components/admin/Toggle";
 import { useAdminT, type AdminKey } from "@/lib/admin-i18n";
 import { useAdminAuth } from "@/components/admin/AdminAuthProvider";
+import { useAdminText } from "@/lib/admin-strings";
 
 interface User {
   id: string;
@@ -23,6 +24,7 @@ const inputCls =
   "rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-brand-crimson focus:outline-none";
 
 export default function UsersAdminPage() {
+  const ax = useAdminText();
   const t = useAdminT();
   const { user: me } = useAdminAuth();
   const [users, setUsers] = useState<User[]>([]);
@@ -44,7 +46,7 @@ export default function UsersAdminPage() {
   const add = async () => {
     setError(null);
     if (!form.name || !form.email || form.password.length < 6) {
-      setError("নাম, ইমেইল ও কমপক্ষে ৬ অক্ষরের পাসওয়ার্ড দিন");
+      setError(ax("নাম, ইমেইল ও কমপক্ষে ৬ অক্ষরের পাসওয়ার্ড দিন"));
       return;
     }
     try {
