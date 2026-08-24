@@ -20,7 +20,7 @@ import { getSocket } from "@/lib/socket";
 import { useAdminAuth } from "@/components/admin/AdminAuthProvider";
 import { useAdminT } from "@/lib/admin-i18n";
 import { ColumnChart } from "@/components/admin/charts/ColumnChart";
-import { BarList } from "@/components/admin/charts/BarList";
+import { PieChart } from "@/components/admin/charts/PieChart";
 
 interface Analytics {
   totals: {
@@ -302,34 +302,47 @@ export default function AdminDashboard() {
       {/* Breakdown grid */}
       <div className="mt-6 grid gap-4 lg:grid-cols-2">
         <div className="rounded-xl border border-border bg-background p-5">
-          <h2 className="mb-3 font-ui text-sm font-semibold text-heading">
+          <h2 className="mb-4 font-ui text-sm font-semibold text-heading">
             {t("dashDevices")}
           </h2>
-          <BarList rows={data?.devices ?? []} showShare />
-        </div>
-        <div className="rounded-xl border border-border bg-background p-5">
-          <h2 className="mb-3 font-ui text-sm font-semibold text-heading">
-            {t("dashBrowsers")}
-          </h2>
-          <BarList rows={data?.browsers ?? []} showShare />
-        </div>
-        <div className="rounded-xl border border-border bg-background p-5">
-          <h2 className="mb-3 font-ui text-sm font-semibold text-heading">
-            {t("dashCountries")}
-          </h2>
-          <BarList
-            showShare
-            rows={(data?.countries ?? []).map((c) => ({
-              label: `${flag(c.label === "—" ? null : c.label)}  ${c.label}`,
-              count: c.count,
-            }))}
+          <PieChart
+            data={data?.devices ?? []}
+            otherLabel={t("chartOther")}
+            totalLabel={t("chartTotal")}
           />
         </div>
         <div className="rounded-xl border border-border bg-background p-5">
-          <h2 className="mb-3 font-ui text-sm font-semibold text-heading">
+          <h2 className="mb-4 font-ui text-sm font-semibold text-heading">
+            {t("dashBrowsers")}
+          </h2>
+          <PieChart
+            data={data?.browsers ?? []}
+            otherLabel={t("chartOther")}
+            totalLabel={t("chartTotal")}
+          />
+        </div>
+        <div className="rounded-xl border border-border bg-background p-5">
+          <h2 className="mb-4 font-ui text-sm font-semibold text-heading">
+            {t("dashCountries")}
+          </h2>
+          <PieChart
+            data={(data?.countries ?? []).map((c) => ({
+              label: `${flag(c.label === "—" ? null : c.label)}  ${c.label}`,
+              count: c.count,
+            }))}
+            otherLabel={t("chartOther")}
+            totalLabel={t("chartTotal")}
+          />
+        </div>
+        <div className="rounded-xl border border-border bg-background p-5">
+          <h2 className="mb-4 font-ui text-sm font-semibold text-heading">
             {t("dashReferrers")}
           </h2>
-          <BarList showShare rows={data?.referrers ?? []} />
+          <PieChart
+            data={data?.referrers ?? []}
+            otherLabel={t("chartOther")}
+            totalLabel={t("chartTotal")}
+          />
         </div>
       </div>
 

@@ -305,6 +305,8 @@ export const adminDict = {
   },
   adDays: { bn: "দিন", en: "days" },
   dashLast24Total: { bn: "মোট {n} ভিজিট", en: "{n} visits in total" },
+  chartOther: { bn: "অন্যান্য", en: "Other" },
+  chartTotal: { bn: "মোট", en: "total" },
   adShowDaily: { bn: "প্রতিদিনের হিসাব দেখুন", en: "Show daily figures" },
   adHideDaily: { bn: "প্রতিদিনের হিসাব লুকান", en: "Hide daily figures" },
   adLifetime: { bn: "সর্বমোট (ইম্প্রেশন / ক্লিক)", en: "Lifetime (impr. / clicks)" },
