@@ -11,7 +11,16 @@
  * (a restart is not something an attacker can trigger).
  */
 
-const MAX_FAILURES = 5;
+/**
+ * One account tolerates five wrong passwords; one address tolerates fifteen.
+ *
+ * They differ on purpose. An account under attack should lock quickly — five
+ * guesses is already more than a person needs. But a whole newsroom can share
+ * one office address, and locking that after five mistakes would shut out
+ * everybody because one colleague fumbled their password twice.
+ */
+const MAX_PER_ACCOUNT = 5;
+const MAX_PER_IP = 15;
 const LOCK_MS = 15 * 60 * 1000;
 /** Failures older than this no longer count towards a lock. */
 const WINDOW_MS = 15 * 60 * 1000;
@@ -30,6 +39,9 @@ function sweep(now: number) {
     if (rec.lockedUntil < now && last < now - WINDOW_MS) byKey.delete(key);
   }
 }
+
+const limitFor = (key: string) =>
+  key.startsWith("ip:") ? MAX_PER_IP : MAX_PER_ACCOUNT;
 
 function read(key: string, now: number): Record {
   const rec = byKey.get(key) ?? { failures: [], lockedUntil: 0 };
@@ -52,7 +64,7 @@ export function checkLogin(ip: string | null, email: string): LockState {
 
   let locked = false;
   let until = 0;
-  let remaining = MAX_FAILURES;
+  let remaining = MAX_PER_ACCOUNT;
 
   for (const key of keysFor(ip, email)) {
     const rec = read(key, now);
@@ -60,7 +72,7 @@ export function checkLogin(ip: string | null, email: string): LockState {
       locked = true;
       until = Math.max(until, rec.lockedUntil);
     }
-    remaining = Math.min(remaining, MAX_FAILURES - rec.failures.length);
+    remaining = Math.min(remaining, limitFor(key) - rec.failures.length);
   }
 
   return {
@@ -76,7 +88,7 @@ export function recordFailure(ip: string | null, email: string): LockState {
   for (const key of keysFor(ip, email)) {
     const rec = read(key, now);
     rec.failures.push(now);
-    if (rec.failures.length >= MAX_FAILURES) {
+    if (rec.failures.length >= limitFor(key)) {
       rec.lockedUntil = now + LOCK_MS;
       rec.failures = [];
     }
