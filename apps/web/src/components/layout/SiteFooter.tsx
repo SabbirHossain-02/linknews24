@@ -66,13 +66,15 @@ export function SiteFooter({ categories }: { categories: NavChild[] }) {
         className="mx-auto flex max-w-[1600px] justify-center px-4 pt-6 sm:px-6"
         imgClassName="max-h-[120px] w-auto object-contain"
       />
-      {/* Two columns from the smallest screen up. Stacked in one column the
-          footer ran on for several screenfuls on a phone. */}
-      <div className="mx-auto grid max-w-[1600px] grid-cols-2 gap-x-6 gap-y-8 px-4 py-8 sm:px-6 md:gap-10 lg:grid-cols-4 lg:py-12">
+      {/* Three columns on a phone. Stacked in one they ran on for several
+          screenfuls; the masthead and the newsletter still take the full width,
+          because a third of a 430px screen holds neither a logo nor an email
+          field. */}
+      <div className="mx-auto grid max-w-[1600px] grid-cols-3 gap-x-4 gap-y-8 px-4 py-8 sm:gap-x-6 sm:px-6 md:gap-10 lg:grid-cols-4 lg:py-12">
         {/* Brand + social + app. The masthead itself, not a text imitation of
             it — the same file the header and the editor use. */}
         {showBrand && (
-          <div className="col-span-2 lg:col-span-1">
+          <div className="col-span-3 lg:col-span-1">
             <Link href="/" aria-label={t("home")} className="inline-block">
               <Image
                 src="/logo.png"
@@ -122,7 +124,7 @@ export function SiteFooter({ categories }: { categories: NavChild[] }) {
           <h3 className="font-ui text-xs font-semibold uppercase tracking-wider text-foreground-muted/70">
             {t("footerCategories")}
           </h3>
-          <ul className="mt-3 grid grid-cols-1 gap-2 font-ui text-sm sm:grid-cols-2 lg:grid-cols-2">
+          <ul className="mt-3 grid grid-cols-1 gap-2 font-ui text-[13px] sm:grid-cols-2 sm:text-sm lg:grid-cols-2">
             {categories.map((cat) => (
               <li key={cat.key}>
                 <Link href={cat.href} className="hover:text-brand-crimson">
@@ -140,7 +142,7 @@ export function SiteFooter({ categories }: { categories: NavChild[] }) {
           <h3 className="font-ui text-xs font-semibold uppercase tracking-wider text-foreground-muted/70">
             {t("footerCompany")}
           </h3>
-          <ul className="mt-3 grid grid-cols-1 gap-2 font-ui text-sm sm:grid-cols-2 lg:grid-cols-1">
+          <ul className="mt-3 grid grid-cols-1 gap-2 font-ui text-[13px] sm:grid-cols-2 sm:text-sm lg:grid-cols-1">
             {companyLinks.map((link) => (
               <li key={link.href}>
                 <Link href={link.href} className="hover:text-brand-crimson">
@@ -152,27 +154,17 @@ export function SiteFooter({ categories }: { categories: NavChild[] }) {
         </div>
         )}
 
-        {/* Newsletter + contact */}
+        {/* Contact and newsletter. `contents` lets both take their own place
+            in the grid on a phone, while on a wide screen the wrapper collapses
+            back into a single column holding the two of them. */}
         {showLast && (
-        <div id="newsletter" className="col-span-2 lg:col-span-1">
-          {show("newsletter") && (
-            <>
-              <h3 className="font-ui text-xs font-semibold uppercase tracking-wider text-foreground-muted/70">
-                {t("footerNewsletter")}
-              </h3>
-              <p className="mt-3 font-ui text-sm text-foreground-muted">
-                {t("footerNewsletterCopy")}
-              </p>
-              <NewsletterForm />
-            </>
-          )}
-
+        <div className="contents lg:block">
           {show("contact") && (
-          <div className={show("newsletter") ? "mt-6 border-t border-border pt-5" : ""}>
+          <div className="col-span-1 lg:col-auto">
             <h3 className="font-ui text-xs font-semibold uppercase tracking-wider text-foreground-muted/70">
               {t("footerContactInfo")}
             </h3>
-            <ul className="mt-3 flex flex-col gap-2.5 font-ui text-sm">
+            <ul className="mt-3 flex flex-col gap-2.5 font-ui text-[13px] [overflow-wrap:anywhere] sm:text-sm">
               <li className="flex items-start gap-2.5">
                 <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-brand-crimson" />
                 {cfg.address || t("footerAddress")}
@@ -197,6 +189,23 @@ export function SiteFooter({ categories }: { categories: NavChild[] }) {
               </li>
             </ul>
           </div>
+          )}
+
+          {show("newsletter") && (
+            <div
+              id="newsletter"
+              className={`col-span-3 lg:col-auto ${
+                show("contact") ? "lg:mt-6 lg:border-t lg:border-border lg:pt-5" : ""
+              }`}
+            >
+              <h3 className="font-ui text-xs font-semibold uppercase tracking-wider text-foreground-muted/70">
+                {t("footerNewsletter")}
+              </h3>
+              <p className="mt-3 font-ui text-sm text-foreground-muted">
+                {t("footerNewsletterCopy")}
+              </p>
+              <NewsletterForm />
+            </div>
           )}
         </div>
         )}
