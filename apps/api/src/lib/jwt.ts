@@ -7,7 +7,8 @@ export interface JwtPayload {
 }
 
 export const signToken = (payload: JwtPayload) =>
-  jwt.sign(payload, env.jwtSecret, { expiresIn: "7d" });
+  // Matches the cookie's lifetime; see the note there.
+  jwt.sign(payload, env.jwtSecret, { expiresIn: "24h" });
 
 export const verifyToken = (token: string): JwtPayload =>
   jwt.verify(token, env.jwtSecret) as JwtPayload;

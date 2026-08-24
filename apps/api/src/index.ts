@@ -19,6 +19,31 @@ const app = express();
 // Trust the first proxy (e.g. nginx, when added) so client IPs resolve correctly.
 app.set("trust proxy", true);
 
+/**
+ * Baseline security headers.
+ *
+ * Written out rather than pulled from a package: there are only a handful that
+ * matter for a JSON API plus a static uploads folder, and each one here is a
+ * decision rather than a default. A Content-Security-Policy is deliberately
+ * left to the web app, which knows what it loads.
+ */
+app.use((_req, res, next) => {
+  // Never let a browser guess that an upload is something other than it says.
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  // The API is not a page; nothing should be framing it.
+  res.setHeader("X-Frame-Options", "DENY");
+  // Don't leak the full admin URL to whatever a link points at.
+  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  res.setHeader(
+    "Permissions-Policy",
+    "camera=(), microphone=(), geolocation=(), payment=()",
+  );
+  // Express advertises itself by default; there is nothing to gain from that.
+  res.removeHeader("X-Powered-By");
+  next();
+});
+app.disable("x-powered-by");
+
 app.use(cors({ origin: env.corsOrigin, credentials: true }));
 app.use(express.json({ limit: "5mb" }));
 app.use(cookieParser());

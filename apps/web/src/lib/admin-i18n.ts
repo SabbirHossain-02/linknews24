@@ -307,6 +307,28 @@ export const adminDict = {
   dashLast24Total: { bn: "মোট {n} ভিজিট", en: "{n} visits in total" },
   chartOther: { bn: "অন্যান্য", en: "Other" },
 
+  // --- security ---
+  securityLogins: { bn: "লগইনের হিসাব", en: "Sign-in activity" },
+  securityLoginsNote: {
+    bn: "কে কখন কোন ঠিকানা থেকে ঢুকেছে, আর কে ঢুকতে ব্যর্থ হয়েছে।",
+    en: "Who signed in, when, from where — and who tried and failed.",
+  },
+  securityNoLogins: { bn: "এখনো কোনো হিসাব নেই।", en: "Nothing recorded yet." },
+  securityFailedCount: {
+    bn: "{n}টি ব্যর্থ চেষ্টা",
+    en: "{n} failed attempts",
+  },
+  securityWhat: { bn: "কী হয়েছে", en: "What" },
+  securityWho: { bn: "কে", en: "Who" },
+  securityFrom: { bn: "কোথা থেকে", en: "From" },
+  security_login: { bn: "ঢুকেছেন", en: "Signed in" },
+  security_logout: { bn: "বেরিয়েছেন", en: "Signed out" },
+  security_login_failed: { bn: "ভুল পাসওয়ার্ড", en: "Wrong password" },
+  security_login_locked: {
+    bn: "বারবার ভুল — সাময়িক বন্ধ",
+    en: "Too many attempts — locked out",
+  },
+
   // --- media actions ---
   mediaDownload: { bn: "ডাউনলোড করুন", en: "Download" },
   mediaCopyImage: { bn: "ছবিটি কপি করুন", en: "Copy the picture" },

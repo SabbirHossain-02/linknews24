@@ -8,6 +8,7 @@ import { ConfirmModal } from "@/components/admin/Modal";
 import { Toggle } from "@/components/admin/Toggle";
 import { useAdminT, type AdminKey } from "@/lib/admin-i18n";
 import { useAdminAuth } from "@/components/admin/AdminAuthProvider";
+import { LoginActivity } from "@/components/admin/LoginActivity";
 import { useAdminText } from "@/lib/admin-strings";
 
 interface User {
@@ -88,7 +89,7 @@ export default function UsersAdminPage() {
     );
 
   return (
-    <div className="max-w-4xl">
+    <div className="max-w-5xl">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-bold text-heading">{t("usersRoles")}</h1>
         <Link
@@ -196,6 +197,8 @@ export default function UsersAdminPage() {
           </tbody>
         </table>
       </div>
+
+      <LoginActivity />
 
       {deleteId && (
         <ConfirmModal

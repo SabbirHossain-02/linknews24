@@ -43,34 +43,34 @@ enum SectionType {
 }
 
 model User {
-  id        String    @id @default(cuid())
+  id        String        @id @default(cuid())
   name      String
-  email     String    @unique
+  email     String        @unique
   password  String
-  role      Role      @default(REPORTER)
+  role      Role          @default(REPORTER)
   avatar    String?
   bio       String?
-  active    Boolean   @default(true)
-  articles  Article[] @relation("ArticleAuthor")
+  active    Boolean       @default(true)
+  articles  Article[]     @relation("ArticleAuthor")
   media     Media[]
   logs      ActivityLog[]
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
 }
 
 model Category {
-  id        String     @id @default(cuid())
+  id        String            @id @default(cuid())
   name      String
   nameEn    String
-  slug      String     @unique
+  slug      String            @unique
   parentId  String?
-  parent    Category?  @relation("CategoryTree", fields: [parentId], references: [id])
-  children  Category[] @relation("CategoryTree")
-  order     Int        @default(0)
-  visible   Boolean    @default(true)
+  parent    Category?         @relation("CategoryTree", fields: [parentId], references: [id])
+  children  Category[]        @relation("CategoryTree")
+  order     Int               @default(0)
+  visible   Boolean           @default(true)
   articles  Article[]
   sections  HomepageSection[]
-  createdAt DateTime   @default(now())
+  createdAt DateTime          @default(now())
 }
 
 model Tag {
@@ -349,6 +349,11 @@ model SiteSetting {
   value Json
 }
 
+/// Who did what, and from where.
+///
+/// Sign-ins and failed sign-in attempts are written here, so a break-in
+/// attempt leaves a trace instead of passing unnoticed. `detail` holds the
+/// address that was tried when no account matched it.
 model ActivityLog {
   id        String   @id @default(cuid())
   userId    String?
@@ -356,9 +361,15 @@ model ActivityLog {
   action    String
   entity    String?
   entityId  String?
+  detail    String?
+  ip        String?
+  userAgent String?
+  success   Boolean  @default(true)
   createdAt DateTime @default(now())
 
   @@index([userId])
+  @@index([action, createdAt])
+  @@index([createdAt])
 }
 
 // --- Analytics ---

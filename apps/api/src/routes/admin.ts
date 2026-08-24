@@ -19,6 +19,7 @@ import { emitChange, emitAnalytics, onlineCount } from "../realtime";
 import { adReport } from "../lib/adTracking";
 import { auditArticles, readSeo, sitemapStats, writeSeo } from "../lib/seo";
 import { listNotifications } from "../lib/notifications";
+import { recentLogins } from "../lib/audit";
 
 export const adminRouter = Router();
 
@@ -801,6 +802,14 @@ adminRouter.delete("/subscribers/:id", requireRole(...CAN_MANAGE), async (req, r
 /** Everything waiting on the newsroom, newest first, for the bell. */
 adminRouter.get("/notifications", async (_req, res) => {
   res.json(await listNotifications());
+});
+
+/**
+ * Recent sign-in activity. Super Admin only: it carries other people's
+ * addresses and the addresses attackers have tried.
+ */
+adminRouter.get("/security/logins", requireRole("SUPER_ADMIN"), async (req, res) => {
+  res.json({ logins: await recentLogins(Number(req.query.take) || 50) });
 });
 
 /** What each role may do — served from the same lists that guard the routes. */
