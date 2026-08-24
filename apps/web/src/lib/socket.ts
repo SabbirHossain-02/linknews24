@@ -9,6 +9,15 @@ export function getSocket(): Socket {
     socket = io(API_BASE, {
       transports: ["websocket", "polling"],
       reconnection: true,
+      // The server counts these connections as "readers online now", so a tab
+      // sitting in the admin panel says so and is left out of that figure.
+      query: {
+        panel:
+          typeof window !== "undefined" &&
+          window.location.pathname.startsWith("/admin")
+            ? "admin"
+            : "public",
+      },
     });
   }
   return socket;

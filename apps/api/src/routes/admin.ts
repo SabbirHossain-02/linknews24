@@ -14,7 +14,7 @@ import {
   slugify,
 } from "../lib/roles";
 import { hashPassword } from "../lib/password";
-import { emitChange, emitAnalytics } from "../realtime";
+import { emitChange, emitAnalytics, onlineCount } from "../realtime";
 
 export const adminRouter = Router();
 
@@ -1067,8 +1067,14 @@ adminRouter.get("/analytics", async (_req, res) => {
     browsers,
     recent,
     articles,
-    breaking,
+    publishedArticles,
+    breakingItems,
+    breakingArticles,
     pendingComments,
+    pendingLawyers,
+    pendingDonors,
+    pendingHospitals,
+    subscribers,
     ads,
   ] = await Promise.all([
     prisma.pageView.count(),
@@ -1121,8 +1127,16 @@ adminRouter.get("/analytics", async (_req, res) => {
       },
     }),
     prisma.article.count(),
+    prisma.article.count({ where: { status: "PUBLISHED" } }),
     prisma.breakingItem.count({ where: { active: true } }),
+    // An article with its breaking switch on is breaking news too — the card
+    // read zero while the ticker was carrying three of them.
+    prisma.article.count({ where: { status: "PUBLISHED", isBreaking: true } }),
     prisma.comment.count({ where: { status: "PENDING" } }),
+    prisma.lawyer.count({ where: { status: "PENDING" } }),
+    prisma.bloodDonor.count({ where: { status: "PENDING" } }),
+    prisma.hospital.count({ where: { status: "PENDING" } }),
+    prisma.subscriber.count(),
     prisma.ad.findMany({ orderBy: { createdAt: "desc" } }),
   ]);
 
@@ -1139,7 +1153,13 @@ adminRouter.get("/analytics", async (_req, res) => {
     if (idx >= 0 && idx < 24) hourly[idx].count += 1;
   }
 
-  const online = new Set(onlineRows.map((o) => o.ip).filter(Boolean)).size;
+  // Live socket connections, not "someone loaded a page in the last 5 minutes".
+  // onlineRows is kept as a floor for the moment right after an API restart,
+  // when every browser is still reconnecting.
+  const online = Math.max(
+    onlineCount(),
+    new Set(onlineRows.map((o) => o.ip).filter(Boolean)).size,
+  );
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const asRows = (rows: any[], key: string) =>
     rows.map((r) => ({ label: r[key] || "—", count: r._count._all }));
@@ -1154,8 +1174,14 @@ adminRouter.get("/analytics", async (_req, res) => {
       uniqueToday: uniqueToday.length,
       online,
       articles,
-      breaking,
+      publishedArticles,
+      breaking: breakingItems + breakingArticles,
       pendingComments,
+      pendingLawyers,
+      pendingDonors,
+      pendingHospitals,
+      pendingListings: pendingLawyers + pendingDonors + pendingHospitals,
+      subscribers,
       adImpressions,
       adClicks,
     },

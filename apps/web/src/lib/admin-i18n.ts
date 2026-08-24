@@ -285,6 +285,10 @@ export const adminDict = {
   dashClicks: { bn: "ক্লিক", en: "Clicks" },
   dashCtr: { bn: "সিটিআর", en: "CTR" },
   pendingCommentsStat: { bn: "অপেক্ষমাণ কমেন্ট", en: "Pending comments" },
+  pendingLawyersStat: { bn: "অপেক্ষমাণ আইনজীবী", en: "Pending lawyers" },
+  pendingDonorsStat: { bn: "অপেক্ষমাণ রক্তদাতা", en: "Pending donors" },
+  pendingHospitalsStat: { bn: "অপেক্ষমাণ হাসপাতাল", en: "Pending hospitals" },
+  dashSubscribers: { bn: "নিউজলেটার গ্রাহক", en: "Newsletter subscribers" },
 
   // Ads management
   ads: { bn: "বিজ্ঞাপন", en: "Ads" },

@@ -1,12 +1,17 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import {
+  Droplet,
   Eye,
+  Hospital,
+  Mail,
   MessageSquare,
   MousePointerClick,
   Newspaper,
   Radio,
+  Scale,
   Users,
   Wifi,
 } from "lucide-react";
@@ -25,8 +30,14 @@ interface Analytics {
     uniqueToday: number;
     online: number;
     articles: number;
+    publishedArticles: number;
     breaking: number;
     pendingComments: number;
+    pendingLawyers: number;
+    pendingDonors: number;
+    pendingHospitals: number;
+    pendingListings: number;
+    subscribers: number;
     adImpressions: number;
     adClicks: number;
   };
@@ -142,10 +153,60 @@ export default function AdminDashboard() {
     { label: t("dashToday"), value: tt?.todayViews, icon: Eye },
     { label: t("dashUniqueToday"), value: tt?.uniqueToday, icon: Users },
     { label: t("dashTotalViews"), value: tt?.totalViews, icon: Eye },
-    { label: t("statTotalArticles"), value: tt?.articles, icon: Newspaper },
-    { label: t("statBreaking"), value: tt?.breaking, icon: Radio },
-    { label: t("pendingCommentsStat"), value: tt?.pendingComments, icon: MessageSquare },
-    { label: t("dashClicks"), value: tt?.adClicks, icon: MousePointerClick },
+    {
+      label: t("statTotalArticles"),
+      value: tt?.articles,
+      icon: Newspaper,
+      href: "/admin/articles",
+    },
+    {
+      label: t("statBreaking"),
+      value: tt?.breaking,
+      icon: Radio,
+      href: "/admin/breaking",
+    },
+    {
+      label: t("pendingCommentsStat"),
+      value: tt?.pendingComments,
+      icon: MessageSquare,
+      href: "/admin/comments",
+      alert: !!tt?.pendingComments,
+    },
+    {
+      label: t("dashSubscribers"),
+      value: tt?.subscribers,
+      icon: Mail,
+      href: "/admin/newsletter",
+    },
+  ];
+
+  // Reader submissions waiting for a decision. Nothing on this dashboard used
+  // to mention them, so a legal, blood or hospital listing could sit unseen.
+  const queues = [
+    {
+      label: t("pendingLawyersStat"),
+      value: tt?.pendingLawyers,
+      icon: Scale,
+      href: "/admin/lawyers",
+    },
+    {
+      label: t("pendingDonorsStat"),
+      value: tt?.pendingDonors,
+      icon: Droplet,
+      href: "/admin/donors",
+    },
+    {
+      label: t("pendingHospitalsStat"),
+      value: tt?.pendingHospitals,
+      icon: Hospital,
+      href: "/admin/hospitals",
+    },
+    {
+      label: t("dashClicks"),
+      value: tt?.adClicks,
+      icon: MousePointerClick,
+      href: "/admin/ads",
+    },
   ];
 
   return (
@@ -174,18 +235,37 @@ export default function AdminDashboard() {
 
       {/* Stat cards */}
       <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
-        {cards.map((c) => (
-          <div
-            key={c.label}
-            className="rounded-xl border border-border bg-background p-5 shadow-sm"
-          >
-            <c.icon
-              className={`h-5 w-5 ${c.live ? "text-green-600" : "text-brand-crimson"}`}
-            />
-            <p className="mt-3 text-2xl font-bold text-heading">{c.value ?? "—"}</p>
-            <p className="font-ui text-xs text-foreground-muted">{c.label}</p>
-          </div>
-        ))}
+        {[...cards, ...queues].map((c) => {
+          const body = (
+            <>
+              <c.icon
+                className={`h-5 w-5 ${
+                  "live" in c && c.live
+                    ? "text-green-600"
+                    : "alert" in c && c.alert
+                      ? "text-amber-600"
+                      : "text-brand-crimson"
+                }`}
+              />
+              <p className="mt-3 text-2xl font-bold text-heading">
+                {c.value ?? "—"}
+              </p>
+              <p className="font-ui text-xs text-foreground-muted">{c.label}</p>
+            </>
+          );
+          const cls =
+            "rounded-xl border border-border bg-background p-5 shadow-sm transition-colors";
+          // A card that stands for a queue is a way in, not just a number.
+          return "href" in c && c.href ? (
+            <Link key={c.label} href={c.href} className={`${cls} hover:border-brand-crimson/40 hover:bg-surface/60`}>
+              {body}
+            </Link>
+          ) : (
+            <div key={c.label} className={cls}>
+              {body}
+            </div>
+          );
+        })}
       </div>
 
       {/* Hourly line chart */}
