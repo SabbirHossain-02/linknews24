@@ -307,6 +307,23 @@ export const adminDict = {
   dashLast24Total: { bn: "মোট {n} ভিজিট", en: "{n} visits in total" },
   chartOther: { bn: "অন্যান্য", en: "Other" },
 
+  // --- media actions ---
+  mediaDownload: { bn: "ডাউনলোড করুন", en: "Download" },
+  mediaCopyImage: { bn: "ছবিটি কপি করুন", en: "Copy the picture" },
+  mediaDownloading: { bn: "ডাউনলোড হচ্ছে…", en: "Downloading…" },
+  mediaDownloaded: { bn: "ডাউনলোড হয়েছে ✓", en: "Downloaded ✓" },
+  mediaDownloadFailed: { bn: "ডাউনলোড করা যায়নি", en: "Could not download" },
+  mediaCopying: { bn: "কপি হচ্ছে…", en: "Copying…" },
+  mediaImageCopied: {
+    bn: "ছবি কপি হয়েছে — এখন যেকোনো জায়গায় পেস্ট করুন",
+    en: "Picture copied — paste it anywhere",
+  },
+  mediaCopyFailed: { bn: "কপি করা যায়নি", en: "Could not copy" },
+  mediaNeedsHttps: {
+    bn: "ছবি কপি করতে HTTPS লাগে। ডোমেইন যোগ করার পর কাজ করবে — আপাতত ডাউনলোড বা URL কপি করুন।",
+    en: "Copying a picture needs HTTPS. It will work once a domain is attached — for now download it or copy the URL.",
+  },
+
   // --- roles & permissions ---
   rolesNav: { bn: "রোল ও অনুমতি", en: "Roles & permissions" },
   rolesTitle: { bn: "রোল ও অনুমতি", en: "Roles & permissions" },
