@@ -304,6 +304,8 @@ export const adminDict = {
     en: "No impressions or clicks in this period.",
   },
   adDays: { bn: "দিন", en: "days" },
+  adShowDaily: { bn: "প্রতিদিনের হিসাব দেখুন", en: "Show daily figures" },
+  adHideDaily: { bn: "প্রতিদিনের হিসাব লুকান", en: "Hide daily figures" },
   adLifetime: { bn: "সর্বমোট (ইম্প্রেশন / ক্লিক)", en: "Lifetime (impr. / clicks)" },
   adImage: { bn: "ব্যানার ছবি", en: "Banner image" },
   adLink: { bn: "লিংক (URL)", en: "Link (URL)" },

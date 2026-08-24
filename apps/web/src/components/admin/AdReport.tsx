@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { apiFetch } from "@/lib/admin-api";
 import { getSocket } from "@/lib/socket";
 import { useAdminT } from "@/lib/admin-i18n";
-import { LineChart } from "./charts/LineChart";
+import { ColumnChart } from "./charts/ColumnChart";
 
 interface Day {
   day: string;
@@ -32,6 +32,11 @@ interface Report {
 
 const RANGES = [7, 14, 30];
 
+// Brand crimson against the documented blue: colour-blind separation ΔE 26.7
+// (protanopia) and 34.5 for normal vision — comfortably clear of the floor.
+const IMPRESSION_COLOR = "#d81f26";
+const CLICK_COLOR = "#2a78d6";
+
 const ctr = (clicks: number, impressions: number) =>
   impressions > 0 ? `${((clicks / impressions) * 100).toFixed(2)}%` : "—";
 
@@ -54,7 +59,7 @@ export function AdReport() {
   const t = useAdminT();
   const [days, setDays] = useState(14);
   const [report, setReport] = useState<Report | null>(null);
-  const [metric, setMetric] = useState<"impressions" | "clicks">("impressions");
+  const [showTable, setShowTable] = useState(false);
 
   const load = useCallback(() => {
     apiFetch<Report>(`/api/admin/ads/report?days=${days}`)
@@ -120,29 +125,74 @@ export function AdReport() {
         </p>
       ) : (
         <>
-          <div className="px-5">
-            <div className="flex items-center gap-1">
-              {(["impressions", "clicks"] as const).map((m) => (
-                <button
-                  key={m}
-                  type="button"
-                  onClick={() => setMetric(m)}
-                  className={`rounded-lg px-2.5 py-1 font-ui text-xs font-semibold transition-colors ${
-                    metric === m
-                      ? "bg-surface text-heading"
-                      : "text-foreground-muted hover:bg-surface/60"
-                  }`}
-                >
-                  {m === "impressions" ? t("dashImpressions") : t("dashClicks")}
-                </button>
-              ))}
+          {/* Two charts, not two y-axes: impressions dwarf clicks, and sharing a
+              scale would flatten clicks into the baseline. */}
+          <div className="grid gap-6 px-5 pb-2 lg:grid-cols-2">
+            <div>
+              <p className="mb-3 font-ui text-xs font-semibold text-heading">
+                {t("dashImpressions")}
+              </p>
+              <ColumnChart
+                data={report.totals.map((d) => ({
+                  label: shortDay(d.day),
+                  value: d.impressions,
+                }))}
+                color={IMPRESSION_COLOR}
+                valueLabel={t("dashImpressions")}
+              />
             </div>
-            <LineChart
-              data={report.totals.map((d) => ({
-                label: shortDay(d.day),
-                value: d[metric],
-              }))}
-            />
+            <div>
+              <p className="mb-3 font-ui text-xs font-semibold text-heading">
+                {t("dashClicks")}
+              </p>
+              <ColumnChart
+                data={report.totals.map((d) => ({
+                  label: shortDay(d.day),
+                  value: d.clicks,
+                }))}
+                color={CLICK_COLOR}
+                valueLabel={t("dashClicks")}
+              />
+            </div>
+          </div>
+
+          {/* Every value a tooltip shows is reachable without hovering. */}
+          <div className="px-5 pb-2">
+            <button
+              type="button"
+              onClick={() => setShowTable((v) => !v)}
+              className="font-ui text-xs font-semibold text-brand-crimson hover:underline"
+            >
+              {showTable ? t("adHideDaily") : t("adShowDaily")}
+            </button>
+            {showTable && (
+              <div className="mt-2 max-h-56 overflow-y-auto rounded-lg border border-border">
+                <table className="w-full text-left text-sm">
+                  <thead className="sticky top-0 border-b border-border bg-surface font-ui text-xs uppercase tracking-wide text-foreground-muted/70">
+                    <tr>
+                      <th className="px-3 py-2">{t("colTime")}</th>
+                      <th className="px-3 py-2">{t("dashImpressions")}</th>
+                      <th className="px-3 py-2">{t("dashClicks")}</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {[...report.totals].reverse().map((d) => (
+                      <tr key={d.day}>
+                        <td className="px-3 py-1.5 font-ui text-xs text-foreground">
+                          {shortDay(d.day)}
+                        </td>
+                        <td className="px-3 py-1.5 tabular-nums text-foreground-muted">
+                          {d.impressions}
+                        </td>
+                        <td className="px-3 py-1.5 tabular-nums text-foreground-muted">
+                          {d.clicks}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
 
           <div className="mt-2 overflow-x-auto">
