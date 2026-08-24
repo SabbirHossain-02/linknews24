@@ -3,15 +3,28 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Trash2 } from "lucide-react";
-import { getBookmarks, removeBookmark, type BookmarkedArticle } from "@/lib/auth-storage";
+import {
+  getBookmarks,
+  pruneBookmarks,
+  removeBookmark,
+  type BookmarkedArticle,
+} from "@/lib/auth-storage";
+import { liveSlugs } from "@/lib/live-slugs";
 import { useLocale } from "@/components/providers/LocaleProvider";
 
 export function SavedArticlesList() {
   const [items, setItems] = useState<BookmarkedArticle[]>([]);
   const { t } = useLocale();
 
+  // A bookmark to a deleted article is a broken link, not a saved story.
   useEffect(() => {
-    setItems(getBookmarks());
+    const saved = getBookmarks();
+    if (!saved.length) return;
+    liveSlugs(saved.map((b) => b.slug)).then((live) => {
+      if (!live) return setItems(saved);
+      pruneBookmarks(live);
+      setItems(saved.filter((b) => live.has(b.slug)));
+    });
   }, []);
 
   const handleRemove = (slug: string) => {

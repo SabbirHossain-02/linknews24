@@ -123,6 +123,27 @@ export function getHistory(): HistoryEntry[] {
   return readJSON<HistoryEntry[]>(HISTORY_KEY, []);
 }
 
+/**
+  * Drops history entries whose article is gone, and reports whether anything
+  * changed so a caller can avoid a pointless re-render.
+  */
+export function pruneHistory(liveSlugs: Set<string>): boolean {
+  const before = getHistory();
+  const after = before.filter((h) => liveSlugs.has(h.slug));
+  if (after.length === before.length) return false;
+  writeJSON(HISTORY_KEY, after);
+  return true;
+}
+
+/** The same, for saved articles. */
+export function pruneBookmarks(liveSlugs: Set<string>): boolean {
+  const before = getBookmarks();
+  const after = before.filter((b) => liveSlugs.has(b.slug));
+  if (after.length === before.length) return false;
+  writeJSON(BOOKMARKS_KEY, after);
+  return true;
+}
+
 export function clearHistory() {
   localStorage.removeItem(HISTORY_KEY);
 }

@@ -493,6 +493,25 @@ publicRouter.get("/articles", async (req, res) => {
   res.json({ articles, total, page: Number(page), limit: take });
 });
 
+/**
+ * Filters a list of slugs down to the ones still published.
+ *
+ * Bookmarks and reading history live in the reader's own browser, so they
+ * outlive the articles they point at. Without this, a deleted or unpublished
+ * story stayed listed in someone's sidebar and led to a 404 when clicked.
+ */
+publicRouter.get("/articles/exists", async (req, res) => {
+  const raw = String(req.query.slugs ?? "");
+  const slugs = raw.split(",").map((s) => s.trim()).filter(Boolean).slice(0, 50);
+  if (!slugs.length) return res.json({ slugs: [] });
+
+  const found = await prisma.article.findMany({
+    where: { slug: { in: slugs }, status: "PUBLISHED" },
+    select: { slug: true },
+  });
+  res.json({ slugs: found.map((a) => a.slug) });
+});
+
 // Increment view count (called once per reader session from the article page).
 publicRouter.post("/articles/:slug/view", async (req, res) => {
   await prisma.article

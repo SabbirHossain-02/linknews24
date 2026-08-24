@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Clock } from "lucide-react";
-import { getHistory, type HistoryEntry } from "@/lib/auth-storage";
+import { getHistory, pruneHistory, type HistoryEntry } from "@/lib/auth-storage";
+import { liveSlugs } from "@/lib/live-slugs";
 import { useLocale } from "@/components/providers/LocaleProvider";
 
 /**
@@ -19,8 +20,28 @@ export function RecentlyRead({ limit = 5 }: { limit?: number }) {
 
   // localStorage is only readable in the browser, so the list arrives after
   // the first paint. `null` means "not looked yet" and renders nothing.
+  //
+  // The history outlives the articles themselves, so what it holds is checked
+  // against what is still published — a deleted story used to sit here and
+  // lead to a 404. Anything gone is dropped from storage for good.
   useEffect(() => {
-    setItems(getHistory().slice(0, limit));
+    let cancelled = false;
+    const history = getHistory();
+    if (!history.length) {
+      setItems([]);
+      return;
+    }
+    liveSlugs(history.map((h) => h.slug)).then((live) => {
+      if (cancelled) return;
+      // A failed check returns null — keep showing what we have rather than
+      // blanking the list over a network hiccup.
+      if (!live) return setItems(history.slice(0, limit));
+      pruneHistory(live);
+      setItems(history.filter((h) => live.has(h.slug)).slice(0, limit));
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [limit]);
 
   if (items === null) return null;

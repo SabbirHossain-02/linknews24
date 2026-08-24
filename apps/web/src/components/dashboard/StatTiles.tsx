@@ -6,18 +6,35 @@ import {
   getBookmarks,
   getFollowedTopics,
   getHistory,
+  pruneBookmarks,
+  pruneHistory,
 } from "@/lib/auth-storage";
+import { liveSlugs } from "@/lib/live-slugs";
 import { useLocale } from "@/components/providers/LocaleProvider";
 
 export function StatTiles() {
   const { t, locale } = useLocale();
   const [stats, setStats] = useState({ saved: 0, read: 0, following: 0 });
 
+  // Counted after the dead entries are dropped, so the tiles agree with the
+  // lists below them.
   useEffect(() => {
-    setStats({
-      saved: getBookmarks().length,
-      read: getHistory().length,
-      following: getFollowedTopics().length,
+    const saved = getBookmarks();
+    const read = getHistory();
+    const following = getFollowedTopics().length;
+    setStats({ saved: saved.length, read: read.length, following });
+
+    const slugs = [...saved.map((b) => b.slug), ...read.map((h) => h.slug)];
+    if (!slugs.length) return;
+    liveSlugs(slugs).then((live) => {
+      if (!live) return;
+      pruneBookmarks(live);
+      pruneHistory(live);
+      setStats({
+        saved: saved.filter((b) => live.has(b.slug)).length,
+        read: read.filter((h) => live.has(h.slug)).length,
+        following,
+      });
     });
   }, []);
 

@@ -2,15 +2,28 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { clearHistory, getHistory, type HistoryEntry } from "@/lib/auth-storage";
+import {
+  clearHistory,
+  getHistory,
+  pruneHistory,
+  type HistoryEntry,
+} from "@/lib/auth-storage";
+import { liveSlugs } from "@/lib/live-slugs";
 import { useLocale } from "@/components/providers/LocaleProvider";
 
 export function HistoryList() {
   const [items, setItems] = useState<HistoryEntry[]>([]);
   const { t } = useLocale();
 
+  // Only articles that still exist — see the note in RecentlyRead.
   useEffect(() => {
-    setItems(getHistory());
+    const history = getHistory();
+    if (!history.length) return;
+    liveSlugs(history.map((h) => h.slug)).then((live) => {
+      if (!live) return setItems(history);
+      pruneHistory(live);
+      setItems(history.filter((h) => live.has(h.slug)));
+    });
   }, []);
 
   const handleClear = () => {
