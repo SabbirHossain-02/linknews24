@@ -30,6 +30,7 @@ import { apiFetch } from "@/lib/admin-api";
 import { getSocket } from "@/lib/socket";
 import { useLocale } from "@/components/providers/LocaleProvider";
 import { useAdminT, type AdminKey } from "@/lib/admin-i18n";
+import { NotificationBell } from "./NotificationBell";
 
 interface NavItem {
   key: AdminKey;
@@ -233,15 +234,26 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             </button>
           </div>
           <div className="flex items-center gap-3">
+            <NotificationBell />
             <div className="text-right">
               <p className="text-sm font-semibold text-heading">{user?.name}</p>
               <p className="font-ui text-xs text-foreground-muted">
                 {user ? t(`role${user.role}` as AdminKey) : ""}
               </p>
             </div>
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-crimson font-ui text-sm font-bold text-white">
-              {user?.name?.charAt(0).toUpperCase()}
-            </div>
+            {/* The uploaded picture when there is one; the initial otherwise. */}
+            {user?.avatar ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={user.avatar}
+                alt={user.name}
+                className="h-9 w-9 shrink-0 rounded-full object-cover ring-1 ring-border"
+              />
+            ) : (
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-crimson font-ui text-sm font-bold text-white">
+                {user?.name?.charAt(0).toUpperCase()}
+              </div>
+            )}
             <button
               onClick={handleLogout}
               className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 font-ui text-sm text-foreground-muted transition-colors hover:text-brand-crimson"

@@ -307,6 +307,34 @@ export const adminDict = {
   dashLast24Total: { bn: "মোট {n} ভিজিট", en: "{n} visits in total" },
   chartOther: { bn: "অন্যান্য", en: "Other" },
 
+  // --- notification bell ---
+  notifications: { bn: "নোটিফিকেশন", en: "Notifications" },
+  notifEmpty: {
+    bn: "নতুন কিছু নেই। সব দেখা হয়ে গেছে।",
+    en: "Nothing new. You are all caught up.",
+  },
+  notifPending: { bn: "{n}টি অপেক্ষমাণ", en: "{n} pending" },
+  notif_lawyer: { bn: "আইন সেবায় নতুন আবেদন", en: "New legal listing submitted" },
+  notif_donor: { bn: "রক্ত সেবায় নতুন আবেদন", en: "New blood donor submitted" },
+  notif_hospital: { bn: "হাসপাতাল সেবায় নতুন আবেদন", en: "New hospital submitted" },
+  notif_comment: { bn: "নতুন কমেন্ট অপেক্ষায়", en: "Comment awaiting moderation" },
+  notif_ad: { bn: "নতুন বিজ্ঞাপনের আবেদন", en: "Ad booking awaiting approval" },
+  notifJustNow: { bn: "এইমাত্র", en: "just now" },
+  notifMinutes: { bn: "{n} মিনিট আগে", en: "{n} min ago" },
+  notifHours: { bn: "{n} ঘণ্টা আগে", en: "{n} hr ago" },
+  notifDays: { bn: "{n} দিন আগে", en: "{n} d ago" },
+
+  // --- profile (Settings) ---
+  profileSection: { bn: "আপনার প্রোফাইল", en: "Your profile" },
+  profileNote: {
+    bn: "উপরের ডানে যে নাম ও ছবি দেখায়, সেটাই। শুধু আপনার নিজের অ্যাকাউন্টে কাজ করে।",
+    en: "The name and picture shown at the top right. Applies to your own account only.",
+  },
+  profileName: { bn: "আপনার নাম", en: "Your name" },
+  profilePhoto: { bn: "প্রোফাইল ছবি", en: "Profile picture" },
+  profileRemovePhoto: { bn: "ছবি সরান", en: "Remove picture" },
+  profileSaved: { bn: "প্রোফাইল সংরক্ষিত হয়েছে ✓", en: "Profile saved ✓" },
+
   // --- footer blocks (Settings) ---
   footerBlocks: { bn: "ফুটারে কী কী দেখাবে", en: "What the footer shows" },
   footerBlocksNote: {

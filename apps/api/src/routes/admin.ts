@@ -17,6 +17,7 @@ import { hashPassword } from "../lib/password";
 import { emitChange, emitAnalytics, onlineCount } from "../realtime";
 import { adReport } from "../lib/adTracking";
 import { auditArticles, readSeo, sitemapStats, writeSeo } from "../lib/seo";
+import { listNotifications } from "../lib/notifications";
 
 export const adminRouter = Router();
 
@@ -794,6 +795,38 @@ adminRouter.delete("/subscribers/:id", requireRole(...CAN_MANAGE), async (req, r
 });
 
 // ===================== SITE SETTINGS =====================
+// ===================== NOTIFICATIONS & PROFILE =====================
+
+/** Everything waiting on the newsroom, newest first, for the bell. */
+adminRouter.get("/notifications", async (_req, res) => {
+  res.json(await listNotifications());
+});
+
+const profileSchema = z.object({
+  name: z.string().trim().min(1).max(80),
+  avatar: z.string().trim().max(500).nullable().optional(),
+});
+
+/**
+ * The signed-in person's own name and picture. Anyone may change their own —
+ * this is not the Users page, which is about other people's accounts.
+ */
+adminRouter.put("/me", async (req, res) => {
+  const parsed = profileSchema.safeParse(req.body);
+  if (!parsed.success)
+    return res.status(400).json({ error: "নাম দিতে হবে" });
+
+  const user = await prisma.user.update({
+    where: { id: req.user!.id },
+    data: {
+      name: parsed.data.name,
+      avatar: parsed.data.avatar?.trim() || null,
+    },
+    select: { id: true, name: true, email: true, role: true, avatar: true, bio: true },
+  });
+  res.json({ user });
+});
+
 // ===================== SEO =====================
 
 /**
