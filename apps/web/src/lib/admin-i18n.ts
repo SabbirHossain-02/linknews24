@@ -294,6 +294,17 @@ export const adminDict = {
   ads: { bn: "বিজ্ঞাপন", en: "Ads" },
   addAd: { bn: "নতুন বিজ্ঞাপন", en: "New ad" },
   adName: { bn: "বিজ্ঞাপনের নাম", en: "Ad name" },
+  adReport: { bn: "দিন-ভিত্তিক হিসাব", en: "Daily performance" },
+  adReportNote: {
+    bn: "বিজ্ঞাপনের অন্তত অর্ধেক অংশ পর্দায় ১ সেকেন্ড (ভিডিও হলে ২ সেকেন্ড) থাকলে তবেই একটি ইম্প্রেশন গোনা হয়।",
+    en: "An impression counts only after half the ad has been on screen for one second (two for video).",
+  },
+  adReportEmpty: {
+    bn: "এই সময়ে কোনো ইম্প্রেশন বা ক্লিক হয়নি।",
+    en: "No impressions or clicks in this period.",
+  },
+  adDays: { bn: "দিন", en: "days" },
+  adLifetime: { bn: "সর্বমোট (ইম্প্রেশন / ক্লিক)", en: "Lifetime (impr. / clicks)" },
   adImage: { bn: "ব্যানার ছবি", en: "Banner image" },
   adLink: { bn: "লিংক (URL)", en: "Link (URL)" },
   adPlacement: { bn: "অবস্থান", en: "Placement" },

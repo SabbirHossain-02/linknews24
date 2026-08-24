@@ -5,6 +5,7 @@ import { BLOOD_GROUPS } from "../lib/blood";
 import { emitChange, emitAnalytics } from "../realtime";
 import { clientIp, geoLookup, parseUA } from "../lib/analytics";
 import { AD_SLOTS } from "../lib/adSlots";
+import { recordAdEvent } from "../lib/adTracking";
 import { readViewerAccount } from "../middleware/account";
 import { donorBadge, nextEligibleDate, isEligibleNow } from "../lib/donorBadge";
 
@@ -344,19 +345,34 @@ publicRouter.get("/ads", async (req, res) => {
   res.json({ ads });
 });
 
+/**
+ * The browser reports an impression only once the banner has actually been on
+ * screen (half of it, for a full second). Everything the server can still tell
+ * apart — crawlers, and the same reader seeing the same ad again within half an
+ * hour — is filtered here.
+ */
 publicRouter.post("/ads/:id/impression", async (req, res) => {
-  await prisma.ad
-    .update({ where: { id: req.params.id }, data: { impressions: { increment: 1 } } })
-    .catch(() => null);
-  emitAnalytics({ type: "ad" });
+  const counted = await recordAdEvent({
+    adId: req.params.id,
+    type: "IMPRESSION",
+    ip: clientIp(req.headers as Record<string, unknown>, req.socket.remoteAddress),
+    path: typeof req.body?.path === "string" ? req.body.path.slice(0, 200) : null,
+    userAgent: req.get("user-agent"),
+  }).catch(() => false);
+  // Only wake the dashboard when the figure actually moved.
+  if (counted) emitAnalytics({ type: "ad" });
   res.status(204).end();
 });
 
 publicRouter.post("/ads/:id/click", async (req, res) => {
-  await prisma.ad
-    .update({ where: { id: req.params.id }, data: { clicks: { increment: 1 } } })
-    .catch(() => null);
-  emitAnalytics({ type: "ad" });
+  const counted = await recordAdEvent({
+    adId: req.params.id,
+    type: "CLICK",
+    ip: clientIp(req.headers as Record<string, unknown>, req.socket.remoteAddress),
+    path: typeof req.body?.path === "string" ? req.body.path.slice(0, 200) : null,
+    userAgent: req.get("user-agent"),
+  }).catch(() => false);
+  if (counted) emitAnalytics({ type: "ad" });
   res.status(204).end();
 });
 

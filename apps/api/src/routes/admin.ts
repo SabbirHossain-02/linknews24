@@ -15,6 +15,7 @@ import {
 } from "../lib/roles";
 import { hashPassword } from "../lib/password";
 import { emitChange, emitAnalytics, onlineCount } from "../realtime";
+import { adReport } from "../lib/adTracking";
 
 export const adminRouter = Router();
 
@@ -1207,6 +1208,15 @@ const adSchema = z.object({
   active: z.boolean().default(true),
   startsAt: z.string().nullable().optional(),
   endsAt: z.string().nullable().optional(),
+});
+
+/**
+ * Day-by-day impressions and clicks — what an advertiser is actually shown.
+ * The running totals on each ad cannot answer "how did last week go?".
+ */
+adminRouter.get("/ads/report", async (req, res) => {
+  const days = Math.min(Math.max(Number(req.query.days) || 14, 1), 90);
+  res.json(await adReport(days));
 });
 
 adminRouter.get("/ads", async (_req, res) => {

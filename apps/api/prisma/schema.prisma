@@ -432,8 +432,34 @@ model Ad {
   startsAt    DateTime?
   endsAt      DateTime?
   createdAt   DateTime    @default(now())
+  events      AdEvent[]
 
   @@index([placement, active])
   @@index([accountId])
   @@index([status])
+}
+
+enum AdEventType {
+  IMPRESSION
+  CLICK
+}
+
+/// One recorded ad event.
+///
+/// The Ad row keeps running totals so the site can read them cheaply, but a
+/// counter alone cannot say what happened on which day, and cannot be audited
+/// or corrected. An advertiser asking "how did my week go?" needs these rows.
+model AdEvent {
+  id        String      @id @default(cuid())
+  adId      String
+  ad        Ad          @relation(fields: [adId], references: [id], onDelete: Cascade)
+  type      AdEventType
+  ip        String?
+  path      String?
+  createdAt DateTime    @default(now())
+
+  @@index([adId, createdAt])
+  // Powers the "same reader, same ad, again already?" check.
+  @@index([adId, type, ip, createdAt])
+  @@index([createdAt])
 }

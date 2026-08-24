@@ -3,7 +3,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { MousePointerClick, Eye, Pencil, Plus, Trash2, Upload } from "lucide-react";
 import { apiFetch, uploadFile } from "@/lib/admin-api";
+import { getSocket } from "@/lib/socket";
 import { ConfirmModal, Modal } from "@/components/admin/Modal";
+import { AdReport } from "@/components/admin/AdReport";
 import { useAdminT, type AdminKey } from "@/lib/admin-i18n";
 
 type Placement = "HEADER" | "SIDEBAR" | "IN_ARTICLE" | "FOOTER" | "POPUP";
@@ -71,8 +73,17 @@ export default function AdsAdminPage() {
       .catch(() => {});
   }, []);
 
+  // Reload when anything changes anywhere — a booking approved in another tab
+  // or a click on the site shows here without a refresh.
   useEffect(() => {
     load();
+    const socket = getSocket();
+    socket.on("content:changed", load);
+    socket.on("analytics:changed", load);
+    return () => {
+      socket.off("content:changed", load);
+      socket.off("analytics:changed", load);
+    };
   }, [load]);
 
   const set = (k: keyof typeof form, v: string | boolean) =>
@@ -416,6 +427,8 @@ export default function AdsAdminPage() {
           </div>
         </Modal>
       )}
+
+      <AdReport />
 
       {deleteId && (
         <ConfirmModal
