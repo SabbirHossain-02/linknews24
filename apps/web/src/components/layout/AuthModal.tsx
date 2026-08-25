@@ -78,9 +78,19 @@ function GoogleButton({ label }: { label: string }) {
 export function AuthModal({
   triggerClassName = "transition-colors hover:text-white",
   triggerLabel,
+  triggerChildren,
+  redirectTo = "/dashboard",
 }: {
   triggerClassName?: string;
   triggerLabel?: string;
+  /** Replaces the trigger's text when the button needs an icon beside it. */
+  triggerChildren?: React.ReactNode;
+  /**
+   * Where to land once signed in. The service pages send a reader to the exact
+   * dashboard tab they asked for, so pressing "Join as a donor" ends on the
+   * donor form rather than on the dashboard's front page.
+   */
+  redirectTo?: string;
 } = {}) {
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<Mode>("login");
@@ -110,7 +120,7 @@ export function AuthModal({
     try {
       await login(String(form.get("email")), String(form.get("password")));
       close();
-      router.push("/dashboard");
+      router.push(redirectTo);
     } catch (err) {
       setError(err instanceof Error ? err.message : t("signInFailed"));
     } finally {
@@ -134,7 +144,7 @@ export function AuthModal({
     try {
       await register(String(form.get("name")), String(form.get("email")), password);
       close();
-      router.push("/dashboard");
+      router.push(redirectTo);
     } catch (err) {
       setError(err instanceof Error ? err.message : t("signInFailed"));
     } finally {
@@ -145,7 +155,7 @@ export function AuthModal({
   return (
     <>
       <button onClick={() => setOpen(true)} className={triggerClassName}>
-        {triggerLabel ?? t("login")}
+        {triggerChildren ?? triggerLabel ?? t("login")}
       </button>
 
       {open && (

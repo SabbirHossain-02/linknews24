@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   Bookmark,
   Building2,
@@ -57,10 +58,36 @@ const TABS: {
   { key: "settings", label: "settings", icon: Settings },
 ];
 
+const TAB_KEYS: string[] = TABS.map((entry) => entry.key);
+const isTab = (value: string | null): value is TabKey =>
+  value !== null && TAB_KEYS.includes(value);
+
 export default function DashboardPage() {
+  // useSearchParams needs a boundary of its own, or the whole page opts out of
+  // static rendering.
+  return (
+    <Suspense
+      fallback={<main className="mx-auto w-full max-w-5xl flex-1 px-6 py-10" />}
+    >
+      <DashboardView />
+    </Suspense>
+  );
+}
+
+function DashboardView() {
   const { user, ready, logout } = useAuth();
   const { t } = useLocale();
-  const [tab, setTab] = useState<TabKey>("overview");
+  /** ?tab=donor is how a service page hands someone straight to their form. */
+  const urlTab = useSearchParams().get("tab");
+  const [tab, setTab] = useState<TabKey>(() =>
+    isTab(urlTab) ? urlTab : "overview",
+  );
+
+  // Signing in from /dashboard?tab=donor returns here with the page already
+  // mounted, so the initial state above ran long ago — follow the URL instead.
+  useEffect(() => {
+    if (isTab(urlTab)) setTab(urlTab);
+  }, [urlTab]);
 
   if (!ready) {
     return <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-10" />;
@@ -77,6 +104,7 @@ export default function DashboardPage() {
         </p>
         <AuthModal
           triggerLabel={t("signIn")}
+          redirectTo={isTab(urlTab) ? `/dashboard?tab=${urlTab}` : "/dashboard"}
           triggerClassName="rounded-lg bg-brand-crimson px-5 py-2.5 font-ui text-sm font-medium text-white transition-colors hover:bg-brand-crimson-dark"
         />
       </main>

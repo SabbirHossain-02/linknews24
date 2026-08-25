@@ -353,6 +353,41 @@ export const translations = {
     en: "Hospital hotlines for emergencies. Those running 24-hour emergency care are listed first.",
   },
 
+  // --- "Join this service" banner on the three directory pages ---
+  svcJoinLegalTitle: {
+    bn: "আইনজীবী হিসেবে যোগদান করুন",
+    en: "Join as an advocate",
+  },
+  svcJoinLegalCopy: {
+    bn: "বার কাউন্সিলে তালিকাভুক্ত হলে নিজের নাম, জেলা ও আইনের বিষয় জমা দিন। সম্পাদক যাচাই করে অনুমোদন দিলে আপনার তথ্য এই তালিকায় দেখা যাবে।",
+    en: "Enrolled with the Bar Council? Submit your name, district and area of practice. Once an editor has verified it, you appear in this list.",
+  },
+  svcJoinBloodTitle: {
+    bn: "স্বেচ্ছায় রক্ত দিতে যোগদান করুন",
+    en: "Join as a blood donor",
+  },
+  svcJoinBloodCopy: {
+    bn: "আপনার রক্তের গ্রুপ, জেলা ও ফোন নম্বর জমা দিন। অনুমোদনের পর জরুরি প্রয়োজনে মানুষ আপনাকে সরাসরি ফোন করে রক্ত চাইতে পারবে।",
+    en: "Submit your blood group, district and phone number. Once approved, people in urgent need can call you directly.",
+  },
+  svcJoinHospitalTitle: {
+    bn: "হাসপাতাল যুক্ত করুন",
+    en: "Add your hospital",
+  },
+  svcJoinHospitalCopy: {
+    bn: "হাসপাতাল বা ক্লিনিকের নাম, ঠিকানা ও জরুরি হটলাইন জমা দিন। অনুমোদনের পর রোগীরা এখান থেকেই সরাসরি যোগাযোগ করতে পারবে।",
+    en: "Submit your hospital or clinic name, address and emergency hotline. Once approved, patients can reach you straight from this page.",
+  },
+  svcJoinButton: { bn: "যোগদান করুন", en: "Join" },
+  svcJoinSignedOutNote: {
+    bn: "লগইন করলেই সরাসরি ফরমে নিয়ে যাওয়া হবে।",
+    en: "Sign in and you go straight to the form.",
+  },
+  svcJoinSignedInNote: {
+    bn: "ড্যাশবোর্ডে আপনার ফরমটি খুলবে।",
+    en: "Opens the form in your dashboard.",
+  },
+
   svcAllGroups: { bn: "সব রক্তের গ্রুপ", en: "All blood groups" },
   svcAllDistricts: { bn: "সব জেলা", en: "All districts" },
   svcAllTypes: { bn: "সব ধরন", en: "All types" },
