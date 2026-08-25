@@ -355,8 +355,8 @@ export const translations = {
 
   // --- "Join this service" banner on the three directory pages ---
   svcJoinLegalTitle: {
-    bn: "আইনজীবী হিসেবে যোগদান করুন",
-    en: "Join as an advocate",
+    bn: "আইন সেবা পেতে / দিতে যোগদান করুন",
+    en: "Join to give or get legal help",
   },
   svcJoinLegalCopy: {
     bn: "বার কাউন্সিলে তালিকাভুক্ত হলে নিজের নাম, জেলা ও আইনের বিষয় জমা দিন। সম্পাদক যাচাই করে অনুমোদন দিলে আপনার তথ্য এই তালিকায় দেখা যাবে।",
