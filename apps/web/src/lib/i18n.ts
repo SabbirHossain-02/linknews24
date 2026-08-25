@@ -379,13 +379,29 @@ export const translations = {
     en: "Submit your hospital or clinic name, address and emergency hotline. Once approved, patients can reach you straight from this page.",
   },
   svcJoinButton: { bn: "যোগদান করুন", en: "Join" },
-  svcJoinSignedOutNote: {
-    bn: "লগইন করলেই সরাসরি ফরমে নিয়ে যাওয়া হবে।",
-    en: "Sign in and you go straight to the form.",
+
+  /*
+   * The disclaimer under each directory's banner.
+   *
+   * Every entry in these three lists is written by the person or hospital
+   * listed — the newsroom checks that a submission looks genuine before
+   * approving it, and nothing beyond that. Readers act on them in a hurry, so
+   * the notice says plainly what was and was not checked, and what to verify
+   * before trusting it. Each service gets its own wording because the thing
+   * that can go wrong is different in each.
+   */
+  svcWarnLabel: { bn: "সতর্কতা", en: "Please note" },
+  svcWarnBlood: {
+    bn: "এখানকার তথ্য রক্তদাতারা নিজেরাই জমা দিয়েছেন। রক্ত নেওয়ার আগে দাতার পরিচয় ও রক্তের গ্রুপ নিজে যাচাই করুন এবং অনুমোদিত হাসপাতাল বা ব্লাড ব্যাংকের মাধ্যমেই রক্ত সংগ্রহ ও সঞ্চালন করান। কেউ রক্তের বিনিময়ে টাকা চাইলে দেবেন না। সেবা গ্রহণ বা প্রদানের সম্পূর্ণ দায়িত্ব আপনার নিজের — এ থেকে কোনো ক্ষতি বা অনাকাঙ্ক্ষিত ঘটনা ঘটলে LinkNews24 কর্তৃপক্ষ দায়ী থাকবে না।",
+    en: "These details are submitted by the donors themselves. Before accepting blood, verify the donor's identity and blood group yourself, and have the collection and transfusion done through a licensed hospital or blood bank. Never pay anyone for blood. Giving or receiving blood is entirely at your own responsibility — LinkNews24 accepts no liability for any harm or loss arising from it.",
   },
-  svcJoinSignedInNote: {
-    bn: "ড্যাশবোর্ডে আপনার ফরমটি খুলবে।",
-    en: "Opens the form in your dashboard.",
+  svcWarnLegal: {
+    bn: "এখানকার তথ্য আইনজীবীরা নিজেরাই জমা দিয়েছেন। মামলা বা পরামর্শের দায়িত্ব দেওয়ার আগে বার কাউন্সিলের সনদ ও পরিচয় নিজে যাচাই করুন, এবং ফি ও শর্ত আগেই লিখিতভাবে ঠিক করে নিন। সেবা গ্রহণের সম্পূর্ণ দায়িত্ব আপনার নিজের — এ থেকে কোনো আর্থিক বা আইনগত ক্ষতি হলে LinkNews24 কর্তৃপক্ষ দায়ী থাকবে না।",
+    en: "These details are submitted by the advocates themselves. Before handing over a case or seeking advice, verify Bar Council enrolment and identity yourself, and agree fees and terms in writing first. Engaging anyone listed here is entirely at your own responsibility — LinkNews24 accepts no liability for any financial or legal loss arising from it.",
+  },
+  svcWarnHospital: {
+    bn: "এখানকার তথ্য হাসপাতাল কর্তৃপক্ষ নিজেরাই জমা দিয়েছেন এবং নম্বর বা সেবা যেকোনো সময় বদলাতে পারে। ভর্তি বা চিকিৎসা নেওয়ার আগে হাসপাতালের লাইসেন্স, সেবা ও খরচ সরাসরি তাদের সঙ্গে কথা বলে যাচাই করে নিন। সেবা গ্রহণের সম্পূর্ণ দায়িত্ব আপনার নিজের — এ থেকে কোনো ক্ষতি হলে LinkNews24 কর্তৃপক্ষ দায়ী থাকবে না।",
+    en: "These details are submitted by the hospitals themselves, and numbers or services may change at any time. Before admission or treatment, confirm the hospital's licensing, services and costs directly with them. Using any service listed here is entirely at your own responsibility — LinkNews24 accepts no liability for any loss arising from it.",
   },
 
   svcAllGroups: { bn: "সব রক্তের গ্রুপ", en: "All blood groups" },
