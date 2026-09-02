@@ -4,8 +4,10 @@ export const CAN_MANAGE = ["ADMIN", "SUPER_ADMIN"];
 export const CAN_DIRECTORY = ["MODERATOR", "ADMIN", "SUPER_ADMIN"];
 export const CAN_MODERATE = ["MODERATOR", "EDITOR", "ADMIN", "SUPER_ADMIN"];
 
+import { normalizeSlug } from "./slug";
+
 export function slugify(input: string): string {
-  const base = input
+  const base = normalizeSlug(input)
     .toLowerCase()
     .trim()
     .replace(/[^a-z0-9ঀ-৿]+/g, "-")

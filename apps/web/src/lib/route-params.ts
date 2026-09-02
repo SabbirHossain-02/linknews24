@@ -14,7 +14,10 @@
  */
 export function routeParam(value: string): string {
   try {
-    return decodeURIComponent(value);
+    // NFC as well as decoding: Bengali writes some letters two ways, and a
+    // link that has been through a chat app or a crawler comes back in the
+    // other one. The API stores and matches slugs in this same form.
+    return decodeURIComponent(value).normalize("NFC");
   } catch {
     // A stray "%" that is not an escape sequence. Take the segment as written
     // rather than throwing a 500 at whoever typed the address; it will simply

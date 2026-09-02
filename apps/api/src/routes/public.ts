@@ -9,8 +9,19 @@ import { recordAdEvent } from "../lib/adTracking";
 import { readSeo } from "../lib/seo";
 import { readViewerAccount } from "../middleware/account";
 import { donorBadge, nextEligibleDate, isEligibleNow } from "../lib/donorBadge";
+import { normalizeSlug } from "../lib/slug";
 
 export const publicRouter = Router();
+
+/**
+ * Read every ":slug" in one Unicode form — see lib/slug.ts for why a Bengali
+ * slug arrives written two different ways. Doing it here rather than at each
+ * query means a route added later cannot forget.
+ */
+publicRouter.param("slug", (req, _res, next, value: string) => {
+  req.params.slug = normalizeSlug(value);
+  next();
+});
 
 // --- Directories ---
 publicRouter.get("/districts", async (_req, res) => {
