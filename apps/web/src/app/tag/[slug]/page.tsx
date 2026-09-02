@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getSidebar, getTag, toArticle } from "@/lib/api";
+import { routeParam } from "@/lib/route-params";
 import { ReadingSidebar } from "@/components/home/ReadingSidebar";
 import { TagListing } from "@/components/category/TagListing";
 
@@ -11,7 +12,8 @@ export async function generateMetadata({
 }: {
   params: Promise<PageParams>;
 }): Promise<Metadata> {
-  const { slug } = await params;
+  const { slug: rawSlug } = await params;
+  const slug = routeParam(rawSlug);
   const data = await getTag(slug);
   if (!data) return {};
   return {
@@ -25,7 +27,8 @@ export default async function TagPage({
 }: {
   params: Promise<PageParams>;
 }) {
-  const { slug } = await params;
+  const { slug: rawSlug } = await params;
+  const slug = routeParam(rawSlug);
   const data = await getTag(slug);
   if (!data) notFound();
 

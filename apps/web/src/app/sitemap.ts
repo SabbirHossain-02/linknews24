@@ -34,13 +34,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }
 
   const categoryRoutes: MetadataRoute.Sitemap = categories.map((c) => ({
-    url: `${SITE_URL}/${c.slug}`,
+    url: `${SITE_URL}/${encodeURIComponent(c.slug)}`,
     changeFrequency: "hourly",
     priority: 0.7,
   }));
 
   const articleRoutes: MetadataRoute.Sitemap = articles.map((a) => ({
-    url: `${SITE_URL}/${a.slug}`,
+    url: `${SITE_URL}/${encodeURIComponent(a.slug)}`,
     lastModified: a.publishedAt ? new Date(a.publishedAt) : undefined,
     changeFrequency: "weekly",
     priority: 0.8,

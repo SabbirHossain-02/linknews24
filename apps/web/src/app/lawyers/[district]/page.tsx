@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getDistrict } from "@/lib/directory-data";
 import { getLawyers } from "@/lib/api";
+import { routeParam } from "@/lib/route-params";
 import { LawyerDistrictView } from "@/components/directory/LawyerDistrictView";
 
 type Params = { district: string };
@@ -11,7 +12,8 @@ export async function generateMetadata({
 }: {
   params: Promise<Params>;
 }): Promise<Metadata> {
-  const { district } = await params;
+  const { district: rawDistrict } = await params;
+  const district = routeParam(rawDistrict);
   const d = getDistrict(district);
   return {
     title: d ? `${d.name} জেলার আইনজীবী` : "আইনজীবী",
@@ -26,7 +28,8 @@ export default async function LawyerDistrictPage({
 }: {
   params: Promise<Params>;
 }) {
-  const { district } = await params;
+  const { district: rawDistrict } = await params;
+  const district = routeParam(rawDistrict);
   const d = getDistrict(district);
   if (!d) notFound();
   const lawyers = await getLawyers(district);

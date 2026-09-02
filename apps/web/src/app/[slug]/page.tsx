@@ -14,6 +14,7 @@ import {
 } from "@/lib/api";
 import { getSeo } from "@/lib/seo";
 import { SITE_URL } from "@/lib/site";
+import { routeParam } from "@/lib/route-params";
 
 const PER_PAGE = 12;
 
@@ -25,7 +26,8 @@ export async function generateMetadata({
 }: {
   params: Promise<PageParams>;
 }): Promise<Metadata> {
-  const { slug } = await params;
+  const { slug: rawSlug } = await params;
+  const slug = routeParam(rawSlug);
 
   const article = await getArticleBySlug(slug);
   if (article) {
@@ -38,7 +40,7 @@ export async function generateMetadata({
     // The story's own picture is what should appear when it is shared. Without
     // one the share falls back to the site image, never to nothing.
     const image = article.featuredImage || seo.defaultOgImage || undefined;
-    const url = `${SITE_URL}/${article.slug}`;
+    const url = `${SITE_URL}/${encodeURIComponent(article.slug)}`;
 
     return {
       title,
@@ -73,7 +75,7 @@ export async function generateMetadata({
   const category = categories.find((c) => c.slug === slug);
   if (category) {
     const seo = await getSeo();
-    const url = `${SITE_URL}/${category.slug}`;
+    const url = `${SITE_URL}/${encodeURIComponent(category.slug)}`;
     const description = `${seo.siteName}-এ সর্বশেষ ${category.name} বিভাগের সংবাদ।`;
     return {
       title: category.name,
@@ -99,7 +101,8 @@ export default async function SlugPage({
   params: Promise<PageParams>;
   searchParams: Promise<PageSearchParams>;
 }) {
-  const { slug } = await params;
+  const { slug: rawSlug } = await params;
+  const slug = routeParam(rawSlug);
 
   // 1) Article?
   const apiArticle = await getArticleBySlug(slug);

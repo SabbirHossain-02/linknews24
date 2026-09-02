@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getBloodGroup } from "@/lib/directory-data";
 import { getDonors } from "@/lib/api";
+import { routeParam } from "@/lib/route-params";
 import { DonorGroupView } from "@/components/directory/DonorGroupView";
 
 type Params = { group: string };
@@ -11,7 +12,8 @@ export async function generateMetadata({
 }: {
   params: Promise<Params>;
 }): Promise<Metadata> {
-  const { group } = await params;
+  const { group: rawGroup } = await params;
+  const group = routeParam(rawGroup);
   const g = getBloodGroup(group);
   return {
     title: g ? `${g.label} গ্রুপের রক্তদাতা` : "রক্তদাতা",
@@ -26,7 +28,8 @@ export default async function BloodGroupPage({
 }: {
   params: Promise<Params>;
 }) {
-  const { group } = await params;
+  const { group: rawGroup } = await params;
+  const group = routeParam(rawGroup);
   const g = getBloodGroup(group);
   if (!g) notFound();
   const donors = await getDonors(group);
