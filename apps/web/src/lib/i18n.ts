@@ -26,6 +26,8 @@ export const translations = {
   relatedNews: { bn: "সম্পর্কিত সংবাদ", en: "Related News" },
   breaking: { bn: "ব্রেকিং", en: "Breaking" },
   shareThis: { bn: "শেয়ার করুন", en: "Share" },
+  articlePublished: { bn: "প্রকাশ", en: "Published" },
+  articleUpdated: { bn: "আপডেট", en: "Updated" },
   footerDevelopedBy: { bn: "ডেভেলপ করেছে", en: "Developed by" },
 
   // Accessible names and small glyphs that used to be Bengali in both views.
@@ -623,6 +625,47 @@ const ARABIC_TO_BENGALI: Record<string, string> = {
 export function toLocaleDigits(value: string | number, locale: Locale): string {
   const s = String(value);
   return locale === "en" ? s : s.replace(/[0-9]/g, (d) => ARABIC_TO_BENGALI[d]);
+}
+
+/** Gregorian month names, written out for the date stamp on a story. */
+const STAMP_MONTHS: Record<Locale, string[]> = {
+  bn: [
+    "জানুয়ারি", "ফেব্রুয়ারি", "মার্চ", "এপ্রিল", "মে", "জুন",
+    "জুলাই", "আগস্ট", "সেপ্টেম্বর", "অক্টোবর", "নভেম্বর", "ডিসেম্বর",
+  ],
+  en: [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December",
+  ],
+};
+
+/**
+ * "০১ সেপ্টেম্বর ২০২৬ | ২০:৫৭" — when a story went out, in Dhaka time.
+ *
+ * The zone is named rather than left to the machine: the server keeps UTC, so
+ * without it every story would appear to have been filed six hours early. The
+ * month names and digits are written here rather than handed to Intl, so the
+ * server and the browser cannot disagree over an ICU version and produce two
+ * different strings for the same moment.
+ */
+export function publishStamp(value: string, locale: Locale): string {
+  const d = new Date(value);
+  if (isNaN(d.getTime())) return "";
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Dhaka",
+    year: "numeric",
+    month: "numeric",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(d);
+  const at = (type: string) => parts.find((p) => p.type === type)?.value ?? "";
+  const month = STAMP_MONTHS[locale][Number(at("month")) - 1] ?? "";
+  const day = toLocaleDigits(at("day"), locale);
+  const year = toLocaleDigits(at("year"), locale);
+  const time = `${toLocaleDigits(at("hour"), locale)}:${toLocaleDigits(at("minute"), locale)}`;
+  return `${day} ${month} ${year} | ${time}`;
 }
 
 // Relative time from an ISO date: "just now / X min / X hr / X days ago",

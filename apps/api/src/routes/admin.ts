@@ -290,6 +290,10 @@ adminRouter.put("/articles/:id", requireRole(...CAN_WRITE), async (req, res) => 
           : status === "DRAFT"
             ? null
             : existing.publishedAt,
+      // Only a change to something already published is an update a reader
+      // needs to know about; going live for the first time is publication, and
+      // publishedAt already says when that was.
+      editedAt: existing.publishedAt ? new Date() : existing.editedAt,
       tags: { set: [], connectOrCreate: tagConnectOrCreate(data.tags) },
     },
   });

@@ -109,6 +109,11 @@ model Article {
   seoDescription String?
   seoKeywords    String?
   publishedAt    DateTime?
+  /// When an editor last changed the story after it was published — the
+  /// "updated" line readers see. updatedAt cannot serve: Prisma stamps it on
+  /// every write, and reading an article increments its view count, so it
+  /// moves whenever anyone so much as visits the page.
+  editedAt       DateTime?
   comments       Comment[]
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt

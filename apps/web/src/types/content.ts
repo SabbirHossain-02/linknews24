@@ -15,6 +15,8 @@ export interface Article {
   category: Category;
   author: string;
   publishedAt: string;
+  /** Set only when the story was changed after it went out. */
+  editedAt?: string | null;
   imageTone: "navy" | "crimson" | "slate" | "amber";
   featuredImage?: string | null;
   isBreaking?: boolean;

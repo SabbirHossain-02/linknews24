@@ -23,6 +23,8 @@ export interface ApiArticle {
   viewCount: number;
   authorName?: string | null;
   publishedAt: string | null;
+  /** When an editor last changed the story after publishing it; see the API. */
+  editedAt?: string | null;
   category?: { name: string; nameEn: string; slug: string } | null;
   author?: { name: string } | null;
   tags?: { name: string; nameEn: string; slug: string }[];
@@ -69,6 +71,7 @@ export function toArticle(a: ApiArticle): Article {
     category: { id: cat.slug, name: cat.name, nameEn: cat.nameEn, slug: cat.slug },
     author: a.authorName ?? a.author?.name ?? "",
     publishedAt: a.publishedAt ?? "",
+    editedAt: a.editedAt ?? null,
     imageTone: (TONES.includes(a.imageTone)
       ? a.imageTone
       : "navy") as Article["imageTone"],

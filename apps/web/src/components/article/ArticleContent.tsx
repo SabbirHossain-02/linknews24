@@ -6,7 +6,7 @@ import type { Article } from "@/types/content";
 import { toneGradientClass } from "@/lib/tone";
 import { localizedAuthor, localizedName } from "@/lib/i18n";
 import { useLocale } from "@/components/providers/LocaleProvider";
-import { TimeAgo } from "@/components/home/TimeAgo";
+import { PublishStamp } from "./PublishStamp";
 import { ThematicRow } from "@/components/home/ThematicRow";
 import { ArticleActions } from "./ArticleActions";
 import { RecordHistory } from "./RecordHistory";
@@ -72,14 +72,17 @@ export function ArticleContent({
           {title}
         </h1>
 
-        <div className="flex flex-wrap items-center justify-between gap-4 border-y border-border py-3">
-          <p className="font-ui text-sm text-foreground-muted">
-            <span className="font-semibold text-foreground">
+        <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-2 border-y border-border py-3">
+          <div>
+            <p className="font-ui text-sm font-semibold text-foreground">
               {localizedAuthor(article.author, locale)}
-            </span>
-            <span className="mx-1.5">·</span>
-            <TimeAgo iso={article.publishedAt} />
-          </p>
+            </p>
+            <PublishStamp
+              publishedAt={article.publishedAt}
+              editedAt={article.editedAt}
+              className="mt-1"
+            />
+          </div>
           <ArticleActions article={article} title={title} />
         </div>
       </div>
