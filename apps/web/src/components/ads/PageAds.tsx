@@ -23,15 +23,15 @@ export function LeftAd() {
       <div className="pointer-events-none fixed left-3 top-[200px] z-30 hidden w-[160px] min-[1900px]:block">
         <AdSlot
           placement="LEFT"
-          className="pointer-events-auto rounded-lg border border-border bg-background"
-          imgClassName="w-full object-contain"
+          className="pointer-events-auto text-foreground-muted"
         />
       </div>
       <div className="mx-auto w-full max-w-[1600px] px-6 pt-4 min-[1900px]:hidden">
         <AdSlot
           placement="LEFT"
-          className="mx-auto w-fit max-w-full rounded-lg border border-border"
-          imgClassName="max-h-[160px] w-auto max-w-full object-contain"
+          className="text-foreground-muted"
+          maxW={728}
+          maxH={160}
         />
       </div>
     </>
@@ -112,8 +112,7 @@ export function PopupAd() {
         <AdSlot
           placement="POPUP"
           preset={ad}
-          className="rounded-xl bg-background shadow-2xl"
-          imgClassName="max-h-[80vh] w-auto max-w-full object-contain"
+          className="rounded-xl bg-background p-2 text-foreground-muted shadow-2xl"
         />
       </div>
     </div>

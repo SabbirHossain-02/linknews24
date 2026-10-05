@@ -123,7 +123,7 @@ export function ArticleContent({
 
       <AdSlot
         placement="IN_ARTICLE"
-        className="max-w-2xl rounded-lg border border-border"
+        className="rounded-lg bg-surface/70 px-3 py-3 text-foreground-muted"
       />
 
       {tags.length > 0 && (

@@ -15,6 +15,7 @@ import {
   Upload,
 } from "lucide-react";
 import {
+  AdCreativePreview,
   PlacementDiagram,
   PlacementPicker,
   SITE_WIDE,
@@ -390,7 +391,7 @@ export default function AdsAdminPage() {
           others.map((ad) => (
             <div key={ad.id} className="overflow-hidden rounded-xl border border-border bg-background">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={ad.imageUrl} alt={ad.name} className="h-32 w-full object-cover" />
+              <img src={ad.imageUrl} alt={ad.name} className="h-32 w-full bg-surface object-contain p-1.5" />
               <div className="p-3">
                 <div className="flex items-center justify-between gap-2">
                   <p className="min-w-0 truncate font-semibold text-foreground">{ad.name}</p>
@@ -584,6 +585,7 @@ export default function AdsAdminPage() {
                 />
               </div>
             </div>
+            {form.imageUrl && <AdCreativePreview url={form.imageUrl} placement={form.placement} />}
             <div className="flex gap-3">
               <div className="flex-1">
                 <label className="font-ui text-xs font-semibold text-foreground-muted">

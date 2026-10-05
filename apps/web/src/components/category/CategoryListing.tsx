@@ -127,8 +127,7 @@ export function CategoryListing({
           </div>
           <AdSlot
             placement="IN_ARTICLE"
-            className="my-2 rounded-lg border border-border"
-            imgClassName="mx-auto max-h-[250px] w-auto max-w-full object-contain"
+            className="my-3 rounded-lg bg-surface/70 px-3 py-3 text-foreground-muted"
           />
           <div className="flex flex-col divide-y divide-border">
             {rest.slice(4).map((article) => (

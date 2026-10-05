@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { CheckCircle2, FileText, Globe, Home, Link2, Loader2, Tags } from "lucide-react";
 import { API_BASE } from "@/lib/admin-api";
 import { useLocale } from "@/components/providers/LocaleProvider";
-import type { AdPlacement } from "./AdSlot";
+import { AD_FRAMES, type AdPlacement } from "./AdSlot";
 
 /**
  * Where an ad runs: the page(s), and the spot on the page. Shared by the
@@ -394,3 +394,77 @@ export function targetText(
 }
 
 export { useBi };
+
+/**
+ * The uploaded banner as the site will show it in the chosen spot, with its
+ * real size beside the sizes the spot is made for — and a plain warning when
+ * its shape is wrong for the spot, before anyone pays for a poster squeezed
+ * into a strip.
+ */
+export function AdCreativePreview({ url, placement }: { url: string; placement: AdPlacement }) {
+  const L = useBi();
+  const [size, setSize] = useState<{ w: number; h: number } | null>(null);
+  const frame = AD_FRAMES[placement];
+  const video = /\.(mp4|webm|ogg|mov)(\?.*)?$/i.test(url);
+
+  useEffect(() => setSize(null), [url]);
+
+  const style = { maxWidth: "100%", maxHeight: `${Math.min(frame.maxH, 300)}px` };
+  const ratio = size ? size.w / size.h : 1;
+  const warning = !size
+    ? null
+    : frame.landscape && ratio < 1.2
+      ? L(
+          "এই জায়গার জন্য ব্যানারটি বেশি লম্বা/চৌকো — সাইটে ছোট হয়ে মাঝখানে দেখাবে। ভালো দেখাতে আড়াআড়ি ব্যানার দিন।",
+          "This banner is too tall for this spot — it will show small in the middle. Use a wide banner.",
+        )
+      : placement === "LEFT" && ratio > 0.8
+        ? L(
+            "বাম পাশের জায়গাটি খাড়া — ১৬০×৬০০ মাপের লম্বা ব্যানার দিন।",
+            "The left spot is tall — use a 160×600 banner.",
+          )
+        : null;
+
+  return (
+    <div className="flex flex-col gap-2 rounded-xl border border-border bg-surface/60 p-3">
+      <p className="font-ui text-[11px] font-semibold text-foreground-muted">
+        {L("সাইটে যেভাবে দেখাবে", "How it will look on the site")} · {placementLabel(placement, L)}
+      </p>
+      <div className="flex justify-center rounded-lg bg-background p-3">
+        {video ? (
+          <video
+            src={url}
+            muted
+            className="block h-auto w-auto object-contain"
+            style={{ ...style, maxWidth: `min(${frame.maxW}px, 100%)` }}
+            onLoadedMetadata={(e) =>
+              setSize({ w: e.currentTarget.videoWidth, h: e.currentTarget.videoHeight })
+            }
+          />
+        ) : (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={url}
+            alt=""
+            className="block h-auto w-auto object-contain"
+            style={{ ...style, maxWidth: `min(${frame.maxW}px, 100%)` }}
+            onLoad={(e) =>
+              setSize({ w: e.currentTarget.naturalWidth, h: e.currentTarget.naturalHeight })
+            }
+          />
+        )}
+      </div>
+      <p className="font-ui text-[11px] text-foreground-muted">
+        {size && (
+          <>
+            {L("আপনার ব্যানার", "Your banner")}: {size.w}×{size.h} ·{" "}
+          </>
+        )}
+        {L("এই জায়গার মাপ", "Sizes for this spot")}: {frame.sizes}
+      </p>
+      {warning && (
+        <p className="rounded-lg bg-amber-50 px-2.5 py-2 font-ui text-xs text-amber-800">{warning}</p>
+      )}
+    </div>
+  );
+}

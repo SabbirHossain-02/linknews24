@@ -72,8 +72,7 @@ export function SiteFooter({ categories }: { categories: NavChild[] }) {
     <footer className="border-t border-border bg-surface text-foreground-muted">
       <AdSlot
         placement="FOOTER"
-        className="mx-auto flex max-w-[1600px] justify-center px-4 pt-6 sm:px-6"
-        imgClassName="max-h-[120px] w-auto object-contain"
+        className="mx-auto max-w-[1600px] px-4 pt-6 text-foreground-muted sm:px-6"
       />
       {/* Three columns on a phone. Stacked in one they ran on for several
           screenfuls; the masthead and the newsletter still take the full width,

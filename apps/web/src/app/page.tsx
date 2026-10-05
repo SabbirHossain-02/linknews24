@@ -47,8 +47,7 @@ export default async function Home() {
             the category sections. Renders nothing when no ad is booked. */}
         <AdSlot
           placement="IN_ARTICLE"
-          className="rounded-lg border border-border"
-          imgClassName="mx-auto max-h-[250px] w-auto max-w-full object-contain"
+          className="rounded-lg bg-surface/70 px-3 py-3 text-foreground-muted"
         />
 
         {sections.map((s) => (

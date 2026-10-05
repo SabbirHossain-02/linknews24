@@ -7,8 +7,7 @@ export function AdBanner() {
   return (
     <AdSlot
       placement="HEADER"
-      className="flex w-full justify-center bg-brand-navy py-2"
-      imgClassName="max-h-[250px] w-auto max-w-full object-contain"
+      className="bg-brand-navy px-3 py-2 text-white"
     />
   );
 }

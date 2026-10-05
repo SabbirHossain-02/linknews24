@@ -18,8 +18,9 @@ import { getSocket } from "@/lib/socket";
 import { useLocale } from "@/components/providers/LocaleProvider";
 import type { TranslationKey } from "@/lib/i18n";
 import { useAuth } from "@/components/providers/AuthProvider";
-import type { AdPlacement } from "@/components/ads/AdSlot";
+import { AD_FRAMES, type AdPlacement } from "@/components/ads/AdSlot";
 import {
+  AdCreativePreview,
   PlacementDiagram,
   PlacementPicker,
   SITE_WIDE,
@@ -488,7 +489,7 @@ function BookingModal({
                 />
               </div>
               <p className="mt-1 font-ui text-[11px] text-foreground-muted">
-                {t("bannerLabel")}: {current.size} · {t("videoNote")}
+                {t("bannerLabel")}: {AD_FRAMES[placement].sizes} · {t("videoNote")}
               </p>
               {progress !== null && (
                 <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-surface">
@@ -504,6 +505,7 @@ function BookingModal({
             <TargetPicker value={target} onChange={setTarget} />
             <h5 className={label}>{L("পাতার কোথায়", "Where on the page")}</h5>
             <PlacementPicker slots={slots} value={placement} onChange={setPlacement} currency={t("currencySymbol")} />
+            {mediaUrl && <AdCreativePreview url={mediaUrl} placement={placement} />}
           </section>
 
           {/* 3 — how long */}
