@@ -1,4 +1,4 @@
-import { getCategories } from "@/lib/api";
+import { apiGet, getCategories } from "@/lib/api";
 import { buildNav } from "@/lib/nav";
 import { TopUtilityBar } from "./TopUtilityBar";
 import { BreakingNewsTicker } from "./BreakingNewsTicker";
@@ -12,13 +12,16 @@ import { MainNav } from "./MainNav";
 // now. RealtimeRefresh re-runs this on the API's `content:changed` event, so
 // adding or deleting a category in the admin updates the menu without a reload.
 export async function SiteHeader() {
-  const categories = await getCategories();
+  const [categories, site] = await Promise.all([
+    getCategories(),
+    apiGet<{ settings?: { logoUrl?: string } }>("/api/settings"),
+  ]);
 
   return (
     <header className="sticky top-0 z-50 shadow-sm">
       <TopUtilityBar />
       <BreakingNewsTicker />
-      <MainNav items={buildNav(categories)} />
+      <MainNav items={buildNav(categories)} logoUrl={site?.settings?.logoUrl || null} />
     </header>
   );
 }

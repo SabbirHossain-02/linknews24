@@ -7,12 +7,19 @@ import { useAdminAuth, type AdminUser } from "@/components/admin/AdminAuthProvid
 import { useAdminT, type AdminKey } from "@/lib/admin-i18n";
 import { Toggle } from "@/components/admin/Toggle";
 import { FOOTER_BLOCKS, footerShows, type FooterBlock } from "@/lib/footer-blocks";
+import { LogoField, SocialLinksEditor } from "@/components/admin/SiteBrandingFields";
+import { socialLinks, type SocialLink } from "@/components/icons/SocialPlatforms";
+import { useAdminText } from "@/lib/admin-strings";
 
 interface Settings {
   tagline?: string;
   facebook?: string;
   twitter?: string;
   youtube?: string;
+  /** Any number of social links, each a network and a URL. */
+  socials?: SocialLink[];
+  /** The masthead in the site's header and footer. */
+  logoUrl?: string;
   address?: string;
   email?: string;
   phone?: string;
@@ -318,6 +325,8 @@ export default function SettingsAdminPage() {
   const { can } = useAdminAuth();
   const siteSettings = can("settings", "view");
   const canSave = can("settings", "edit");
+  const ax = useAdminText();
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [s, setS] = useState<Settings>({});
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -337,17 +346,34 @@ export default function SettingsAdminPage() {
       return;
     }
     apiFetch<{ settings: Settings }>("/api/admin/settings")
-      .then((d) => setS(d.settings ?? {}))
+      // A site saved before the social list existed starts from its three
+      // fixed links, so nothing disappears from the footer.
+      .then((d) => {
+        const v: Settings = d.settings ?? {};
+        setS({ ...v, socials: v.socials ?? socialLinks(v) });
+      })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [siteSettings]);
 
   const save = async () => {
+    setSaveError(null);
+    const socials = (s.socials ?? [])
+      .map((x) => ({ ...x, url: x.url.trim() }))
+      .filter((x) => x.url);
+    if (socials.some((x) => !/^https?:\/\/\S+$/i.test(x.url))) {
+      setSaveError(ax("লিংক https:// দিয়ে শুরু হতে হবে"));
+      return;
+    }
     setBusy(true);
     setSaved(false);
     try {
-      await apiFetch("/api/admin/settings", { method: "PUT", body: JSON.stringify(s) });
+      const next = { ...s, socials };
+      await apiFetch("/api/admin/settings", { method: "PUT", body: JSON.stringify(next) });
+      setS(next);
       setSaved(true);
+    } catch (e) {
+      setSaveError(e instanceof Error ? e.message : "Error");
     } finally {
       setBusy(false);
     }
@@ -364,16 +390,25 @@ export default function SettingsAdminPage() {
 
       {siteSettings && (
       <div className="mt-5 flex flex-col gap-4 rounded-xl border border-border bg-background p-5">
+        <p className="font-ui text-xs font-semibold uppercase tracking-wide text-foreground-muted/70">
+          {ax("সাইটের লোগো")}
+        </p>
+        <LogoField
+          value={s.logoUrl}
+          disabled={!canSave}
+          onChange={(url) => setS((p) => ({ ...p, logoUrl: url }))}
+        />
+
         <Field label={t("tagline")} value={s.tagline ?? ""} onChange={(v) => set("tagline", v)} />
 
         <p className="mt-2 font-ui text-xs font-semibold uppercase tracking-wide text-foreground-muted/70">
           {t("socialLinks")}
         </p>
-        <div className="grid gap-3 sm:grid-cols-3">
-          <Field label="Facebook" value={s.facebook ?? ""} onChange={(v) => set("facebook", v)} placeholder="https://" />
-          <Field label="X / Twitter" value={s.twitter ?? ""} onChange={(v) => set("twitter", v)} placeholder="https://" />
-          <Field label="YouTube" value={s.youtube ?? ""} onChange={(v) => set("youtube", v)} placeholder="https://" />
-        </div>
+        <SocialLinksEditor
+          value={s.socials ?? []}
+          disabled={!canSave}
+          onChange={(socials) => setS((p) => ({ ...p, socials }))}
+        />
 
         <p className="mt-2 font-ui text-xs font-semibold uppercase tracking-wide text-foreground-muted/70">
           {t("contactInfo")}
@@ -415,6 +450,7 @@ export default function SettingsAdminPage() {
             {busy ? t("saving") : t("save")}
           </button>
           {saved && <span className="font-ui text-sm text-green-600">{t("savedOk")}</span>}
+          {saveError && <span className="font-ui text-sm text-brand-crimson">{saveError}</span>}
         </div>
       </div>
       )}

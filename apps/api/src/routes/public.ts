@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../prisma";
+import { breakingEnabled } from "../lib/siteSettings";
 import { BLOOD_GROUPS } from "../lib/blood";
 import { emitChange, emitAnalytics } from "../realtime";
 import { clientIp, geoLookup, parseUA } from "../lib/analytics";
@@ -421,6 +422,9 @@ publicRouter.get("/livetv", async (_req, res) => {
  * outside the article card, which is why the ticker looked broken.
  */
 publicRouter.get("/breaking", async (_req, res) => {
+  // Switched off from the admin: no bar at all, whatever is queued.
+  if (!(await breakingEnabled())) return res.json({ enabled: false, items: [] });
+
   const now = new Date();
   const [manual, articles] = await Promise.all([
     prisma.breakingItem.findMany({
@@ -439,6 +443,7 @@ publicRouter.get("/breaking", async (_req, res) => {
   ]);
 
   res.json({
+    enabled: true,
     items: [
       ...manual.map((i) => ({
         id: i.id,

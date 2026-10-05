@@ -7,7 +7,12 @@ import { ArrowUp, Mail, MapPin, Phone } from "lucide-react";
 import { API_BASE } from "@/lib/admin-api";
 import { useLocale } from "@/components/providers/LocaleProvider";
 import type { NavChild } from "@/lib/nav";
-import { FacebookIcon, XIcon, YoutubeIcon } from "@/components/icons/SocialIcons";
+import {
+  SocialBadge,
+  platformFor,
+  socialLinks,
+  type SocialLink,
+} from "@/components/icons/SocialPlatforms";
 import { NewsletterForm } from "./NewsletterForm";
 import { AdSlot } from "@/components/ads/AdSlot";
 import { StoreBadges } from "./StoreBadges";
@@ -18,6 +23,10 @@ interface SiteConfig {
   facebook?: string;
   twitter?: string;
   youtube?: string;
+  /** The social links set in Settings — any number, any network. */
+  socials?: SocialLink[];
+  /** The masthead uploaded in Settings; the bundled one otherwise. */
+  logoUrl?: string;
   address?: string;
   email?: string;
   phone?: string;
@@ -79,13 +88,18 @@ export function SiteFooter({ categories }: { categories: NavChild[] }) {
                 which is otherwise empty to the right of the logo. */}
             <div className="flex flex-wrap items-center justify-between gap-4 lg:block">
               <Link href="/" aria-label={t("home")} className="inline-block">
-                <Image
-                  src="/logo.png"
-                  alt="LinkNews24"
-                  width={2048}
-                  height={656}
-                  className="h-11 w-auto"
-                />
+                {cfg.logoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={cfg.logoUrl} alt="LinkNews24" className="h-11 w-auto max-w-[220px] object-contain" />
+                ) : (
+                  <Image
+                    src="/logo.png"
+                    alt="LinkNews24"
+                    width={2048}
+                    height={656}
+                    className="h-11 w-auto"
+                  />
+                )}
               </Link>
 
               {show("app") && (
@@ -105,17 +119,24 @@ export function SiteFooter({ categories }: { categories: NavChild[] }) {
                 {cfg.tagline || t("footerTagline")}
               </p>
             )}
-            {show("social") && (
-              <div className="mt-4 flex gap-4">
-                <a href={cfg.facebook || "#"} aria-label="Facebook" className="hover:text-brand-crimson">
-                  <FacebookIcon className="h-5 w-5" />
-                </a>
-                <a href={cfg.twitter || "#"} aria-label="Twitter" className="hover:text-brand-crimson">
-                  <XIcon className="h-5 w-5" />
-                </a>
-                <a href={cfg.youtube || "#"} aria-label="YouTube" className="hover:text-brand-crimson">
-                  <YoutubeIcon className="h-5 w-5" />
-                </a>
+            {show("social") && socialLinks(cfg).length > 0 && (
+              <div className="mt-4 flex flex-wrap gap-2">
+                {socialLinks(cfg).map((s, i) => {
+                  const p = platformFor(s.platform)!;
+                  return (
+                    <a
+                      key={`${s.platform}-${i}`}
+                      href={s.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={p.name}
+                      title={p.name}
+                      className="transition-transform hover:-translate-y-0.5 hover:opacity-90"
+                    >
+                      <SocialBadge platform={p} size={32} />
+                    </a>
+                  );
+                })}
               </div>
             )}
           </div>

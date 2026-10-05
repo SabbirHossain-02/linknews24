@@ -7,7 +7,14 @@ import { ChevronDown, Menu, Search, X } from "lucide-react";
 import type { NavEntry } from "@/lib/nav";
 import { useLocale } from "@/components/providers/LocaleProvider";
 
-export function MainNav({ items }: { items: NavEntry[] }) {
+export function MainNav({
+  items,
+  logoUrl,
+}: {
+  items: NavEntry[];
+  /** The masthead uploaded in Settings; the bundled one otherwise. */
+  logoUrl?: string | null;
+}) {
   const { locale, t } = useLocale();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [openDesktopDropdown, setOpenDesktopDropdown] = useState<
@@ -36,14 +43,23 @@ export function MainNav({ items }: { items: NavEntry[] }) {
     >
       <div className="mx-auto flex max-w-[1600px] items-center justify-between gap-4 px-4 py-2.5 sm:gap-6 sm:px-6 sm:py-3">
         <Link href="/" className="flex shrink-0 items-center">
-          <Image
-            src="/logo.png"
-            alt="LinkNews24"
-            width={169}
-            height={54}
-            priority
-            className="h-14 w-auto"
-          />
+          {logoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={logoUrl}
+              alt="LinkNews24"
+              className="h-14 w-auto max-w-[240px] object-contain"
+            />
+          ) : (
+            <Image
+              src="/logo.png"
+              alt="LinkNews24"
+              width={169}
+              height={54}
+              priority
+              className="h-14 w-auto"
+            />
+          )}
         </Link>
 
         <Link

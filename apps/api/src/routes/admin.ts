@@ -26,6 +26,7 @@ import {
   uniqueSlug,
 } from "../lib/articles";
 import { logWork, notifyStaff } from "../lib/staffNotify";
+import { breakingEnabled } from "../lib/siteSettings";
 import { adReport } from "../lib/adTracking";
 import { auditArticles, readSeo, sitemapStats, writeSeo } from "../lib/seo";
 import { newsroomRouter } from "./newsroom";
@@ -467,11 +468,53 @@ adminRouter.put("/livetv", async (req, res) => {
 });
 
 // ===================== BREAKING TICKER =====================
+/**
+ * Everything the ticker carries, as the Breaking News page needs it: the
+ * typed lines, the published stories whose "breaking" switch is on (the
+ * ticker shows both, so the page must too), and whether the bar is on at all.
+ */
 adminRouter.get("/breaking", async (_req, res) => {
-  const items = await prisma.breakingItem.findMany({
-    orderBy: { order: "asc" },
+  const [items, articles, enabled] = await Promise.all([
+    prisma.breakingItem.findMany({ orderBy: { order: "asc" } }),
+    prisma.article.findMany({
+      where: { isBreaking: true, status: "PUBLISHED" },
+      orderBy: { publishedAt: "desc" },
+      select: { id: true, title: true, titleEn: true, slug: true, publishedAt: true },
+    }),
+    breakingEnabled(),
+  ]);
+  res.json({ items, articles, enabled });
+});
+
+/** The whole breaking bar on or off for readers, with one switch. */
+adminRouter.put("/breaking/settings", async (req, res) => {
+  const parsed = z.object({ enabled: z.boolean() }).safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: "Invalid input" });
+  await prisma.siteSetting.upsert({
+    where: { key: "breaking" },
+    update: { value: { enabled: parsed.data.enabled } },
+    create: { key: "breaking", value: { enabled: parsed.data.enabled } },
   });
-  res.json({ items });
+  res.json({ enabled: parsed.data.enabled });
+});
+
+/**
+ * Take a story off the ticker (or put it back) from the Breaking News page.
+ * This is ticker curation, governed by the breaking-news permission — the
+ * story's own content is not touched.
+ */
+adminRouter.put("/breaking/articles/:id", async (req, res) => {
+  const parsed = z.object({ isBreaking: z.boolean() }).safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: "Invalid input" });
+  const article = await prisma.article
+    .update({
+      where: { id: req.params.id },
+      data: { isBreaking: parsed.data.isBreaking },
+      select: { id: true, title: true, isBreaking: true },
+    })
+    .catch(() => null);
+  if (!article) return res.status(404).json({ error: "Not found" });
+  res.json({ article });
 });
 
 const breakingSchema = z.object({
