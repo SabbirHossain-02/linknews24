@@ -488,6 +488,83 @@ publicRouter.get("/breaking", async (_req, res) => {
   });
 });
 
+/**
+ * Suggestions while someone types in the search box — from the first letter.
+ *
+ * Headlines that begin with what was typed come first, then headlines that
+ * contain it, then stories tagged with it; categories whose name matches are
+ * offered alongside. Bodies are not searched here: a single letter matches
+ * the text of nearly every story, and a suggestion list is about headlines.
+ */
+publicRouter.get("/search/suggest", async (req, res) => {
+  const q = String(req.query.q ?? "").normalize("NFC").trim().slice(0, 100);
+  if (!q) return res.json({ articles: [], categories: [] });
+  const LIMIT = 8;
+  const select = {
+    id: true,
+    title: true,
+    titleEn: true,
+    slug: true,
+    featuredImage: true,
+    imageTone: true,
+    publishedAt: true,
+    category: { select: { name: true, nameEn: true } },
+  } as const;
+  const published = { status: "PUBLISHED" as const };
+  const newest = { publishedAt: "desc" as const };
+
+  const [starts, contains, tagged, categories] = await Promise.all([
+    prisma.article.findMany({
+      where: {
+        ...published,
+        OR: [
+          { title: { startsWith: q, mode: "insensitive" } },
+          { titleEn: { startsWith: q, mode: "insensitive" } },
+        ],
+      },
+      select,
+      orderBy: newest,
+      take: LIMIT,
+    }),
+    prisma.article.findMany({
+      where: {
+        ...published,
+        OR: [
+          { title: { contains: q, mode: "insensitive" } },
+          { titleEn: { contains: q, mode: "insensitive" } },
+        ],
+      },
+      select,
+      orderBy: newest,
+      take: LIMIT * 2,
+    }),
+    prisma.article.findMany({
+      where: { ...published, tags: { some: { name: { startsWith: q, mode: "insensitive" } } } },
+      select,
+      orderBy: newest,
+      take: LIMIT,
+    }),
+    prisma.category.findMany({
+      where: {
+        visible: true,
+        OR: [
+          { name: { contains: q, mode: "insensitive" } },
+          { nameEn: { contains: q, mode: "insensitive" } },
+        ],
+      },
+      select: { name: true, nameEn: true, slug: true },
+      orderBy: { order: "asc" },
+      take: 3,
+    }),
+  ]);
+
+  const seen = new Set<string>();
+  const articles = [...starts, ...contains, ...tagged]
+    .filter((a) => (seen.has(a.id) ? false : (seen.add(a.id), true)))
+    .slice(0, LIMIT);
+  res.json({ articles, categories });
+});
+
 publicRouter.get("/articles", async (req, res) => {
   const { category, q, from, to, sort, page = "1", limit = "12" } =
     req.query as Record<string, string>;
@@ -502,7 +579,10 @@ publicRouter.get("/articles", async (req, res) => {
       return res.json({ articles: [], total: 0, page: Number(page) || 1, limit: take });
     where.categoryId = { in: ids };
   }
-  if (q) {
+  // Bengali typed on some keyboards arrives decomposed; the stored text is NFC.
+  const term = q ? q.normalize("NFC").trim().slice(0, 100) : "";
+  if (term) {
+    const q = term;
     where.OR = [
       { title: { contains: q, mode: "insensitive" } },
       { titleEn: { contains: q, mode: "insensitive" } },
@@ -512,10 +592,18 @@ publicRouter.get("/articles", async (req, res) => {
       { tags: { some: { name: { contains: q, mode: "insensitive" } } } },
     ];
   }
-  if (from || to) {
+  // Days are Dhaka days. A malformed date is ignored rather than handed to
+  // the database, where an Invalid Date used to bring the whole API down.
+  const day = (d: string | undefined, end: boolean) =>
+    d && /^\d{4}-\d{2}-\d{2}$/.test(d)
+      ? new Date(`${d}T${end ? "23:59:59.999" : "00:00:00"}+06:00`)
+      : null;
+  const fromDate = day(from, false);
+  const toDate = day(to, true);
+  if (fromDate || toDate) {
     where.publishedAt = {};
-    if (from) where.publishedAt.gte = new Date(from);
-    if (to) where.publishedAt.lte = new Date(`${to}T23:59:59.999Z`);
+    if (fromDate) where.publishedAt.gte = fromDate;
+    if (toDate) where.publishedAt.lte = toDate;
   }
 
   const [articles, total] = await Promise.all([

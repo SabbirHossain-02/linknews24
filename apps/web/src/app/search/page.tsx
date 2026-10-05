@@ -16,7 +16,7 @@ export default async function SearchPage({
   const query = q?.trim() ?? "";
   const hasFilter = Boolean(query || category || from || to);
 
-  const [{ articles }, categories, sidebar] = await Promise.all([
+  const [{ articles, total }, categories, sidebar] = await Promise.all([
     hasFilter
       ? getArticles({ q: query, category, from, to, limit: 48 })
       : Promise.resolve({ articles: [], total: 0 }),
@@ -31,6 +31,7 @@ export default async function SearchPage({
       <SearchResultsView
         query={query}
         results={results}
+        total={total}
         categories={categories}
         selectedCategory={category ?? ""}
         from={from ?? ""}

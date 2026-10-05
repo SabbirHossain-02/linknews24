@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Search } from "lucide-react";
+import { SearchAutocomplete } from "./SearchAutocomplete";
 import { ArticleCard } from "./ArticleCard";
 import { useLocale } from "@/components/providers/LocaleProvider";
 import type { Article } from "@/types/content";
@@ -10,6 +10,7 @@ import type { ApiCategory } from "@/lib/api";
 export function SearchResultsView({
   query,
   results,
+  total,
   categories,
   selectedCategory,
   from,
@@ -18,6 +19,8 @@ export function SearchResultsView({
 }: {
   query: string;
   results: Article[];
+  /** Every match, not only the ones shown. */
+  total: number;
   categories: ApiCategory[];
   selectedCategory: string;
   from: string;
@@ -35,17 +38,11 @@ export function SearchResultsView({
 
       <form action="/search" method="get" className="flex flex-col gap-3">
         <div className="flex gap-2">
-          <div className="relative flex-1">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground-muted" />
-            <input
-              type="text"
-              name="q"
-              defaultValue={query}
-              placeholder={t("searchPlaceholder")}
-              autoFocus
-              className={`${inputCls} w-full pl-10`}
-            />
-          </div>
+          <SearchAutocomplete
+            defaultValue={query}
+            placeholder={t("searchPlaceholder")}
+            autoFocus
+          />
           <button
             type="submit"
             className="shrink-0 rounded-lg bg-brand-navy px-5 py-2.5 font-ui text-sm font-medium text-white transition-colors hover:bg-brand-navy-soft"
@@ -102,13 +99,16 @@ export function SearchResultsView({
         <p className="font-ui text-sm text-foreground-muted">
           {locale === "bn" ? (
             <>
-              <span className="font-semibold text-foreground">{results.length}</span> টি
-              ফলাফল পাওয়া গেছে
+              <span className="font-semibold text-foreground">
+                {total.toLocaleString("bn-BD")}
+              </span>{" "}
+              টি ফলাফল পাওয়া গেছে
+              {total > results.length && ` (প্রথম ${results.length.toLocaleString("bn-BD")}টি দেখানো হচ্ছে)`}
             </>
           ) : (
             <>
-              <span className="font-semibold text-foreground">{results.length}</span>{" "}
-              results found
+              <span className="font-semibold text-foreground">{total}</span> results found
+              {total > results.length && ` (showing the first ${results.length})`}
             </>
           )}
         </p>
