@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Hind_Siliguri, Inter } from "next/font/google";
+import { Hind_Siliguri, Inter, Noto_Serif_Bengali } from "next/font/google";
 import { SITE_URL } from "@/lib/site";
 import { getSeo } from "@/lib/seo";
 import localFont from "next/font/local";
@@ -17,6 +17,15 @@ const hindSiliguri = Hind_Siliguri({
   variable: "--font-hind-siliguri",
   subsets: ["bengali", "latin"],
   weight: ["400", "500", "600", "700"],
+  display: "swap",
+});
+
+// Noto Serif Bengali — the site's main Bengali face. A free (OFL) stand-in for
+// the newspaper-style serif Asia Post uses, whose own font (VarendraAP) is
+// proprietary. Bengali subset only, so Latin text falls through to Inter.
+const notoSerifBengali = Noto_Serif_Bengali({
+  variable: "--font-noto-serif-bengali",
+  subsets: ["bengali"],
   display: "swap",
 });
 
@@ -96,7 +105,7 @@ export default function RootLayout({
   return (
     <html lang="bn">
       <body
-        className={`${siyamRupali.variable} ${hindSiliguri.variable} ${inter.variable} antialiased`}
+        className={`${notoSerifBengali.variable} ${siyamRupali.variable} ${hindSiliguri.variable} ${inter.variable} antialiased`}
       >
         <LocaleProvider>
           <AuthProvider>

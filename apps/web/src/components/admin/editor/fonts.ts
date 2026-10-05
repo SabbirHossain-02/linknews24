@@ -24,6 +24,12 @@ export interface FontOption {
 
 export const BUNDLED_FONTS: FontOption[] = [
   {
+    label: "Noto Serif Bengali",
+    value: "var(--font-noto-serif-bengali), serif",
+    tier: "bundled",
+    bangla: true,
+  },
+  {
     label: "Siyam Rupali",
     value: "var(--font-siyam-rupali), sans-serif",
     tier: "bundled",
@@ -49,7 +55,6 @@ export const SYSTEM_BANGLA_FONTS: FontOption[] = [
   { label: "Shonar Bangla", value: "'Shonar Bangla', sans-serif", tier: "system", bangla: true },
   { label: "Vrinda", value: "Vrinda, sans-serif", tier: "system", bangla: true },
   { label: "Noto Sans Bengali", value: "'Noto Sans Bengali', sans-serif", tier: "system", bangla: true },
-  { label: "Noto Serif Bengali", value: "'Noto Serif Bengali', serif", tier: "system", bangla: true },
 ];
 
 /** The Latin faces Word's own list opens with. */
