@@ -2,17 +2,24 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { CheckCircle2, ChevronLeft, ChevronRight, Clock, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import { apiFetch } from "@/lib/admin-api";
 import { ConfirmModal } from "@/components/admin/Modal";
 import { Toggle } from "@/components/admin/Toggle";
 import { useAdminT, type AdminKey } from "@/lib/admin-i18n";
+import { useAdminText } from "@/lib/admin-strings";
+import { useAdminAuth } from "@/components/admin/AdminAuthProvider";
+import { getSocket } from "@/lib/socket";
 
 interface AdminArticle {
   id: string;
   title: string;
   slug: string;
-  status: "DRAFT" | "SCHEDULED" | "PUBLISHED";
+  status: "DRAFT" | "SCHEDULED" | "PENDING" | "REJECTED" | "PUBLISHED";
+  reviewNote?: string | null;
+  /** Edits to this live story still waiting for the Super Admin. */
+  _count?: { revisions: number };
   isBreaking: boolean;
   authorName: string | null;
   featuredImage: string | null;
@@ -27,11 +34,23 @@ interface Category {
 }
 
 const PER_PAGE = 20;
+
+const STATUS_CLS: Record<AdminArticle["status"], string> = {
+  PUBLISHED: "bg-green-100 text-green-700",
+  PENDING: "bg-amber-100 text-amber-700",
+  REJECTED: "bg-brand-crimson/10 text-brand-crimson",
+  SCHEDULED: "bg-brand-navy/10 text-brand-navy",
+  DRAFT: "bg-surface text-foreground-muted",
+};
 const inputCls =
   "rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-brand-crimson focus:outline-none";
 
 export default function AdminArticlesPage() {
   const t = useAdminT();
+  const ax = useAdminText();
+  const { isSuper, can } = useAdminAuth();
+  const sent = useSearchParams().get("notice") === "sent";
+  const [mine, setMine] = useState(false);
   const [articles, setArticles] = useState<AdminArticle[]>([]);
   const [cats, setCats] = useState<Category[]>([]);
   const [total, setTotal] = useState(0);
@@ -51,6 +70,7 @@ export default function AdminArticlesPage() {
     if (q) params.set("q", q);
     if (category) params.set("category", category);
     if (status) params.set("status", status);
+    if (mine) params.set("mine", "1");
     const id = ++reqId.current;
     setLoading(true);
     apiFetch<{ articles: AdminArticle[]; total: number }>(
@@ -65,7 +85,16 @@ export default function AdminArticlesPage() {
       .finally(() => {
         if (id === reqId.current) setLoading(false);
       });
-  }, [page, q, category, status]);
+  }, [page, q, category, status, mine]);
+
+  // A story approved or rejected elsewhere changes its badge here at once.
+  useEffect(() => {
+    const socket = getSocket();
+    socket.on("content:changed", load);
+    return () => {
+      socket.off("content:changed", load);
+    };
+  }, [load]);
 
   useEffect(() => {
     apiFetch<{ categories: Category[] }>("/api/admin/categories")
@@ -81,7 +110,7 @@ export default function AdminArticlesPage() {
   // reset to page 1 when filters change
   useEffect(() => {
     setPage(1);
-  }, [q, category, status]);
+  }, [q, category, status, mine]);
 
   /**
    * Flips the switch on screen first, then tells the server.
@@ -125,6 +154,7 @@ export default function AdminArticlesPage() {
     <div>
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-heading">{t("articles")}</h1>
+        {can("articles", "edit") && (
         <Link
           href="/admin/articles/new"
           className="flex items-center gap-1.5 rounded-lg bg-brand-crimson px-4 py-2.5 font-ui text-sm font-semibold text-white hover:bg-brand-crimson-dark"
@@ -132,7 +162,15 @@ export default function AdminArticlesPage() {
           <Plus className="h-4 w-4" />
           {t("newArticle")}
         </Link>
+        )}
       </div>
+
+      {sent && (
+        <p className="mt-4 flex items-center gap-2 rounded-xl border border-green-200 bg-green-50 px-4 py-3 font-ui text-sm text-green-800">
+          <CheckCircle2 className="h-4 w-4 shrink-0" />
+          {ax("সুপার অ্যাডমিনের কাছে অনুমোদনের জন্য পাঠানো হয়েছে। সিদ্ধান্ত হলে নোটিফিকেশন পাবেন।")}
+        </p>
+      )}
 
       {/* Filters */}
       <div className="mt-5 flex flex-wrap items-center gap-2">
@@ -165,8 +203,19 @@ export default function AdminArticlesPage() {
           <option value="">{t("allStatus")}</option>
           <option value="PUBLISHED">{t("statusPUBLISHED")}</option>
           <option value="DRAFT">{t("statusDRAFT")}</option>
+          <option value="PENDING">{t("statusPENDING")}</option>
+          <option value="REJECTED">{t("statusREJECTED")}</option>
           <option value="SCHEDULED">{t("statusSCHEDULED")}</option>
         </select>
+        <label className="flex items-center gap-1.5 font-ui text-sm text-foreground">
+          <input
+            type="checkbox"
+            checked={mine}
+            onChange={(e) => setMine(e.target.checked)}
+            className="h-4 w-4 accent-[var(--brand-crimson)]"
+          />
+          {ax("শুধু আমার খবর")}
+        </label>
         <span className="ml-auto font-ui text-sm text-foreground-muted">
           {t("totalLabel")}: {total}
         </span>
@@ -219,24 +268,58 @@ export default function AdminArticlesPage() {
                     {a.category?.name ?? "—"}
                   </td>
                   <td className="px-4 py-3">
-                    <button
-                      onClick={() =>
-                        patchFlags(a.id, {
-                          status: a.status === "PUBLISHED" ? "DRAFT" : "PUBLISHED",
-                        })
-                      }
-                      className={`rounded-full px-2.5 py-1 font-ui text-xs font-semibold ${
-                        a.status === "PUBLISHED"
-                          ? "bg-green-100 text-green-700"
-                          : "bg-surface text-foreground-muted"
-                      }`}
-                    >
-                      {t(`status${a.status}` as AdminKey)}
-                    </button>
+                    {/* The Super Admin publishes and unpublishes with a click.
+                        Anyone else can only send a draft for approval; a live
+                        story is changed through the editor. */}
+                    {(() => {
+                      const cls = `inline-flex items-center gap-1 rounded-full px-2.5 py-1 font-ui text-xs font-semibold ${STATUS_CLS[a.status]}`;
+                      const label = t(`status${a.status}` as AdminKey);
+                      if (isSuper)
+                        return (
+                          <button
+                            onClick={() =>
+                              patchFlags(a.id, {
+                                status: a.status === "PUBLISHED" ? "DRAFT" : "PUBLISHED",
+                              })
+                            }
+                            title={a.status === "PUBLISHED" ? ax("খসড়ায় নিন") : ax("প্রকাশ করুন")}
+                            className={cls}
+                          >
+                            {label}
+                          </button>
+                        );
+                      if ((a.status === "DRAFT" || a.status === "REJECTED") && can("articles", "edit"))
+                        return (
+                          <button
+                            onClick={() => patchFlags(a.id, { status: "PENDING" })}
+                            title={ax("অনুমোদনের জন্য পাঠান")}
+                            className={cls}
+                          >
+                            {label}
+                          </button>
+                        );
+                      return (
+                        <span className={cls} title={a.reviewNote ?? undefined}>
+                          {label}
+                        </span>
+                      );
+                    })()}
+                    {!!a._count?.revisions && (
+                      <span className="ml-1.5 inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 font-ui text-[10px] font-bold text-amber-700">
+                        <Clock className="h-3 w-3" />
+                        {ax("সংশোধন অপেক্ষায়")}
+                      </span>
+                    )}
+                    {a.status === "REJECTED" && a.reviewNote && (
+                      <p className="mt-1 max-w-[220px] truncate font-ui text-[11px] text-brand-crimson" title={a.reviewNote}>
+                        “{a.reviewNote}”
+                      </p>
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     <Toggle
                       checked={a.isBreaking}
+                      disabled={!can("articles", "edit") || (!isSuper && a.status === "PUBLISHED")}
                       onChange={(next) => patchFlags(a.id, { isBreaking: next })}
                       title={t("breakingNews")}
                     />
@@ -250,13 +333,15 @@ export default function AdminArticlesPage() {
                       >
                         <Pencil className="h-4 w-4" />
                       </Link>
-                      <button
-                        onClick={() => setDeleteId(a.id)}
-                        className="rounded p-1.5 text-foreground-muted hover:bg-surface hover:text-brand-crimson"
-                        title={t("delete")}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
+                      {can("articles", "delete") && (
+                        <button
+                          onClick={() => setDeleteId(a.id)}
+                          className="rounded p-1.5 text-foreground-muted hover:bg-surface hover:text-brand-crimson"
+                          title={t("delete")}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>

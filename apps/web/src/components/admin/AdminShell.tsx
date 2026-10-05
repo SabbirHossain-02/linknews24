@@ -5,12 +5,15 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import {
+  Activity,
   Building2,
+  ClipboardCheck,
   Droplet,
   FileText,
   FolderTree,
   Image as ImageIcon,
   LayoutDashboard,
+  Lock,
   LayoutTemplate,
   LogOut,
   Mail,
@@ -26,7 +29,7 @@ import {
   Tv,
   Users,
 } from "lucide-react";
-import { useAdminAuth } from "./AdminAuthProvider";
+import { useAdminAuth, type Module } from "./AdminAuthProvider";
 import { apiFetch } from "@/lib/admin-api";
 import { getSocket } from "@/lib/socket";
 import { useLocale } from "@/components/providers/LocaleProvider";
@@ -38,30 +41,64 @@ interface NavItem {
   key: AdminKey;
   href: string | null;
   icon: typeof LayoutDashboard;
+  /**
+   * The permission module behind the page. Hidden from anyone the Super Admin
+   * has not given "view" on it — and the API refuses them too.
+   */
+  module?: Module;
   /** Hidden from anyone who is not a Super Admin — the API refuses them too. */
   superOnly?: boolean;
 }
 
 const NAV: NavItem[] = [
+  // Everyone has a dashboard: their own work, plus the site figures if allowed.
   { key: "dashboard", href: "/admin", icon: LayoutDashboard },
-  { key: "articles", href: "/admin/articles", icon: Newspaper },
-  { key: "categoriesTags", href: "/admin/categories", icon: FolderTree },
-  { key: "breaking", href: "/admin/breaking", icon: Radio },
-  { key: "homepageBuilder", href: "/admin/homepage", icon: LayoutTemplate },
-  { key: "liveTv", href: "/admin/live-tv", icon: Tv },
-  { key: "media", href: "/admin/media", icon: ImageIcon },
-  { key: "epaper", href: "/admin/epaper", icon: FileText },
-  { key: "lawyers", href: "/admin/lawyers", icon: Scale },
-  { key: "donors", href: "/admin/donors", icon: Droplet },
-  { key: "hospitals", href: "/admin/hospitals", icon: Building2 },
-  { key: "newsletter", href: "/admin/newsletter", icon: Mail },
-  { key: "ads", href: "/admin/ads", icon: Megaphone },
-  { key: "comments", href: "/admin/comments", icon: MessageSquare },
-  { key: "seo", href: "/admin/seo", icon: Search },
+  { key: "approvalsNav", href: "/admin/approvals", icon: ClipboardCheck, superOnly: true },
+  { key: "teamNav", href: "/admin/team", icon: Activity, superOnly: true },
+  { key: "articles", href: "/admin/articles", icon: Newspaper, module: "articles" },
+  { key: "categoriesTags", href: "/admin/categories", icon: FolderTree, module: "categories" },
+  { key: "breaking", href: "/admin/breaking", icon: Radio, module: "breaking" },
+  { key: "homepageBuilder", href: "/admin/homepage", icon: LayoutTemplate, module: "homepage" },
+  { key: "liveTv", href: "/admin/live-tv", icon: Tv, module: "liveTv" },
+  { key: "media", href: "/admin/media", icon: ImageIcon, module: "media" },
+  { key: "epaper", href: "/admin/epaper", icon: FileText, module: "epaper" },
+  { key: "lawyers", href: "/admin/lawyers", icon: Scale, module: "lawyers" },
+  { key: "donors", href: "/admin/donors", icon: Droplet, module: "donors" },
+  { key: "hospitals", href: "/admin/hospitals", icon: Building2, module: "hospitals" },
+  { key: "newsletter", href: "/admin/newsletter", icon: Mail, module: "newsletter" },
+  { key: "ads", href: "/admin/ads", icon: Megaphone, module: "ads" },
+  { key: "comments", href: "/admin/comments", icon: MessageSquare, module: "comments" },
+  { key: "seo", href: "/admin/seo", icon: Search, module: "seo" },
   { key: "settings", href: "/admin/settings", icon: Settings },
   { key: "usersRoles", href: "/admin/users", icon: Users, superOnly: true },
   { key: "rolesNav", href: "/admin/roles", icon: ShieldCheck, superOnly: true },
 ];
+
+/** The nav entry a path belongs to — /admin/articles/123/edit is Articles. */
+function navFor(pathname: string): NavItem | undefined {
+  return NAV.filter(
+    (n) =>
+      n.href &&
+      (pathname === n.href || (n.href !== "/admin" && pathname.startsWith(n.href + "/"))),
+  ).sort((a, b) => (b.href?.length ?? 0) - (a.href?.length ?? 0))[0];
+}
+
+/**
+ * Tells the server which admin page this tab is on, so the Super Admin's team
+ * page can show who is working where. Sent again whenever the page changes and
+ * whenever the server says the socket is ready (after every reconnect).
+ */
+function usePresence(pathname: string) {
+  useEffect(() => {
+    const socket = getSocket();
+    const send = () => socket.emit("presence:page", { path: pathname });
+    send();
+    socket.on("staff:ready", send);
+    return () => {
+      socket.off("staff:ready", send);
+    };
+  }, [pathname]);
+}
 
 /**
  * Reader submissions waiting on each section, keyed by the nav entry they
@@ -81,6 +118,7 @@ function usePendingCounts(): Partial<Record<AdminKey, number>> {
         donors: number;
         hospitals: number;
         comments: number;
+        approvals: number;
       }>("/api/admin/pending-counts")
         .then((d) =>
           setCounts({
@@ -88,6 +126,7 @@ function usePendingCounts(): Partial<Record<AdminKey, number>> {
             donors: d.donors,
             hospitals: d.hospitals,
             comments: d.comments,
+            approvalsNav: d.approvals,
           }),
         )
         .catch(() => {});
@@ -95,9 +134,11 @@ function usePendingCounts(): Partial<Record<AdminKey, number>> {
     load();
     const socket = getSocket();
     socket.on("content:changed", load);
+    socket.on("approvals:changed", load);
     const timer = setInterval(load, 60_000);
     return () => {
       socket.off("content:changed", load);
+      socket.off("approvals:changed", load);
       clearInterval(timer);
     };
   }, []);
@@ -144,13 +185,19 @@ function FontScale() {
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const ax = useAdminText();
-  const { user, logout } = useAdminAuth();
+  const { user, logout, isSuper, can } = useAdminAuth();
   const { locale, setLocale } = useLocale();
   const t = useAdminT();
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const pending = usePendingCounts();
+  usePresence(pathname);
+
+  const allowed = (n: NavItem) =>
+    n.superOnly ? isSuper : n.module ? can(n.module, "view") : true;
+  const current = navFor(pathname);
+  const blocked = current ? !allowed(current) : false;
 
   // Name the browser tab after the section being viewed, in whichever language
   // the panel is set to. A row of admin tabs is otherwise indistinguishable.
@@ -190,9 +237,9 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           </span>
         </div>
         <nav className="flex-1 overflow-y-auto px-3 py-4">
-          {NAV.filter((n) => !n.superOnly || user?.role === "SUPER_ADMIN").map(
+          {NAV.filter(allowed).map(
             ({ key, href, icon: Icon }) => {
-            const active = href && pathname === href;
+            const active = href && current?.href === href;
             const waiting = pending[key] ?? 0;
             const cls =
               "flex items-center gap-3 rounded-lg px-3 py-2.5 font-ui text-sm transition-colors";
@@ -282,7 +329,31 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           </div>
         </header>
 
-        <main className="p-6">{children}</main>
+        <main className="p-6">
+          {blocked ? (
+            // The server refuses these requests anyway; this says so plainly
+            // instead of showing a page of failed loads.
+            <div className="mx-auto mt-16 max-w-md rounded-2xl border border-border bg-background p-8 text-center">
+              <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-brand-crimson/10 text-brand-crimson">
+                <Lock className="h-5 w-5" />
+              </span>
+              <h1 className="mt-4 text-lg font-bold text-heading">
+                {ax("এই পাতা দেখার অনুমতি নেই")}
+              </h1>
+              <p className="mt-2 font-ui text-sm leading-relaxed text-foreground-muted">
+                {ax("সুপার অ্যাডমিন আপনাকে এই অংশের অনুমতি দেননি। দরকার হলে তাঁর সঙ্গে যোগাযোগ করুন।")}
+              </p>
+              <Link
+                href="/admin"
+                className="mt-5 inline-block rounded-lg bg-brand-crimson px-4 py-2 font-ui text-sm font-semibold text-white hover:bg-brand-crimson-dark"
+              >
+                {ax("ড্যাশবোর্ডে ফিরুন")}
+              </Link>
+            </div>
+          ) : (
+            children
+          )}
+        </main>
       </div>
     </div>
   );

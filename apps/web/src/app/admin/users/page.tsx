@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Plus, Trash2 } from "lucide-react";
+import { KeyRound, Plus, Trash2 } from "lucide-react";
 import { apiFetch } from "@/lib/admin-api";
 import { ConfirmModal } from "@/components/admin/Modal";
 import { Toggle } from "@/components/admin/Toggle";
@@ -10,6 +10,8 @@ import { useAdminT, type AdminKey } from "@/lib/admin-i18n";
 import { useAdminAuth } from "@/components/admin/AdminAuthProvider";
 import { LoginActivity } from "@/components/admin/LoginActivity";
 import { useAdminText } from "@/lib/admin-strings";
+import { UserPermissionsModal } from "@/components/admin/UserPermissionsModal";
+import { getSocket } from "@/lib/socket";
 
 interface User {
   id: string;
@@ -17,6 +19,22 @@ interface User {
   email: string;
   role: string;
   active: boolean;
+  avatar?: string | null;
+  online?: boolean;
+  lastSeenAt?: string | null;
+  /** How many modules this person has their own exception for. */
+  customPermissions?: number;
+}
+
+/** "5 min ago" style, for the last-seen line. */
+function seen(iso: string | null | undefined, ax: (s: string) => string) {
+  if (!iso) return ax("কখনো আসেননি");
+  const min = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
+  if (min < 1) return ax("এইমাত্র");
+  if (min < 60) return `${min} ${ax("মিনিট আগে")}`;
+  const hr = Math.floor(min / 60);
+  if (hr < 24) return `${hr} ${ax("ঘণ্টা আগে")}`;
+  return `${Math.floor(hr / 24)} ${ax("দিন আগে")}`;
 }
 
 const ROLES = ["SUPER_ADMIN", "ADMIN", "EDITOR", "REPORTER", "MODERATOR"];
@@ -33,6 +51,7 @@ export default function UsersAdminPage() {
   const [form, setForm] = useState({ name: "", email: "", password: "", role: "REPORTER" });
   const [error, setError] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [permsFor, setPermsFor] = useState<string | null>(null);
 
   const load = () =>
     apiFetch<{ users: User[] }>("/api/admin/users")
@@ -42,12 +61,18 @@ export default function UsersAdminPage() {
 
   useEffect(() => {
     load();
+    // Online dots follow people arriving and leaving.
+    const socket = getSocket();
+    socket.on("presence:update", load);
+    return () => {
+      socket.off("presence:update", load);
+    };
   }, []);
 
   const add = async () => {
     setError(null);
-    if (!form.name || !form.email || form.password.length < 6) {
-      setError(ax("নাম, ইমেইল ও কমপক্ষে ৬ অক্ষরের পাসওয়ার্ড দিন"));
+    if (!form.name || !form.email || form.password.length < 8) {
+      setError(ax("নাম, সঠিক ইমেইল ও কমপক্ষে ৮ অক্ষরের পাসওয়ার্ড দিন"));
       return;
     }
     try {
@@ -68,8 +93,9 @@ export default function UsersAdminPage() {
         method: "PUT",
         body: JSON.stringify(patch),
       });
-    } catch {
+    } catch (e) {
       setUsers(before);
+      setError(e instanceof Error ? e.message : "Error");
     }
   };
 
@@ -153,6 +179,7 @@ export default function UsersAdminPage() {
               <th className="px-4 py-3">{t("colName")}</th>
               <th className="px-4 py-3">{t("colEmail")}</th>
               <th className="px-4 py-3">{t("colRole")}</th>
+              <th className="px-4 py-3">{ax("অনুমতি")}</th>
               <th className="px-4 py-3">{t("active")}</th>
               <th className="px-4 py-3" />
             </tr>
@@ -161,7 +188,35 @@ export default function UsersAdminPage() {
             {loading ? null : (
               users.map((u) => (
                 <tr key={u.id}>
-                  <td className="px-4 py-3 font-medium text-foreground">{u.name}</td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2.5">
+                      <span className="relative shrink-0">
+                        {u.avatar ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={u.avatar} alt="" className="h-8 w-8 rounded-full object-cover" />
+                        ) : (
+                          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-navy font-ui text-xs font-bold text-white">
+                            {u.name.charAt(0).toUpperCase()}
+                          </span>
+                        )}
+                        <span
+                          className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-background ${
+                            u.online ? "bg-green-500" : "bg-foreground-muted/30"
+                          }`}
+                        />
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block font-medium text-foreground">{u.name}</span>
+                        <span className="block font-ui text-[11px] text-foreground-muted">
+                          {u.online ? (
+                            <span className="font-semibold text-green-600">{ax("অনলাইনে")}</span>
+                          ) : (
+                            seen(u.lastSeenAt, ax)
+                          )}
+                        </span>
+                      </span>
+                    </div>
+                  </td>
                   <td className="px-4 py-3 text-foreground-muted">{u.email}</td>
                   <td className="px-4 py-3">
                     <select
@@ -175,6 +230,25 @@ export default function UsersAdminPage() {
                         </option>
                       ))}
                     </select>
+                  </td>
+                  <td className="px-4 py-3">
+                    {u.role === "SUPER_ADMIN" ? (
+                      <span className="font-ui text-xs text-foreground-muted">{ax("সব অনুমতি")}</span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setPermsFor(u.id)}
+                        className="flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5 font-ui text-xs font-semibold text-foreground hover:border-brand-crimson hover:text-brand-crimson"
+                      >
+                        <KeyRound className="h-3.5 w-3.5" />
+                        {ax("অনুমতি")}
+                        {!!u.customPermissions && (
+                          <span className="rounded-full bg-amber-100 px-1.5 font-ui text-[10px] font-bold text-amber-700">
+                            {u.customPermissions} {ax("কাস্টম")}
+                          </span>
+                        )}
+                      </button>
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     <Toggle
@@ -199,6 +273,14 @@ export default function UsersAdminPage() {
       </div>
 
       <LoginActivity />
+
+      {permsFor && (
+        <UserPermissionsModal
+          userId={permsFor}
+          onClose={() => setPermsFor(null)}
+          onChanged={load}
+        />
+      )}
 
       {deleteId && (
         <ConfirmModal

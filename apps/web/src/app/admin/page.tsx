@@ -22,6 +22,7 @@ import { useAdminT } from "@/lib/admin-i18n";
 import { ColumnChart } from "@/components/admin/charts/ColumnChart";
 import { PieChart } from "@/components/admin/charts/PieChart";
 import { useAdminText } from "@/lib/admin-strings";
+import { MyWork, NewsroomSummary } from "@/components/admin/DashboardPanels";
 
 interface Analytics {
   totals: {
@@ -67,7 +68,28 @@ function flag(cc: string | null) {
   );
 }
 
+/**
+ * Everyone lands here. The Super Admin sees the approval queue and who is
+ * online; everyone else sees their own work. The site figures below are shown
+ * to whoever has "view" on the dashboard module.
+ */
 export default function AdminDashboard() {
+  const { isSuper, can, user } = useAdminAuth();
+  const t = useAdminT();
+  const top = isSuper ? <NewsroomSummary /> : <MyWork />;
+  if (can("dashboard", "view")) return <SiteDashboard top={top} />;
+  return (
+    <div>
+      <h1 className="text-2xl font-bold text-heading">{t("dashboard")}</h1>
+      <p className="mt-1 font-ui text-sm text-foreground-muted">
+        {t("dashWelcome", { name: user?.name ?? "" })}
+      </p>
+      {top}
+    </div>
+  );
+}
+
+function SiteDashboard({ top }: { top: React.ReactNode }) {
   const ax = useAdminText();
   const { user } = useAdminAuth();
   const t = useAdminT();
@@ -227,6 +249,8 @@ export default function AdminDashboard() {
           {t("dashLive")}
         </span>
       </div>
+
+      {top}
 
       {loadError && !data && (
         <p className="mt-4 rounded-lg bg-brand-crimson/10 px-3.5 py-2 font-ui text-sm text-brand-crimson">

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Eye, Upload } from "lucide-react";
+import { ArrowLeft, Clock, Eye, Info, Send, Upload, XCircle } from "lucide-react";
 import { apiFetch, uploadFile } from "@/lib/admin-api";
 import { RichTextEditor } from "./RichTextEditor";
 import { LanguageBar, type Lang } from "./LanguageBar";
@@ -11,6 +11,7 @@ import { Modal } from "./Modal";
 import { useAdminAuth } from "./AdminAuthProvider";
 import { toneGradientClass } from "@/lib/tone";
 import { useAdminT } from "@/lib/admin-i18n";
+import { useAdminText } from "@/lib/admin-strings";
 
 interface Category {
   id: string;
@@ -66,10 +67,21 @@ const TONES = ["navy", "crimson", "slate", "amber"];
 const inputCls =
   "w-full rounded-lg border border-border bg-background px-3.5 py-2.5 text-sm text-foreground placeholder:text-foreground-muted focus:border-brand-crimson focus:outline-none focus:ring-2 focus:ring-brand-crimson/15";
 
+/** Where a story stands with the Super Admin, for the banner over the form. */
+interface ReviewState {
+  status: "DRAFT" | "SCHEDULED" | "PENDING" | "REJECTED" | "PUBLISHED";
+  reviewNote: string | null;
+  /** An edit to this live story that is still waiting, and whose it is. */
+  revision: { mine: boolean; author: string } | null;
+}
+
 export function ArticleForm({ articleId }: { articleId?: string }) {
   const router = useRouter();
   const t = useAdminT();
-  const { user } = useAdminAuth();
+  const ax = useAdminText();
+  const { user, isSuper } = useAdminAuth();
+  const needsApproval = !isSuper;
+  const [review, setReview] = useState<ReviewState | null>(null);
   const [form, setForm] = useState<FormState>(EMPTY);
   const [categories, setCategories] = useState<Category[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -118,10 +130,34 @@ export function ArticleForm({ articleId }: { articleId?: string }) {
   useEffect(() => {
     if (!articleId) return;
     apiFetch<{
-      article: Omit<FormState, "tags"> & { id: string; tags?: { name: string }[] };
+      article: Omit<FormState, "tags"> & {
+        id: string;
+        tags?: { name: string }[];
+        status: ReviewState["status"];
+        reviewNote: string | null;
+      };
+      pendingRevision: {
+        data: Partial<Omit<FormState, "tags">> & { tags?: string[] };
+        author: { id: string; name: string };
+      } | null;
     }>(`/api/admin/articles/${articleId}`)
       .then((d) => {
-        const a = d.article;
+        const rev = d.pendingRevision;
+        const mine = !!rev && rev.author.id === user?.id;
+        setReview({
+          status: d.article.status,
+          reviewNote: d.article.reviewNote,
+          revision: rev ? { mine, author: rev.author.name } : null,
+        });
+        // Someone reopening their own edit that is still waiting picks up
+        // where they left off, not from the live version.
+        const a = mine && !isSuper
+          ? {
+              ...d.article,
+              ...rev!.data,
+              tags: (rev!.data.tags ?? []).map((name) => ({ name })),
+            }
+          : d.article;
         setForm({
           title: a.title ?? "",
           titleEn: a.titleEn ?? "",
@@ -144,9 +180,11 @@ export function ArticleForm({ articleId }: { articleId?: string }) {
       })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
-  }, [articleId]);
+  }, [articleId, user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const submit = async (status: "DRAFT" | "PUBLISHED") => {
+  const live = review?.status === "PUBLISHED";
+
+  const submit = async (status: "DRAFT" | "PENDING" | "PUBLISHED") => {
     setError(null);
     if (!form.title.trim()) return setError(t("errTitle"));
     if (!form.categoryId) return setError(t("errCategory"));
@@ -160,18 +198,11 @@ export function ArticleForm({ articleId }: { articleId?: string }) {
           .map((s) => s.trim())
           .filter(Boolean),
       };
-      if (articleId) {
-        await apiFetch(`/api/admin/articles/${articleId}`, {
-          method: "PUT",
-          body: JSON.stringify(payload),
-        });
-      } else {
-        await apiFetch("/api/admin/articles", {
-          method: "POST",
-          body: JSON.stringify(payload),
-        });
-      }
-      router.push("/admin/articles");
+      const res = await apiFetch<{ pendingReview?: boolean }>(
+        articleId ? `/api/admin/articles/${articleId}` : "/api/admin/articles",
+        { method: articleId ? "PUT" : "POST", body: JSON.stringify(payload) },
+      );
+      router.push(res.pendingReview ? "/admin/articles?notice=sent" : "/admin/articles");
     } catch (e) {
       setError(e instanceof Error ? e.message : t("errSave"));
     } finally {
@@ -200,6 +231,8 @@ export function ArticleForm({ articleId }: { articleId?: string }) {
           {error}
         </p>
       )}
+
+      <ReviewBanner review={review} needsApproval={needsApproval} isNew={!articleId} />
 
       <div className="mt-5 grid gap-6 lg:grid-cols-[1fr_300px]">
         <div className="flex flex-col gap-4">
@@ -275,22 +308,46 @@ export function ArticleForm({ articleId }: { articleId?: string }) {
 
         <div className="flex flex-col gap-4">
           <div className="rounded-xl border border-border bg-background p-4">
-            <div className="flex gap-2">
-              <button
-                onClick={() => submit("PUBLISHED")}
-                disabled={busy}
-                className="flex-1 rounded-lg bg-brand-crimson py-2.5 font-ui text-sm font-semibold text-white hover:bg-brand-crimson-dark disabled:opacity-60"
-              >
-                {t("publish")}
-              </button>
-              <button
-                onClick={() => submit("DRAFT")}
-                disabled={busy}
-                className="rounded-lg border border-border px-3 py-2.5 font-ui text-sm text-foreground hover:bg-surface disabled:opacity-60"
-              >
-                {t("draft")}
-              </button>
-            </div>
+            {needsApproval ? (
+              // Everyone but the Super Admin sends their story for approval;
+              // an edit to a live story always goes that way.
+              <div className="flex gap-2">
+                <button
+                  onClick={() => submit("PENDING")}
+                  disabled={busy}
+                  className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-brand-crimson py-2.5 font-ui text-sm font-semibold text-white hover:bg-brand-crimson-dark disabled:opacity-60"
+                >
+                  <Send className="h-4 w-4" />
+                  {live ? ax("পরিবর্তন অনুমোদনে পাঠান") : ax("অনুমোদনের জন্য পাঠান")}
+                </button>
+                {!live && (
+                  <button
+                    onClick={() => submit("DRAFT")}
+                    disabled={busy}
+                    className="rounded-lg border border-border px-3 py-2.5 font-ui text-sm text-foreground hover:bg-surface disabled:opacity-60"
+                  >
+                    {t("draft")}
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="flex gap-2">
+                <button
+                  onClick={() => submit("PUBLISHED")}
+                  disabled={busy}
+                  className="flex-1 rounded-lg bg-brand-crimson py-2.5 font-ui text-sm font-semibold text-white hover:bg-brand-crimson-dark disabled:opacity-60"
+                >
+                  {t("publish")}
+                </button>
+                <button
+                  onClick={() => submit("DRAFT")}
+                  disabled={busy}
+                  className="rounded-lg border border-border px-3 py-2.5 font-ui text-sm text-foreground hover:bg-surface disabled:opacity-60"
+                >
+                  {t("draft")}
+                </button>
+              </div>
+            )}
             <button
               onClick={() => setShowPreview(true)}
               className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg border border-border py-2.5 font-ui text-sm font-medium text-foreground hover:bg-surface"
@@ -517,4 +574,93 @@ export function ArticleForm({ articleId }: { articleId?: string }) {
       )}
     </div>
   );
+}
+
+/** Tells the writer where the story stands with the Super Admin, and why. */
+function ReviewBanner({
+  review,
+  needsApproval,
+  isNew,
+}: {
+  review: ReviewState | null;
+  needsApproval: boolean;
+  isNew: boolean;
+}) {
+  const ax = useAdminText();
+  const box = "mt-4 flex items-start gap-2.5 rounded-xl border px-4 py-3 font-ui text-sm";
+
+  if (isNew)
+    return needsApproval ? (
+      <p className={`${box} border-border bg-surface text-foreground-muted`}>
+        <Info className="mt-0.5 h-4 w-4 shrink-0 text-brand-navy" />
+        {ax("আপনার খবর সুপার অ্যাডমিনের অনুমোদনের পর সাইটে প্রকাশিত হবে।")}
+      </p>
+    ) : null;
+  if (!review) return null;
+
+  if (review.revision)
+    return (
+      <p className={`${box} border-amber-200 bg-amber-50 text-amber-900`}>
+        <Clock className="mt-0.5 h-4 w-4 shrink-0" />
+        <span>
+          {!needsApproval ? (
+            <>
+              {ax("এই খবরের একটি সংশোধন অনুমোদনের অপেক্ষায় আছে")} ({review.revision.author}).{" "}
+              <Link href="/admin/approvals" className="font-semibold underline">
+                {ax("অনুমোদন পাতায় দেখুন")}
+              </Link>
+            </>
+          ) : review.revision.mine ? (
+            ax("আপনার পাঠানো সংশোধন অনুমোদনের অপেক্ষায় — নিচে সেটাই দেখানো হচ্ছে। আবার পাঠালে আগের প্রস্তাবের জায়গা নেবে।")
+          ) : (
+            `${ax("অন্য একজনের সংশোধন অপেক্ষায় আছে")} (${review.revision.author}). ${ax("আপনি পাঠালে সেটির জায়গা নেবে।")}`
+          )}
+        </span>
+      </p>
+    );
+
+  if (review.status === "PENDING")
+    return (
+      <p className={`${box} border-amber-200 bg-amber-50 text-amber-900`}>
+        <Clock className="mt-0.5 h-4 w-4 shrink-0" />
+        {ax("খবরটি সুপার অ্যাডমিনের অনুমোদনের অপেক্ষায় আছে।")}
+      </p>
+    );
+
+  if (review.status === "REJECTED")
+    return (
+      <div className={`${box} border-brand-crimson/30 bg-brand-crimson/5 text-foreground`}>
+        <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-brand-crimson" />
+        <div>
+          <p className="font-semibold text-brand-crimson">{ax("খবরটি বাতিল করা হয়েছে")}</p>
+          {review.reviewNote && <p className="mt-0.5">“{review.reviewNote}”</p>}
+          {needsApproval && (
+            <p className="mt-1 text-xs text-foreground-muted">
+              {ax("প্রয়োজনীয় সংশোধন করে আবার অনুমোদনের জন্য পাঠাতে পারেন।")}
+            </p>
+          )}
+        </div>
+      </div>
+    );
+
+  if (review.status === "DRAFT" && review.reviewNote)
+    return (
+      <div className={`${box} border-border bg-surface text-foreground`}>
+        <Info className="mt-0.5 h-4 w-4 shrink-0 text-brand-navy" />
+        <div>
+          <p className="font-semibold">{ax("সুপার অ্যাডমিন খসড়ায় ফেরত পাঠিয়েছেন")}</p>
+          <p className="mt-0.5">“{review.reviewNote}”</p>
+        </div>
+      </div>
+    );
+
+  if (review.status === "PUBLISHED" && needsApproval)
+    return (
+      <p className={`${box} border-border bg-surface text-foreground-muted`}>
+        <Info className="mt-0.5 h-4 w-4 shrink-0 text-brand-navy" />
+        {ax("এটি প্রকাশিত খবর। আপনার পরিবর্তন সুপার অ্যাডমিনের অনুমোদনের পর সাইটে যাবে; ততক্ষণ পাঠকেরা আগের সংস্করণ দেখবেন।")}
+      </p>
+    );
+
+  return null;
 }

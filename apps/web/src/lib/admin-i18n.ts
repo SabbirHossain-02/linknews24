@@ -50,6 +50,8 @@ export const adminDict = {
   statusDRAFT: { bn: "খসড়া", en: "Draft" },
   statusSCHEDULED: { bn: "শিডিউল", en: "Scheduled" },
   statusPUBLISHED: { bn: "প্রকাশিত", en: "Published" },
+  statusPENDING: { bn: "অনুমোদনের অপেক্ষায়", en: "Awaiting approval" },
+  statusREJECTED: { bn: "বাতিল", en: "Rejected" },
   loading: { bn: "লোড হচ্ছে…", en: "Loading…" },
   noArticles: {
     bn: "কোনো আর্টিকেল নেই। নতুন একটি তৈরি করুন।",
@@ -348,6 +350,8 @@ export const adminDict = {
 
   // --- roles & permissions ---
   rolesNav: { bn: "রোল ও অনুমতি", en: "Roles & permissions" },
+  approvalsNav: { bn: "অনুমোদন", en: "Approvals" },
+  teamNav: { bn: "টিম মনিটর", en: "Team monitor" },
   rolesTitle: { bn: "রোল ও অনুমতি", en: "Roles & permissions" },
   rolesIntro: {
     bn: "কোন রোল কী কী করতে পারবে। এই তালিকাটি সার্ভারের আসল নিয়ম থেকেই তৈরি — যা এখানে ✓ নেই, সেটি সার্ভারও করতে দেবে না।",
@@ -459,6 +463,8 @@ export const adminDict = {
   notif_hospital: { bn: "হাসপাতাল সেবায় নতুন আবেদন", en: "New hospital submitted" },
   notif_comment: { bn: "নতুন কমেন্ট অপেক্ষায়", en: "Comment awaiting moderation" },
   notif_ad: { bn: "নতুন বিজ্ঞাপনের আবেদন", en: "Ad booking awaiting approval" },
+  notif_article: { bn: "নতুন খবর অনুমোদনের অপেক্ষায়", en: "New story awaiting approval" },
+  notif_revision: { bn: "খবরের সংশোধন অনুমোদনের অপেক্ষায়", en: "Story edit awaiting approval" },
   notifJustNow: { bn: "এইমাত্র", en: "just now" },
   notifMinutes: { bn: "{n} মিনিট আগে", en: "{n} min ago" },
   notifHours: { bn: "{n} ঘণ্টা আগে", en: "{n} hr ago" },

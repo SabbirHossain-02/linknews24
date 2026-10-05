@@ -313,6 +313,11 @@ function AccountCard() {
 
 export default function SettingsAdminPage() {
   const t = useAdminT();
+  // Everyone keeps their own profile here; the site-wide block below is the
+  // "settings" permission module.
+  const { can } = useAdminAuth();
+  const siteSettings = can("settings", "view");
+  const canSave = can("settings", "edit");
   const [s, setS] = useState<Settings>({});
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -327,11 +332,15 @@ export default function SettingsAdminPage() {
     setS((p) => ({ ...p, footer: { ...p.footer, [b]: on } }));
 
   useEffect(() => {
+    if (!siteSettings) {
+      setLoading(false);
+      return;
+    }
     apiFetch<{ settings: Settings }>("/api/admin/settings")
       .then((d) => setS(d.settings ?? {}))
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, []);
+  }, [siteSettings]);
 
   const save = async () => {
     setBusy(true);
@@ -353,6 +362,7 @@ export default function SettingsAdminPage() {
       <ProfileCard />
       <AccountCard />
 
+      {siteSettings && (
       <div className="mt-5 flex flex-col gap-4 rounded-xl border border-border bg-background p-5">
         <Field label={t("tagline")} value={s.tagline ?? ""} onChange={(v) => set("tagline", v)} />
 
@@ -399,7 +409,7 @@ export default function SettingsAdminPage() {
         <div className="mt-2 flex items-center gap-3">
           <button
             onClick={save}
-            disabled={busy}
+            disabled={busy || !canSave}
             className="rounded-lg bg-brand-crimson px-5 py-2.5 font-ui text-sm font-semibold text-white hover:bg-brand-crimson-dark disabled:opacity-60"
           >
             {busy ? t("saving") : t("save")}
@@ -407,6 +417,7 @@ export default function SettingsAdminPage() {
           {saved && <span className="font-ui text-sm text-green-600">{t("savedOk")}</span>}
         </div>
       </div>
+      )}
     </div>
   );
 }
