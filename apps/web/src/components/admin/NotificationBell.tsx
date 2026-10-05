@@ -130,11 +130,13 @@ export function NotificationBell() {
     };
     socket.on("content:changed", load);
     socket.on("approvals:changed", load);
+    socket.on("ads:booked", load);
     socket.on("notification:new", onPersonal);
     const timer = setInterval(load, 60_000);
     return () => {
       socket.off("content:changed", load);
       socket.off("approvals:changed", load);
+      socket.off("ads:booked", load);
       socket.off("notification:new", onPersonal);
       clearInterval(timer);
     };

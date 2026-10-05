@@ -1,4 +1,19 @@
-export type Placement = "HEADER" | "SIDEBAR" | "IN_ARTICLE" | "FOOTER" | "POPUP";
+export type Placement =
+  | "HEADER"
+  | "LEFT"
+  | "SIDEBAR"
+  | "IN_ARTICLE"
+  | "FOOTER"
+  | "POPUP";
+
+export const PLACEMENTS: Placement[] = [
+  "HEADER",
+  "LEFT",
+  "SIDEBAR",
+  "IN_ARTICLE",
+  "FOOTER",
+  "POPUP",
+];
 
 export interface AdSlotDef {
   placement: Placement;
@@ -11,6 +26,7 @@ export const AD_SLOTS: AdSlotDef[] = [
   { placement: "HEADER", pricePerDay: 2000, size: "970×90 / 728×90" },
   { placement: "POPUP", pricePerDay: 1500, size: "600×500" },
   { placement: "IN_ARTICLE", pricePerDay: 800, size: "728×90 / 300×250" },
+  { placement: "LEFT", pricePerDay: 700, size: "160×600" },
   { placement: "SIDEBAR", pricePerDay: 600, size: "300×250 / 300×600" },
   { placement: "FOOTER", pricePerDay: 300, size: "728×90" },
 ];

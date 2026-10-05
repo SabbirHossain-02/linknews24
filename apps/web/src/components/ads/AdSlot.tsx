@@ -1,11 +1,20 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import { API_BASE } from "@/lib/admin-api";
 import { getSocket } from "@/lib/socket";
 import { useLocale } from "@/components/providers/LocaleProvider";
 
-interface Ad {
+export type AdPlacement =
+  | "HEADER"
+  | "LEFT"
+  | "SIDEBAR"
+  | "IN_ARTICLE"
+  | "FOOTER"
+  | "POPUP";
+
+export interface Ad {
   id: string;
   name: string;
   imageUrl: string;
@@ -34,28 +43,34 @@ export function AdSlot({
   placement,
   className = "",
   imgClassName = "w-full object-cover",
+  preset,
 }: {
-  placement: "HEADER" | "SIDEBAR" | "IN_ARTICLE" | "FOOTER" | "POPUP";
+  placement: AdPlacement;
   className?: string;
   imgClassName?: string;
+  /** An ad already chosen by the caller (the popup) — no fetch of its own. */
+  preset?: Ad;
 }) {
   const { t } = useLocale();
-  const [ad, setAd] = useState<Ad | null>(null);
+  const pathname = usePathname() ?? "/";
+  const [fetched, setFetched] = useState<Ad | null>(null);
+  const ad = preset ?? fetched;
   const holder = useRef<HTMLAnchorElement>(null);
   const counted = useRef(false);
   const clicking = useRef(false);
 
   // Which ad is live here — re-read when the admin changes anything, so a new
   // booking appears without anyone reloading the page.
+  // The page is sent along: an ad booked for this category or this story
+  // shows here instead of a site-wide one.
   useEffect(() => {
+    if (preset) return;
     let cancelled = false;
     const load = () =>
-      fetch(`${API_BASE}/api/ads?placement=${placement}`)
-        .then((r) => r.json())
-        .then((d) => {
+      fetchAds(placement, pathname)
+        .then((ads) => {
           if (cancelled) return;
-          const ads: Ad[] = d.ads ?? [];
-          setAd(ads.length ? ads[Math.floor(Math.random() * ads.length)] : null);
+          setFetched(ads.length ? ads[Math.floor(Math.random() * ads.length)] : null);
         })
         .catch(() => {});
 
@@ -66,7 +81,7 @@ export function AdSlot({
       cancelled = true;
       socket.off("content:changed", load);
     };
-  }, [placement]);
+  }, [placement, pathname, preset]);
 
   const report = useCallback((id: string, kind: "impression" | "click") => {
     fetch(`${API_BASE}/api/ads/${id}/${kind}`, {
@@ -167,4 +182,13 @@ export function AdSlot({
       </span>
     </a>
   );
+}
+
+/** The live ads for one slot on one page, most specific first. */
+export async function fetchAds(placement: AdPlacement, path: string): Promise<Ad[]> {
+  const r = await fetch(
+    `${API_BASE}/api/ads?placement=${placement}&path=${encodeURIComponent(path)}`,
+  );
+  const d = await r.json();
+  return d.ads ?? [];
 }

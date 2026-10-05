@@ -1,3 +1,4 @@
+import type { Prisma } from "@prisma/client";
 import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../prisma";
@@ -5,7 +6,8 @@ import { breakingEnabled } from "../lib/siteSettings";
 import { BLOOD_GROUPS } from "../lib/blood";
 import { emitChange, emitAnalytics } from "../realtime";
 import { clientIp, geoLookup, parseUA } from "../lib/analytics";
-import { AD_SLOTS } from "../lib/adSlots";
+import { AD_SLOTS, PLACEMENTS, type Placement } from "../lib/adSlots";
+import { pageContext, resolveTargetUrl, targetTiers } from "../lib/adTargeting";
 import { recordAdEvent } from "../lib/adTracking";
 import { readSeo } from "../lib/seo";
 import { readViewerAccount } from "../middleware/account";
@@ -348,22 +350,47 @@ publicRouter.get("/ad-slots", (_req, res) => {
 
 // --- Ads: serve active ads by placement + track impression/click ---
 publicRouter.get("/ads", async (req, res) => {
-  const { placement } = req.query as Record<string, string>;
+  const { placement, path } = req.query as Record<string, string>;
+  if (placement && !PLACEMENTS.includes(placement as Placement))
+    return res.json({ ads: [] });
   const now = new Date();
-  const ads = await prisma.ad.findMany({
-    where: {
-      active: true,
-      status: "ACTIVE",
-      placement: placement ? (placement as never) : undefined,
-      AND: [
-        { OR: [{ startsAt: null }, { startsAt: { lte: now } }] },
-        { OR: [{ endsAt: null }, { endsAt: { gte: now } }] },
-      ],
-    },
-    select: { id: true, name: true, imageUrl: true, linkUrl: true, placement: true },
-    orderBy: { createdAt: "desc" },
-  });
-  res.json({ ads });
+  const live: Prisma.AdWhereInput = {
+    active: true,
+    status: "ACTIVE",
+    placement: placement ? (placement as Placement) : undefined,
+    AND: [
+      { OR: [{ startsAt: null }, { startsAt: { lte: now } }] },
+      { OR: [{ endsAt: null }, { endsAt: { gte: now } }] },
+    ],
+  };
+  const select = { id: true, name: true, imageUrl: true, linkUrl: true, placement: true };
+
+  // Without a page, the old behaviour: every live ad for the slot.
+  if (typeof path !== "string")
+    return res.json({
+      ads: await prisma.ad.findMany({ where: live, select, orderBy: { createdAt: "desc" } }),
+    });
+
+  // A page shows its most specific ads: this story's, then its category's,
+  // then the site-wide ones.
+  for (const tier of targetTiers(await pageContext(path))) {
+    const ads = await prisma.ad.findMany({
+      where: { ...live, ...tier },
+      select,
+      orderBy: { createdAt: "desc" },
+    });
+    if (ads.length) return res.json({ ads });
+  }
+  res.json({ ads: [] });
+});
+
+/** A link pasted into the booking form → the page it is, for the preview. */
+publicRouter.get("/ads/resolve-target", async (req, res) => {
+  const url = String(req.query.url ?? "").slice(0, 2000);
+  if (!url.trim()) return res.status(400).json({ error: "লিংক দিন" });
+  const r = await resolveTargetUrl(url);
+  if (!r.ok) return res.status(404).json({ error: r.error });
+  res.json(r);
 });
 
 /**

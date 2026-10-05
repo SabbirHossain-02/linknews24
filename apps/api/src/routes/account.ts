@@ -1,33 +1,44 @@
 import { Router } from "express";
 import { z } from "zod";
-import path from "node:path";
 import multer from "multer";
 import type { Account } from "@prisma/client";
 import { prisma } from "../prisma";
 import { hashPassword, verifyPassword } from "../lib/password";
 import { env } from "../env";
 import { authAccount, signAccountToken } from "../middleware/account";
-import { slotPrice } from "../lib/adSlots";
+import { PLACEMENTS, slotPrice, type Placement } from "../lib/adSlots";
+import { findClash, validateTarget } from "../lib/adTargeting";
+import { emitToStaff } from "../realtime";
 import { UPLOAD_DIR } from "./admin";
 
 export const accountRouter = Router();
 
+/**
+ * The creative formats an advertiser may upload, and the extension each is
+ * saved under. The extension comes from this list, never from the uploaded
+ * name: keeping the client's name let a file called x.html (sent as
+ * image/png) be served back as a web page from the API's own address.
+ */
+const CREATIVE_EXT: Record<string, string> = {
+  "image/png": ".png",
+  "image/jpeg": ".jpg",
+  "image/gif": ".gif",
+  "image/webp": ".webp",
+  "video/mp4": ".mp4",
+  "video/webm": ".webm",
+};
+
 const storage = multer.diskStorage({
   destination: UPLOAD_DIR,
   filename: (_req, file, cb) => {
-    const ext = path.extname(file.originalname).toLowerCase();
-    cb(null, `${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`);
+    cb(null, `${Date.now()}-${Math.round(Math.random() * 1e9)}${CREATIVE_EXT[file.mimetype]}`);
   },
 });
 const upload = multer({
   storage,
   // Allow larger files for video creatives.
   limits: { fileSize: 30 * 1024 * 1024 },
-  fileFilter: (_req, file, cb) =>
-    cb(
-      null,
-      file.mimetype.startsWith("image/") || file.mimetype.startsWith("video/"),
-    ),
+  fileFilter: (_req, file, cb) => cb(null, file.mimetype in CREATIVE_EXT),
 });
 
 function publicAccount(a: Account) {
@@ -132,11 +143,17 @@ accountRouter.post("/upload", authAccount, upload.single("file"), (req, res) => 
 
 // Booked/occupied ranges for a slot (so the UI can show when it's free).
 accountRouter.get("/slot-booked", authAccount, async (req, res) => {
-  const { placement } = req.query as Record<string, string>;
+  const { placement, targetType = "ALL", targetSlug } = req.query as Record<string, string>;
+  if (!PLACEMENTS.includes(placement as Placement)) return res.json({ ranges: [] });
+  if (!["ALL", "HOME", "CATEGORY", "ARTICLE"].includes(targetType))
+    return res.json({ ranges: [] });
   const now = new Date();
   const ranges = await prisma.ad.findMany({
     where: {
-      placement: placement as never,
+      placement: placement as Placement,
+      // The same slot on the same page — another page's booking does not block.
+      targetType: targetType as never,
+      targetSlug: targetSlug || null,
       status: { in: ["PENDING", "ACTIVE"] },
       endsAt: { gt: now },
     },
@@ -146,60 +163,94 @@ accountRouter.get("/slot-booked", authAccount, async (req, res) => {
   res.json({ ranges });
 });
 
-// --- Advertiser: book an ad slot for a specific date-time window ---
+// --- Advertiser: send a booking request ---
+/**
+ * A request, not a purchase: the newsroom calls the number given, agrees the
+ * details and payment, and approves it — only then does it go live. The
+ * advertiser says what (banner, link), where (which page or pages, and where
+ * on the page) and for how long (a start date and a number of days).
+ */
 const bookSchema = z.object({
-  name: z.string().min(1).max(120).optional(),
-  placement: z.enum(["HEADER", "SIDEBAR", "IN_ARTICLE", "FOOTER", "POPUP"]),
-  imageUrl: z.string().min(1),
-  linkUrl: z.string().min(1),
-  startsAt: z.string().min(1),
-  endsAt: z.string().min(1),
+  name: z.string().trim().min(1).max(120),
+  placement: z.enum(PLACEMENTS as [Placement, ...Placement[]]),
+  imageUrl: z.string().url().max(500),
+  linkUrl: z
+    .string()
+    .trim()
+    .max(500)
+    .regex(/^https?:\/\/\S+$/i, "লিংক https:// দিয়ে শুরু হতে হবে"),
+  phone: z
+    .string()
+    .trim()
+    .regex(/^\+?[0-9০-৯][0-9০-৯\s-]{7,18}$/, "সঠিক মোবাইল নম্বর দিন"),
+  targetType: z.enum(["ALL", "HOME", "CATEGORY", "ARTICLE"]),
+  targetSlug: z.string().max(300).nullable().optional(),
+  includeArticles: z.boolean().default(false),
+  days: z.number().int().min(1).max(365),
+  /** The day it should start, YYYY-MM-DD in Dhaka time; today if left out. */
+  startDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional(),
 });
 
 const MS_PER_DAY = 24 * 3600 * 1000;
 
+/** Midnight in Dhaka on a YYYY-MM-DD date, as an instant. */
+function dhakaMidnight(date: string) {
+  return new Date(`${date}T00:00:00+06:00`);
+}
+
 accountRouter.post("/ads", authAccount, async (req, res) => {
   const parsed = bookSchema.safeParse(req.body);
-  if (!parsed.success) return res.status(400).json({ error: "সঠিক তথ্য দিন" });
+  if (!parsed.success)
+    return res.status(400).json({
+      error: parsed.error.issues[0]?.message?.match(/[\u0980-\u09FF]/)
+        ? parsed.error.issues[0].message
+        : "সব তথ্য ঠিকভাবে দিন",
+    });
   const d = parsed.data;
   const price = slotPrice(d.placement);
   if (price === 0) return res.status(400).json({ error: "অবৈধ স্লট" });
 
-  const start = new Date(d.startsAt);
-  const end = new Date(d.endsAt);
-  if (isNaN(start.getTime()) || isNaN(end.getTime()) || end <= start)
-    return res.status(400).json({ error: "শুরুর ও শেষের সময় ঠিক নয়" });
-  if (end.getTime() < Date.now())
-    return res.status(400).json({ error: "শেষ সময় অতীতে হতে পারে না" });
+  const target = await validateTarget(d.targetType, d.targetSlug);
+  if (!target.ok) return res.status(400).json({ error: target.error });
 
-  // Slot is exclusive: reject if any pending/active ad overlaps this window.
-  const conflict = await prisma.ad.findFirst({
-    where: {
-      placement: d.placement,
-      status: { in: ["PENDING", "ACTIVE"] },
-      startsAt: { lt: end },
-      endsAt: { gt: start },
-    },
-    orderBy: { endsAt: "desc" },
-    select: { endsAt: true },
+  const now = new Date();
+  let start = d.startDate ? dhakaMidnight(d.startDate) : now;
+  if (isNaN(start.getTime())) return res.status(400).json({ error: "শুরুর তারিখ ঠিক নয়" });
+  if (start.getTime() < now.getTime() - MS_PER_DAY)
+    return res.status(400).json({ error: "শুরুর তারিখ অতীতে হতে পারে না" });
+  if (start < now) start = now;
+  const end = new Date(start.getTime() + d.days * MS_PER_DAY);
+
+  // One slot on one page belongs to one advertiser at a time.
+  const clash = await findClash({
+    placement: d.placement,
+    targetType: d.targetType,
+    targetSlug: target.slug,
+    start,
+    end,
   });
-  if (conflict) {
+  if (clash)
     return res.status(409).json({
-      error: "এই স্লটটি এই সময়ে বুক করা আছে",
-      availableFrom: conflict.endsAt,
+      error: "এই পাতার এই জায়গাটি ওই সময়ে বুক করা আছে",
+      availableFrom: clash.endsAt,
     });
-  }
-
-  const days = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / MS_PER_DAY));
 
   const ad = await prisma.ad.create({
     data: {
-      name: d.name?.trim() || `${d.placement} বিজ্ঞাপন`,
+      name: d.name,
       imageUrl: d.imageUrl,
       linkUrl: d.linkUrl,
       placement: d.placement,
-      days,
-      amount: price * days,
+      targetType: d.targetType,
+      targetSlug: target.slug,
+      targetLabel: target.label,
+      targetIncludesArticles: d.targetType === "CATEGORY" && d.includeArticles,
+      customerPhone: d.phone,
+      days: d.days,
+      amount: price * d.days,
       startsAt: start,
       endsAt: end,
       status: "PENDING",
@@ -208,6 +259,8 @@ accountRouter.post("/ads", authAccount, async (req, res) => {
       accountId: req.accountId,
     },
   });
+  // The ads page and the bell pick the request up at once.
+  emitToStaff("ads:booked", { id: ad.id });
   res.status(201).json({ ad });
 });
 
@@ -222,6 +275,10 @@ accountRouter.get("/ads", authAccount, async (req, res) => {
       imageUrl: true,
       linkUrl: true,
       placement: true,
+      targetType: true,
+      targetLabel: true,
+      targetIncludesArticles: true,
+      customerPhone: true,
       status: true,
       amount: true,
       days: true,

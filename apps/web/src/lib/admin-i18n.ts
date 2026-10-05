@@ -625,6 +625,7 @@ export const adminDict = {
   placeHEADER: { bn: "হেডার (উপরে)", en: "Header (top)" },
   placeSIDEBAR: { bn: "সাইডবার", en: "Sidebar" },
   placeIN_ARTICLE: { bn: "আর্টিকেলের ভিতরে", en: "In-article" },
+  placeLEFT: { bn: "বাম পাশে", en: "Left side" },
   placeFOOTER: { bn: "ফুটার (নিচে)", en: "Footer" },
   placePOPUP: { bn: "পপআপ", en: "Popup" },
   adAdvertiser: { bn: "বিজ্ঞাপনদাতা", en: "Advertiser" },

@@ -6,6 +6,7 @@ import localFont from "next/font/local";
 import { LocaleProvider } from "@/components/providers/LocaleProvider";
 import { AuthProvider } from "@/components/providers/AuthProvider";
 import { AdBanner } from "@/components/layout/AdBanner";
+import { LeftAd, PopupAd } from "@/components/ads/PageAds";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooterSection } from "@/components/layout/SiteFooterSection";
 import { HideOnAdmin } from "@/components/layout/HideOnAdmin";
@@ -121,6 +122,8 @@ export default function RootLayout({
                 <TrackView />
                 <AdBanner />
                 <SiteHeader />
+                <LeftAd />
+                <PopupAd />
               </HideOnAdmin>
               {children}
               <HideOnAdmin>

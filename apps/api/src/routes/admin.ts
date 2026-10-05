@@ -27,6 +27,8 @@ import {
 } from "../lib/articles";
 import { logWork, notifyStaff } from "../lib/staffNotify";
 import { breakingEnabled } from "../lib/siteSettings";
+import { PLACEMENTS, type Placement } from "../lib/adSlots";
+import { findClash, validateTarget } from "../lib/adTargeting";
 import { adReport } from "../lib/adTracking";
 import { auditArticles, readSeo, sitemapStats, writeSeo } from "../lib/seo";
 import { newsroomRouter } from "./newsroom";
@@ -1375,8 +1377,12 @@ adminRouter.get("/analytics", async (_req, res) => {
 const adSchema = z.object({
   name: z.string().min(1),
   imageUrl: z.string().min(1),
-  linkUrl: z.string().min(1),
-  placement: z.enum(["HEADER", "SIDEBAR", "IN_ARTICLE", "FOOTER", "POPUP"]),
+  linkUrl: z.string().regex(/^https?:\/\/\S+$/i, "লিংক https:// দিয়ে শুরু হতে হবে"),
+  placement: z.enum(PLACEMENTS as [Placement, ...Placement[]]),
+  targetType: z.enum(["ALL", "HOME", "CATEGORY", "ARTICLE"]).default("ALL"),
+  targetSlug: z.string().max(300).nullable().optional(),
+  includeArticles: z.boolean().default(false),
+  customerPhone: z.string().trim().max(30).nullable().optional(),
   active: z.boolean().default(true),
   startsAt: z.string().nullable().optional(),
   endsAt: z.string().nullable().optional(),
@@ -1393,8 +1399,9 @@ adminRouter.get("/ads/report", async (req, res) => {
 
 adminRouter.get("/ads", async (_req, res) => {
   const ads = await prisma.ad.findMany({
-    orderBy: { createdAt: "desc" },
-    include: { account: { select: { name: true, email: true } } },
+    // New booking requests first, so nothing waits unseen at the bottom.
+    orderBy: [{ status: "asc" }, { createdAt: "desc" }],
+    include: { account: { select: { name: true, email: true, phone: true } } },
   });
   res.json({ ads });
 });
@@ -1414,11 +1421,30 @@ adminRouter.patch("/ads/:id/status", async (req, res) => {
   if (status === "ACTIVE") {
     data.active = true;
     data.paid = true;
-    // Keep the advertiser's chosen schedule; only fill gaps for house ads.
-    const start = ad.startsAt ?? new Date();
-    data.startsAt = start;
-    data.endsAt =
+    // The booked number of days runs from approval if the requested start
+    // has already gone by — an advertiser approved late still gets them all.
+    const now = new Date();
+    let start = ad.startsAt ?? now;
+    let end =
       ad.endsAt ?? new Date(start.getTime() + (ad.days || 1) * 24 * 3600 * 1000);
+    if (ad.days > 0 && start < now) {
+      start = now;
+      end = new Date(now.getTime() + ad.days * 24 * 3600 * 1000);
+    }
+    const clash = await findClash({
+      placement: ad.placement,
+      targetType: ad.targetType,
+      targetSlug: ad.targetSlug,
+      start,
+      end,
+      excludeId: ad.id,
+    });
+    if (clash && ad.status === "PENDING")
+      return res.status(409).json({
+        error: `এই জায়গায় ওই সময়ে আরেকটি বিজ্ঞাপন আছে: "${clash.name}"`,
+      });
+    data.startsAt = start;
+    data.endsAt = end;
   } else {
     data.active = false;
   }
@@ -1427,16 +1453,43 @@ adminRouter.patch("/ads/:id/status", async (req, res) => {
   res.json({ ad: updated });
 });
 
+/** Turns the form's target fields into the columns, checking the page exists. */
+async function adTargetData(d: {
+  targetType?: "ALL" | "HOME" | "CATEGORY" | "ARTICLE";
+  targetSlug?: string | null;
+  includeArticles?: boolean;
+}) {
+  const type = d.targetType ?? "ALL";
+  const target = await validateTarget(type, d.targetSlug);
+  if (!target.ok) return target;
+  return {
+    ok: true as const,
+    data: {
+      targetType: type,
+      targetSlug: target.slug,
+      targetLabel: target.label,
+      targetIncludesArticles: type === "CATEGORY" && !!d.includeArticles,
+    },
+  };
+}
+
+const adError = (e: z.ZodError) =>
+  e.issues.find((i) => /[\u0980-\u09FF]/.test(i.message))?.message ?? "সঠিক তথ্য দিন";
+
 adminRouter.post("/ads", async (req, res) => {
   const parsed = adSchema.safeParse(req.body);
-  if (!parsed.success) return res.status(400).json({ error: "সঠিক তথ্য দিন" });
+  if (!parsed.success) return res.status(400).json({ error: adError(parsed.error) });
   const d = parsed.data;
+  const target = await adTargetData(d);
+  if (!target.ok) return res.status(400).json({ error: target.error });
   const ad = await prisma.ad.create({
     data: {
       name: d.name,
       imageUrl: d.imageUrl,
       linkUrl: d.linkUrl,
       placement: d.placement,
+      ...target.data,
+      customerPhone: d.customerPhone || null,
       active: d.active,
       startsAt: d.startsAt ? new Date(d.startsAt) : null,
       endsAt: d.endsAt ? new Date(d.endsAt) : null,
@@ -1447,7 +1500,7 @@ adminRouter.post("/ads", async (req, res) => {
 
 adminRouter.put("/ads/:id", async (req, res) => {
   const parsed = adSchema.partial().safeParse(req.body);
-  if (!parsed.success) return res.status(400).json({ error: "সঠিক তথ্য দিন" });
+  if (!parsed.success) return res.status(400).json({ error: adError(parsed.error) });
   const d = parsed.data;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const data: any = {};
@@ -1456,6 +1509,12 @@ adminRouter.put("/ads/:id", async (req, res) => {
   if (d.linkUrl !== undefined) data.linkUrl = d.linkUrl;
   if (d.placement !== undefined) data.placement = d.placement;
   if (d.active !== undefined) data.active = d.active;
+  if (d.customerPhone !== undefined) data.customerPhone = d.customerPhone || null;
+  if (d.targetType !== undefined) {
+    const target = await adTargetData(d);
+    if (!target.ok) return res.status(400).json({ error: target.error });
+    Object.assign(data, target.data);
+  }
   if (d.startsAt !== undefined) data.startsAt = d.startsAt ? new Date(d.startsAt) : null;
   if (d.endsAt !== undefined) data.endsAt = d.endsAt ? new Date(d.endsAt) : null;
   const ad = await prisma.ad

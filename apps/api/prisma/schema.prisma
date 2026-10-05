@@ -507,10 +507,20 @@ model Account {
 // --- Advertising ---
 enum AdPlacement {
   HEADER
+  /// A rail in the left margin on wide screens; the top of the content otherwise.
+  LEFT
   SIDEBAR
   IN_ARTICLE
   FOOTER
   POPUP
+}
+
+/// Which pages an ad runs on.
+enum AdTarget {
+  ALL
+  HOME
+  CATEGORY
+  ARTICLE
 }
 
 enum AdStatus {
@@ -521,26 +531,36 @@ enum AdStatus {
 }
 
 model Ad {
-  id          String      @id @default(cuid())
-  name        String
-  imageUrl    String
-  linkUrl     String
-  placement   AdPlacement @default(SIDEBAR)
-  active      Boolean     @default(true)
-  status      AdStatus    @default(ACTIVE)
-  accountId   String?
-  account     Account?    @relation(fields: [accountId], references: [id], onDelete: Cascade)
-  amount      Int         @default(0) // total price paid, in BDT
-  days        Int         @default(0)
-  paid        Boolean     @default(false)
-  impressions Int         @default(0)
-  clicks      Int         @default(0)
-  startsAt    DateTime?
-  endsAt      DateTime?
-  createdAt   DateTime    @default(now())
-  events      AdEvent[]
+  id                     String      @id @default(cuid())
+  name                   String
+  imageUrl               String
+  linkUrl                String
+  placement              AdPlacement @default(SIDEBAR)
+  /// The page(s) it runs on; targetSlug is the category or article slug.
+  targetType             AdTarget    @default(ALL)
+  targetSlug             String?
+  /// What the target was called when booked, for the admin's list.
+  targetLabel            String?
+  /// For a category target: also on that category's articles.
+  targetIncludesArticles Boolean     @default(false)
+  /// The advertiser's number, for the admin to call before approving.
+  customerPhone          String?
+  active                 Boolean     @default(true)
+  status                 AdStatus    @default(ACTIVE)
+  accountId              String?
+  account                Account?    @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  amount                 Int         @default(0) // total price paid, in BDT
+  days                   Int         @default(0)
+  paid                   Boolean     @default(false)
+  impressions            Int         @default(0)
+  clicks                 Int         @default(0)
+  startsAt               DateTime?
+  endsAt                 DateTime?
+  createdAt              DateTime    @default(now())
+  events                 AdEvent[]
 
   @@index([placement, active])
+  @@index([placement, targetType, targetSlug])
   @@index([accountId])
   @@index([status])
 }

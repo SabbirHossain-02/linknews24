@@ -8,6 +8,7 @@ import { localizedAuthor, localizedName } from "@/lib/i18n";
 import { useLocale } from "@/components/providers/LocaleProvider";
 import { TimeAgo } from "@/components/home/TimeAgo";
 import type { Article, Category } from "@/types/content";
+import { AdSlot } from "@/components/ads/AdSlot";
 
 function ArticleRow({ article }: { article: Article }) {
   const { locale } = useLocale();
@@ -117,8 +118,20 @@ export function CategoryListing({
             </Link>
           )}
 
+          {/* "Inside the content" on a category page: after the first few
+              stories, where the reader is already scrolling the list. */}
           <div className="flex flex-col divide-y divide-border">
-            {rest.map((article) => (
+            {rest.slice(0, 4).map((article) => (
+              <ArticleRow key={article.id} article={article} />
+            ))}
+          </div>
+          <AdSlot
+            placement="IN_ARTICLE"
+            className="my-2 rounded-lg border border-border"
+            imgClassName="mx-auto max-h-[250px] w-auto max-w-full object-contain"
+          />
+          <div className="flex flex-col divide-y divide-border">
+            {rest.slice(4).map((article) => (
               <ArticleRow key={article.id} article={article} />
             ))}
           </div>

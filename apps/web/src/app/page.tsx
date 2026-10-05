@@ -4,6 +4,7 @@ import { TopStoriesList } from "@/components/home/TopStoriesList";
 import { LatestHeadlines } from "@/components/home/LatestHeadlines";
 import { NewsSection } from "@/components/home/NewsSection";
 import { ReadingSidebar } from "@/components/home/ReadingSidebar";
+import { AdSlot } from "@/components/ads/AdSlot";
 import { getHomepage, getSidebar, toArticle } from "@/lib/api";
 
 export default async function Home() {
@@ -41,6 +42,14 @@ export default async function Home() {
         </div>
 
         <LatestHeadlines articles={latest} />
+
+        {/* "Inside the content" on the homepage: between the headlines and
+            the category sections. Renders nothing when no ad is booked. */}
+        <AdSlot
+          placement="IN_ARTICLE"
+          className="rounded-lg border border-border"
+          imgClassName="mx-auto max-h-[250px] w-auto max-w-full object-contain"
+        />
 
         {sections.map((s) => (
           <NewsSection
