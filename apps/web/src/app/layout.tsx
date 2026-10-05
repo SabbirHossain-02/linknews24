@@ -104,10 +104,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="bn">
-      <body
-        className={`${notoSerifBengali.variable} ${siyamRupali.variable} ${hindSiliguri.variable} ${inter.variable} antialiased`}
-      >
+    // The font variables must live on <html>: Tailwind declares --font-sans
+    // on :root, and a custom property resolves the var()s inside it where it
+    // is declared — on <body> they would be undefined there, and every page
+    // would silently fall back to the reader's system font.
+    <html
+      lang="bn"
+      className={`${notoSerifBengali.variable} ${siyamRupali.variable} ${hindSiliguri.variable} ${inter.variable}`}
+    >
+      <body className="antialiased">
         <LocaleProvider>
           <AuthProvider>
             <div className="flex min-h-screen flex-col">
