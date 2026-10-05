@@ -11,6 +11,7 @@ import { publicRouter } from "./routes/public";
 import { servicesRouter } from "./routes/services";
 import { adminRouter } from "./routes/admin";
 import { authenticate } from "./middleware/auth";
+import { enforcePermissions } from "./middleware/permissions";
 import { setIo } from "./realtime";
 import { notFound, errorHandler } from "./middleware/error";
 
@@ -66,7 +67,7 @@ app.use("/api/auth", authRouter);
 app.use("/api/account", accountRouter);
 app.use("/api/services", servicesRouter);
 app.use("/api", publicRouter);
-app.use("/api/admin", authenticate, adminRouter);
+app.use("/api/admin", authenticate, enforcePermissions, adminRouter);
 
 app.use(notFound);
 app.use(errorHandler);

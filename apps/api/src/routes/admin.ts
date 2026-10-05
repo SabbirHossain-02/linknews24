@@ -3,35 +3,60 @@ import { z } from "zod";
 import path from "node:path";
 import fs from "node:fs";
 import multer from "multer";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "../prisma";
-import { requireRole } from "../middleware/auth";
-import {
-  CAN_DIRECTORY,
-  CAN_MANAGE,
-  CAN_MODERATE,
-  CAN_PUBLISH,
-  CAN_WRITE,
-  slugify,
-} from "../lib/roles";
+import { isSuper, requireRole } from "../middleware/auth";
+import { slugify } from "../lib/roles";
 import { hashPassword, verifyPassword } from "../lib/password";
-import { permissionMatrix } from "../lib/permissions";
-import { emitChange, emitAnalytics, onlineCount } from "../realtime";
+import {
+  emitChange,
+  emitAnalytics,
+  emitToSupers,
+  onlineCount,
+  refreshUserRooms,
+  revokeUser,
+} from "../realtime";
+import {
+  articleSchema,
+  categoryExists,
+  clearOtherHeroes,
+  contentFields,
+  resolveStatus,
+  tagConnectOrCreate,
+  uniqueSlug,
+} from "../lib/articles";
+import { logWork, notifyStaff } from "../lib/staffNotify";
 import { adReport } from "../lib/adTracking";
 import { auditArticles, readSeo, sitemapStats, writeSeo } from "../lib/seo";
-import { listNotifications } from "../lib/notifications";
+import { newsroomRouter } from "./newsroom";
 import { recentLogins } from "../lib/audit";
 
 export const adminRouter = Router();
 
 // Broadcast a realtime "content changed" event after any successful mutation.
+// Changes to the other modules are also written to the team activity feed;
+// articles, users and approvals log their own, more specific entries.
+const SELF_LOGGING = ["articles", "approvals", "users", "permissions", "my", "me", "media"];
 adminRouter.use((req, res, next) => {
   if (req.method !== "GET") {
     res.on("finish", () => {
-      if (res.statusCode < 400) emitChange({ path: req.path });
+      if (res.statusCode >= 400) return;
+      emitChange({ path: req.path });
+      const section = req.path.split("/")[1] ?? "";
+      if (req.user && section && !SELF_LOGGING.includes(section))
+        logWork({
+          userId: req.user.id,
+          action: req.method === "DELETE" ? "module_delete" : "module_edit",
+          entity: section,
+          detail: req.path,
+        });
     });
   }
   next();
 });
+
+// Staff, permissions, approvals, the team page and each person's own figures.
+adminRouter.use(newsroomRouter);
 
 // --- Media upload (images) ---
 export const UPLOAD_DIR = path.join(process.cwd(), "uploads");
@@ -54,7 +79,6 @@ const upload = multer({
 
 adminRouter.post(
   "/media/upload",
-  requireRole(...CAN_WRITE),
   upload.single("file"),
   async (req, res) => {
     if (!req.file) return res.status(400).json({ error: "ছবি পাওয়া যায়নি" });
@@ -75,7 +99,6 @@ const pdfUpload = multer({
 
 adminRouter.post(
   "/epaper/upload",
-  requireRole(...CAN_WRITE),
   pdfUpload.single("file"),
   async (req, res) => {
     if (!req.file) return res.status(400).json({ error: "PDF পাওয়া যায়নি" });
@@ -87,70 +110,13 @@ adminRouter.post(
   },
 );
 
-const articleSchema = z.object({
-  title: z.string().min(1),
-  titleEn: z.string().default(""),
-  slug: z.string().optional(),
-  excerpt: z.string().default(""),
-  excerptEn: z.string().default(""),
-  body: z.string().default(""),
-  bodyEn: z.string().default(""),
-  categoryId: z.string().min(1),
-  authorName: z.string().optional(),
-  imageTone: z.string().default("navy"),
-  featuredImage: z.string().nullable().optional(),
-  isBreaking: z.boolean().default(false),
-  featured: z.boolean().default(false),
-  isHero: z.boolean().default(false),
-  status: z.enum(["DRAFT", "SCHEDULED", "PUBLISHED"]).default("DRAFT"),
-  seoTitle: z.string().nullable().optional(),
-  seoDescription: z.string().nullable().optional(),
-  tags: z.array(z.string()).optional(),
-});
-
-// Turn free-typed tag names into connectOrCreate ops (dedup by slug).
-function tagConnectOrCreate(names?: string[]) {
-  const unique = [
-    ...new Map(
-      (names ?? [])
-        .map((n) => n.trim())
-        .filter(Boolean)
-        .map((n) => [slugify(n), n]),
-    ),
-  ];
-  return unique.map(([slug, name]) => ({
-    where: { slug },
-    create: { name, nameEn: name, slug },
-  }));
-}
-
-// Only one article can be the hero — unset it on all others.
-async function clearOtherHeroes(keepId: string) {
-  await prisma.article.updateMany({
-    where: { isHero: true, id: { not: keepId } },
-    data: { isHero: false },
-  });
-}
-
-async function uniqueSlug(desired: string, excludeId?: string): Promise<string> {
-  const base = slugify(desired);
-  let slug = base;
-  let n = 1;
-  // eslint-disable-next-line no-constant-condition
-  while (true) {
-    const existing = await prisma.article.findUnique({ where: { slug } });
-    if (!existing || existing.id === excludeId) return slug;
-    n += 1;
-    slug = `${base}-${n}`;
-  }
-}
-
 // --- Article list (all statuses, filtered + paginated) ---
 adminRouter.get("/articles", async (req, res) => {
   const {
     status,
     category,
     q,
+    mine,
     page = "1",
     limit = "20",
   } = req.query as Record<string, string>;
@@ -159,9 +125,11 @@ adminRouter.get("/articles", async (req, res) => {
   const currentPage = Math.max(Number(page) || 1, 1);
   const skip = (currentPage - 1) * take;
 
+  const STATUSES = ["DRAFT", "SCHEDULED", "PENDING", "REJECTED", "PUBLISHED"];
   const where = {
-    status: status ? (status as never) : undefined,
+    status: STATUSES.includes(status) ? (status as never) : undefined,
     categoryId: category || undefined,
+    authorId: mine === "1" ? req.user!.id : undefined,
     OR: q
       ? [
           { title: { contains: q, mode: "insensitive" as const } },
@@ -173,9 +141,12 @@ adminRouter.get("/articles", async (req, res) => {
   const [articles, total] = await Promise.all([
     prisma.article.findMany({
       where,
+      omit: { body: true, bodyEn: true },
       include: {
         category: { select: { name: true, nameEn: true, slug: true } },
         author: { select: { name: true } },
+        // A live story with an edit waiting for approval is marked in the list.
+        _count: { select: { revisions: { where: { status: "PENDING" } } } },
       },
       // Newest published first, drafts after them, and stable while you work:
       // ordering by updatedAt meant flipping a switch moved that row to the
@@ -200,20 +171,36 @@ adminRouter.get("/articles/:id", async (req, res) => {
     include: { tags: { select: { name: true } } },
   });
   if (!article) return res.status(404).json({ error: "Not found" });
-  res.json({ article });
+  // An edit to this live story still waiting for the Super Admin, if any.
+  const pendingRevision = await prisma.articleRevision.findFirst({
+    where: { articleId: article.id, status: "PENDING" },
+    orderBy: { updatedAt: "desc" },
+    select: {
+      id: true,
+      data: true,
+      createdAt: true,
+      updatedAt: true,
+      author: { select: { id: true, name: true } },
+    },
+  });
+  res.json({ article, pendingRevision });
 });
 
+const NEEDS_APPROVAL_LIVE =
+  "প্রকাশিত খবরে পরিবর্তনের জন্য সুপার অ্যাডমিনের অনুমোদন লাগবে";
+const OWN_ONLY = "শুধু নিজের খবর সম্পাদনা করতে পারবেন";
+
 // --- Create ---
-adminRouter.post("/articles", requireRole(...CAN_WRITE), async (req, res) => {
+adminRouter.post("/articles", async (req, res) => {
   const parsed = articleSchema.safeParse(req.body);
   if (!parsed.success)
     return res.status(400).json({ error: "Invalid input", issues: parsed.error.issues });
   const data = parsed.data;
+  if (!(await categoryExists(data.categoryId)))
+    return res.status(400).json({ error: "ক্যাটাগরি পাওয়া যায়নি" });
 
-  // Reporters cannot publish.
-  const canPublish = CAN_PUBLISH.includes(req.user!.role);
-  const status = data.status === "PUBLISHED" && !canPublish ? "DRAFT" : data.status;
-
+  const sup = isSuper(req.user);
+  const status = resolveStatus(data.status, sup);
   const slug = await uniqueSlug(data.slug || data.titleEn || data.title);
 
   const article = await prisma.article.create({
@@ -228,128 +215,228 @@ adminRouter.post("/articles", requireRole(...CAN_WRITE), async (req, res) => {
       categoryId: data.categoryId,
       imageTone: data.imageTone,
       featuredImage: data.featuredImage ?? null,
-      isBreaking: canPublish ? data.isBreaking : false,
-      featured: canPublish ? data.featured : false,
-      isHero: canPublish ? data.isHero : false,
+      isBreaking: data.isBreaking,
+      featured: data.featured,
+      isHero: data.isHero,
       status,
       seoTitle: data.seoTitle ?? null,
       seoDescription: data.seoDescription ?? null,
       authorId: req.user!.id,
       authorName: data.authorName?.trim() || null,
       publishedAt: status === "PUBLISHED" ? new Date() : null,
+      submittedAt: status === "PENDING" ? new Date() : null,
       tags: { connectOrCreate: tagConnectOrCreate(data.tags) },
     },
   });
-  if (article.isHero) await clearOtherHeroes(article.id);
-  res.status(201).json({ article });
+  if (article.isHero && article.status === "PUBLISHED")
+    await clearOtherHeroes(article.id);
+
+  await logWork({
+    userId: req.user!.id,
+    action: status === "PENDING" ? "article_submitted" : "article_created",
+    entity: "article",
+    entityId: article.id,
+    detail: article.title,
+  });
+  if (status === "PENDING") emitToSupers("approvals:changed");
+  res.status(201).json({ article, pendingReview: status === "PENDING" });
 });
 
 // --- Update ---
-adminRouter.put("/articles/:id", requireRole(...CAN_WRITE), async (req, res) => {
+adminRouter.put("/articles/:id", async (req, res) => {
   const existing = await prisma.article.findUnique({ where: { id: req.params.id } });
   if (!existing) return res.status(404).json({ error: "Not found" });
 
-  const canPublish = CAN_PUBLISH.includes(req.user!.role);
-  // Reporters may only edit their own drafts.
-  if (!canPublish && existing.authorId !== req.user!.id)
-    return res.status(403).json({ error: "Forbidden" });
+  const me = req.user!;
+  const sup = isSuper(me);
+  // Reporters may only edit their own stories.
+  if (me.role === "REPORTER" && existing.authorId !== me.id)
+    return res.status(403).json({ error: OWN_ONLY });
 
   const parsed = articleSchema.safeParse(req.body);
   if (!parsed.success)
     return res.status(400).json({ error: "Invalid input", issues: parsed.error.issues });
   const data = parsed.data;
+  if (!(await categoryExists(data.categoryId)))
+    return res.status(400).json({ error: "ক্যাটাগরি পাওয়া যায়নি" });
 
-  const status = data.status === "PUBLISHED" && !canPublish ? "DRAFT" : data.status;
-  const slug = data.slug
-    ? await uniqueSlug(data.slug, existing.id)
-    : existing.slug;
+  // A live story is not changed by anyone but the Super Admin: the edit is
+  // kept aside as a revision, and readers go on seeing the approved version
+  // until it is accepted.
+  if (!sup && existing.status === "PUBLISHED") {
+    const open = await prisma.articleRevision.findFirst({
+      where: { articleId: existing.id, status: "PENDING" },
+      select: { id: true },
+    });
+    const revisionData = data as unknown as Prisma.InputJsonValue;
+    const revision = open
+      ? await prisma.articleRevision.update({
+          where: { id: open.id },
+          data: { data: revisionData, authorId: me.id },
+        })
+      : await prisma.articleRevision.create({
+          data: { articleId: existing.id, authorId: me.id, data: revisionData },
+        });
+    await logWork({
+      userId: me.id,
+      action: "revision_submitted",
+      entity: "article",
+      entityId: existing.id,
+      detail: data.title,
+    });
+    emitToSupers("approvals:changed");
+    return res.json({ article: existing, revision, pendingReview: true });
+  }
+
+  const status = resolveStatus(data.status, sup);
+  const approving = sup && existing.status === "PENDING" && status === "PUBLISHED";
 
   const article = await prisma.article.update({
     where: { id: existing.id },
     data: {
-      title: data.title,
-      titleEn: data.titleEn,
-      slug,
-      excerpt: data.excerpt,
-      excerptEn: data.excerptEn,
-      body: data.body,
-      bodyEn: data.bodyEn,
-      categoryId: data.categoryId,
-      imageTone: data.imageTone,
-      featuredImage: data.featuredImage ?? null,
-      isBreaking: canPublish ? data.isBreaking : existing.isBreaking,
-      featured: canPublish ? data.featured : existing.featured,
-      isHero: canPublish ? data.isHero : existing.isHero,
+      ...(await contentFields(data, existing)),
       status,
-      seoTitle: data.seoTitle ?? null,
-      seoDescription: data.seoDescription ?? null,
-      authorName: data.authorName?.trim() || null,
       publishedAt:
         status === "PUBLISHED"
           ? existing.publishedAt ?? new Date()
-          : status === "DRAFT"
+          : status === "DRAFT" || status === "PENDING"
             ? null
             : existing.publishedAt,
+      submittedAt: status === "PENDING" ? new Date() : existing.submittedAt,
+      // Resubmitting clears the old reason; approving records who decided.
+      reviewNote: status === "PENDING" || approving ? null : existing.reviewNote,
+      ...(approving ? { reviewedById: me.id, reviewedAt: new Date() } : {}),
       // Only a change to something already published is an update a reader
       // needs to know about; going live for the first time is publication, and
       // publishedAt already says when that was.
       editedAt: existing.publishedAt ? new Date() : existing.editedAt,
-      tags: { set: [], connectOrCreate: tagConnectOrCreate(data.tags) },
     },
   });
-  if (article.isHero) await clearOtherHeroes(article.id);
-  res.json({ article });
+  if (article.isHero && article.status === "PUBLISHED")
+    await clearOtherHeroes(article.id);
+
+  await logWork({
+    userId: me.id,
+    action:
+      status === "PENDING" && existing.status !== "PENDING"
+        ? "article_submitted"
+        : approving
+          ? "article_approved"
+          : "article_updated",
+    entity: "article",
+    entityId: article.id,
+    detail: article.title,
+  });
+  if (approving && existing.authorId !== me.id)
+    await notifyStaff(existing.authorId, {
+      kind: "article_approved",
+      title: article.title,
+      href: `/admin/articles/${article.id}/edit`,
+    });
+  if (status === "PENDING" || existing.status === "PENDING")
+    emitToSupers("approvals:changed");
+  res.json({ article, pendingReview: status === "PENDING" });
 });
 
 // --- Quick flag toggles (publish / breaking / featured) ---
 const flagsSchema = z.object({
-  status: z.enum(["DRAFT", "SCHEDULED", "PUBLISHED"]).optional(),
+  status: z.enum(["DRAFT", "SCHEDULED", "PENDING", "PUBLISHED"]).optional(),
   isBreaking: z.boolean().optional(),
   featured: z.boolean().optional(),
 });
 
-adminRouter.patch(
-  "/articles/:id/flags",
-  requireRole(...CAN_PUBLISH),
-  async (req, res) => {
-    const existing = await prisma.article.findUnique({
-      where: { id: req.params.id },
-    });
-    if (!existing) return res.status(404).json({ error: "Not found" });
+adminRouter.patch("/articles/:id/flags", async (req, res) => {
+  const existing = await prisma.article.findUnique({
+    where: { id: req.params.id },
+  });
+  if (!existing) return res.status(404).json({ error: "Not found" });
 
-    const parsed = flagsSchema.safeParse(req.body);
-    if (!parsed.success) return res.status(400).json({ error: "Invalid input" });
-    const { status, isBreaking, featured } = parsed.data;
+  const parsed = flagsSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: "Invalid input" });
+  const { isBreaking, featured } = parsed.data;
 
-    const article = await prisma.article.update({
-      where: { id: existing.id },
-      data: {
-        isBreaking: isBreaking ?? existing.isBreaking,
-        featured: featured ?? existing.featured,
-        status: status ?? existing.status,
-        publishedAt:
-          status === "PUBLISHED"
-            ? existing.publishedAt ?? new Date()
-            : status === "DRAFT"
-              ? null
-              : existing.publishedAt,
-      },
+  const me = req.user!;
+  const sup = isSuper(me);
+  if (!sup && existing.status === "PUBLISHED")
+    return res.status(403).json({ error: NEEDS_APPROVAL_LIVE });
+  if (me.role === "REPORTER" && existing.authorId !== me.id)
+    return res.status(403).json({ error: OWN_ONLY });
+
+  const status = parsed.data.status
+    ? resolveStatus(parsed.data.status, sup)
+    : existing.status;
+  const approving = sup && existing.status === "PENDING" && status === "PUBLISHED";
+
+  const article = await prisma.article.update({
+    where: { id: existing.id },
+    data: {
+      isBreaking: isBreaking ?? existing.isBreaking,
+      featured: featured ?? existing.featured,
+      status,
+      publishedAt:
+        status === "PUBLISHED"
+          ? existing.publishedAt ?? new Date()
+          : status === "DRAFT" || status === "PENDING"
+            ? null
+            : existing.publishedAt,
+      submittedAt:
+        status === "PENDING" && existing.status !== "PENDING"
+          ? new Date()
+          : existing.submittedAt,
+      ...(approving
+        ? { reviewedById: me.id, reviewedAt: new Date(), reviewNote: null }
+        : {}),
+    },
+  });
+
+  if (status !== existing.status) {
+    await logWork({
+      userId: me.id,
+      action:
+        status === "PENDING"
+          ? "article_submitted"
+          : approving
+            ? "article_approved"
+            : status === "PUBLISHED"
+              ? "article_published"
+              : "article_unpublished",
+      entity: "article",
+      entityId: article.id,
+      detail: article.title,
     });
-    res.json({ article });
-  },
-);
+    if (approving && existing.authorId !== me.id)
+      await notifyStaff(existing.authorId, {
+        kind: "article_approved",
+        title: article.title,
+        href: `/admin/articles/${article.id}/edit`,
+      });
+    if (status === "PENDING" || existing.status === "PENDING")
+      emitToSupers("approvals:changed");
+  }
+  res.json({ article, pendingReview: status === "PENDING" });
+});
 
 // --- Delete ---
-adminRouter.delete(
-  "/articles/:id",
-  requireRole(...CAN_PUBLISH),
-  async (req, res) => {
-    await prisma.article
-      .delete({ where: { id: req.params.id } })
-      .catch(() => null);
-    res.json({ ok: true });
-  },
-);
+adminRouter.delete("/articles/:id", async (req, res) => {
+  const me = req.user!;
+  const existing = await prisma.article.findUnique({
+    where: { id: req.params.id },
+    select: { id: true, title: true, authorId: true, status: true },
+  });
+  if (!existing) return res.json({ ok: true });
+  if (me.role === "REPORTER" && existing.authorId !== me.id)
+    return res.status(403).json({ error: OWN_ONLY });
+  await prisma.article.delete({ where: { id: existing.id } }).catch(() => null);
+  await logWork({
+    userId: me.id,
+    action: "article_deleted",
+    entity: "article",
+    entityId: existing.id,
+    detail: existing.title,
+  });
+  if (existing.status === "PENDING") emitToSupers("approvals:changed");
+  res.json({ ok: true });
+});
 
 // ===================== LIVE TV =====================
 adminRouter.get("/livetv", async (_req, res) => {
@@ -368,7 +455,7 @@ const liveSchema = z.object({
   titleEn: z.string().default("Live TV"),
 });
 
-adminRouter.put("/livetv", requireRole(...CAN_MANAGE), async (req, res) => {
+adminRouter.put("/livetv", async (req, res) => {
   const parsed = liveSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: "Invalid input" });
   const live = await prisma.liveTvSetting.upsert({
@@ -394,7 +481,7 @@ const breakingSchema = z.object({
   order: z.number().int().default(0),
 });
 
-adminRouter.post("/breaking", requireRole(...CAN_PUBLISH), async (req, res) => {
+adminRouter.post("/breaking", async (req, res) => {
   const parsed = breakingSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: "Invalid input" });
   const count = await prisma.breakingItem.count();
@@ -404,7 +491,7 @@ adminRouter.post("/breaking", requireRole(...CAN_PUBLISH), async (req, res) => {
   res.status(201).json({ item });
 });
 
-adminRouter.put("/breaking/:id", requireRole(...CAN_PUBLISH), async (req, res) => {
+adminRouter.put("/breaking/:id", async (req, res) => {
   const parsed = breakingSchema.partial().safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: "Invalid input" });
   const item = await prisma.breakingItem
@@ -414,7 +501,7 @@ adminRouter.put("/breaking/:id", requireRole(...CAN_PUBLISH), async (req, res) =
   res.json({ item });
 });
 
-adminRouter.delete("/breaking/:id", requireRole(...CAN_PUBLISH), async (req, res) => {
+adminRouter.delete("/breaking/:id", async (req, res) => {
   await prisma.breakingItem.delete({ where: { id: req.params.id } }).catch(() => null);
   res.json({ ok: true });
 });
@@ -465,7 +552,7 @@ async function validateParent(
   return null;
 }
 
-adminRouter.post("/categories", requireRole(...CAN_PUBLISH), async (req, res) => {
+adminRouter.post("/categories", async (req, res) => {
   const parsed = categorySchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: "Invalid input" });
   const d = parsed.data;
@@ -496,7 +583,7 @@ adminRouter.post("/categories", requireRole(...CAN_PUBLISH), async (req, res) =>
   res.status(201).json({ category });
 });
 
-adminRouter.put("/categories/:id", requireRole(...CAN_PUBLISH), async (req, res) => {
+adminRouter.put("/categories/:id", async (req, res) => {
   const parsed = categorySchema.partial().safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: "Invalid input" });
 
@@ -535,7 +622,7 @@ adminRouter.put("/categories/:id", requireRole(...CAN_PUBLISH), async (req, res)
  * With neither, a category that holds articles comes back as 409 with the
  * count, so the UI can ask rather than fail silently.
  */
-adminRouter.delete("/categories/:id", requireRole(...CAN_MANAGE), async (req, res) => {
+adminRouter.delete("/categories/:id", async (req, res) => {
   const id = req.params.id;
   const moveTo = (req.query.moveTo as string | undefined)?.trim();
   const withArticles = req.query.withArticles === "true";
@@ -613,7 +700,7 @@ const sectionSchema = z.object({
   order: z.number().int().optional(),
 });
 
-adminRouter.post("/homepage", requireRole(...CAN_MANAGE), async (req, res) => {
+adminRouter.post("/homepage", async (req, res) => {
   const parsed = sectionSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: "Invalid input" });
   const count = await prisma.homepageSection.count();
@@ -629,7 +716,7 @@ adminRouter.post("/homepage", requireRole(...CAN_MANAGE), async (req, res) => {
   res.status(201).json({ section });
 });
 
-adminRouter.put("/homepage/:id", requireRole(...CAN_MANAGE), async (req, res) => {
+adminRouter.put("/homepage/:id", async (req, res) => {
   const parsed = sectionSchema.partial().safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: "Invalid input" });
   const section = await prisma.homepageSection
@@ -639,7 +726,7 @@ adminRouter.put("/homepage/:id", requireRole(...CAN_MANAGE), async (req, res) =>
   res.json({ section });
 });
 
-adminRouter.delete("/homepage/:id", requireRole(...CAN_MANAGE), async (req, res) => {
+adminRouter.delete("/homepage/:id", async (req, res) => {
   await prisma.homepageSection.delete({ where: { id: req.params.id } }).catch(() => null);
   res.json({ ok: true });
 });
@@ -666,7 +753,6 @@ const sectionOrderSchema = z.object({
 
 adminRouter.put(
   "/section-articles/:categoryId",
-  requireRole(...CAN_PUBLISH),
   async (req, res) => {
     const parsed = sectionOrderSchema.safeParse(req.body);
     if (!parsed.success) return res.status(400).json({ error: "Invalid input" });
@@ -693,80 +779,6 @@ adminRouter.put(
   },
 );
 
-// ===================== USERS & ROLES (super admin) =====================
-const ROLES = ["SUPER_ADMIN", "ADMIN", "EDITOR", "REPORTER", "MODERATOR"] as const;
-
-adminRouter.get("/users", requireRole("SUPER_ADMIN"), async (_req, res) => {
-  const users = await prisma.user.findMany({
-    orderBy: { createdAt: "asc" },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      role: true,
-      active: true,
-      createdAt: true,
-    },
-  });
-  res.json({ users });
-});
-
-const userCreateSchema = z.object({
-  name: z.string().min(1),
-  email: z.string().email(),
-  password: z.string().min(6),
-  role: z.enum(ROLES),
-});
-
-adminRouter.post("/users", requireRole("SUPER_ADMIN"), async (req, res) => {
-  const parsed = userCreateSchema.safeParse(req.body);
-  if (!parsed.success) return res.status(400).json({ error: "Invalid input" });
-  const exists = await prisma.user.findUnique({
-    where: { email: parsed.data.email },
-  });
-  if (exists) return res.status(400).json({ error: "এই ইমেইল আগে থেকেই আছে" });
-  const user = await prisma.user.create({
-    data: {
-      name: parsed.data.name,
-      email: parsed.data.email,
-      password: await hashPassword(parsed.data.password),
-      role: parsed.data.role,
-    },
-    select: { id: true, name: true, email: true, role: true, active: true },
-  });
-  res.status(201).json({ user });
-});
-
-const userUpdateSchema = z.object({
-  name: z.string().min(1).optional(),
-  role: z.enum(ROLES).optional(),
-  active: z.boolean().optional(),
-  password: z.string().min(6).optional(),
-});
-
-adminRouter.put("/users/:id", requireRole("SUPER_ADMIN"), async (req, res) => {
-  const parsed = userUpdateSchema.safeParse(req.body);
-  if (!parsed.success) return res.status(400).json({ error: "Invalid input" });
-  const data: Record<string, unknown> = { ...parsed.data };
-  if (parsed.data.password) data.password = await hashPassword(parsed.data.password);
-  const user = await prisma.user
-    .update({
-      where: { id: req.params.id },
-      data,
-      select: { id: true, name: true, email: true, role: true, active: true },
-    })
-    .catch(() => null);
-  if (!user) return res.status(404).json({ error: "Not found" });
-  res.json({ user });
-});
-
-adminRouter.delete("/users/:id", requireRole("SUPER_ADMIN"), async (req, res) => {
-  if (req.params.id === req.user!.id)
-    return res.status(400).json({ error: "নিজেকে মুছতে পারবেন না" });
-  await prisma.user.delete({ where: { id: req.params.id } }).catch(() => null);
-  res.json({ ok: true });
-});
-
 // ===================== MEDIA LIBRARY =====================
 adminRouter.get("/media", async (_req, res) => {
   const media = await prisma.media.findMany({
@@ -776,7 +788,7 @@ adminRouter.get("/media", async (_req, res) => {
   res.json({ media });
 });
 
-adminRouter.delete("/media/:id", requireRole(...CAN_WRITE), async (req, res) => {
+adminRouter.delete("/media/:id", async (req, res) => {
   const item = await prisma.media
     .delete({ where: { id: req.params.id } })
     .catch(() => null);
@@ -795,7 +807,7 @@ adminRouter.get("/subscribers", async (_req, res) => {
   res.json({ subscribers });
 });
 
-adminRouter.delete("/subscribers/:id", requireRole(...CAN_MANAGE), async (req, res) => {
+adminRouter.delete("/subscribers/:id", async (req, res) => {
   await prisma.subscriber.delete({ where: { id: req.params.id } }).catch(() => null);
   res.json({ ok: true });
 });
@@ -803,22 +815,12 @@ adminRouter.delete("/subscribers/:id", requireRole(...CAN_MANAGE), async (req, r
 // ===================== SITE SETTINGS =====================
 // ===================== NOTIFICATIONS & PROFILE =====================
 
-/** Everything waiting on the newsroom, newest first, for the bell. */
-adminRouter.get("/notifications", async (_req, res) => {
-  res.json(await listNotifications());
-});
-
 /**
  * Recent sign-in activity. Super Admin only: it carries other people's
  * addresses and the addresses attackers have tried.
  */
 adminRouter.get("/security/logins", requireRole("SUPER_ADMIN"), async (req, res) => {
   res.json({ logins: await recentLogins(Number(req.query.take) || 50) });
-});
-
-/** What each role may do — served from the same lists that guard the routes. */
-adminRouter.get("/permissions", async (_req, res) => {
-  res.json(permissionMatrix());
 });
 
 const profileSchema = z.object({
@@ -892,7 +894,7 @@ adminRouter.get("/seo", async (_req, res) => {
   res.json({ settings, sitemap, audit });
 });
 
-adminRouter.put("/seo", requireRole(...CAN_MANAGE), async (req, res) => {
+adminRouter.put("/seo", async (req, res) => {
   const body = (req.body ?? {}) as Record<string, unknown>;
   const str = (k: string) =>
     typeof body[k] === "string" ? (body[k] as string).trim() : undefined;
@@ -922,7 +924,7 @@ adminRouter.get("/settings", async (_req, res) => {
   res.json({ settings: row?.value ?? {} });
 });
 
-adminRouter.put("/settings", requireRole(...CAN_MANAGE), async (req, res) => {
+adminRouter.put("/settings", async (req, res) => {
   const value = req.body ?? {};
   const row = await prisma.siteSetting.upsert({
     where: { key: "site" },
@@ -956,14 +958,14 @@ const lawyerSchema = z.object({
   districtId: z.string().min(1),
 });
 
-adminRouter.post("/lawyers", requireRole(...CAN_DIRECTORY), async (req, res) => {
+adminRouter.post("/lawyers", async (req, res) => {
   const parsed = lawyerSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: "Invalid input" });
   const lawyer = await prisma.lawyer.create({ data: parsed.data });
   res.status(201).json({ lawyer });
 });
 
-adminRouter.put("/lawyers/:id", requireRole(...CAN_DIRECTORY), async (req, res) => {
+adminRouter.put("/lawyers/:id", async (req, res) => {
   const parsed = lawyerSchema.partial().safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: "Invalid input" });
   const lawyer = await prisma.lawyer
@@ -973,7 +975,7 @@ adminRouter.put("/lawyers/:id", requireRole(...CAN_DIRECTORY), async (req, res) 
   res.json({ lawyer });
 });
 
-adminRouter.delete("/lawyers/:id", requireRole(...CAN_DIRECTORY), async (req, res) => {
+adminRouter.delete("/lawyers/:id", async (req, res) => {
   await prisma.lawyer.delete({ where: { id: req.params.id } }).catch(() => null);
   res.json({ ok: true });
 });
@@ -1009,14 +1011,14 @@ const donorSchema = z.object({
   districtId: z.string().min(1),
 });
 
-adminRouter.post("/donors", requireRole(...CAN_DIRECTORY), async (req, res) => {
+adminRouter.post("/donors", async (req, res) => {
   const parsed = donorSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: "Invalid input" });
   const donor = await prisma.bloodDonor.create({ data: parsed.data });
   res.status(201).json({ donor });
 });
 
-adminRouter.put("/donors/:id", requireRole(...CAN_DIRECTORY), async (req, res) => {
+adminRouter.put("/donors/:id", async (req, res) => {
   const parsed = donorSchema.partial().safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: "Invalid input" });
   const donor = await prisma.bloodDonor
@@ -1026,7 +1028,7 @@ adminRouter.put("/donors/:id", requireRole(...CAN_DIRECTORY), async (req, res) =
   res.json({ donor });
 });
 
-adminRouter.delete("/donors/:id", requireRole(...CAN_DIRECTORY), async (req, res) => {
+adminRouter.delete("/donors/:id", async (req, res) => {
   await prisma.bloodDonor.delete({ where: { id: req.params.id } }).catch(() => null);
   res.json({ ok: true });
 });
@@ -1043,7 +1045,7 @@ adminRouter.get("/comments", async (req, res) => {
   res.json({ comments });
 });
 
-adminRouter.patch("/comments/:id", requireRole(...CAN_MODERATE), async (req, res) => {
+adminRouter.patch("/comments/:id", async (req, res) => {
   const status = String(req.body?.status);
   if (!["PENDING", "APPROVED", "REJECTED", "SPAM"].includes(status))
     return res.status(400).json({ error: "Invalid status" });
@@ -1054,7 +1056,7 @@ adminRouter.patch("/comments/:id", requireRole(...CAN_MODERATE), async (req, res
   res.json({ comment });
 });
 
-adminRouter.delete("/comments/:id", requireRole(...CAN_MODERATE), async (req, res) => {
+adminRouter.delete("/comments/:id", async (req, res) => {
   await prisma.comment.delete({ where: { id: req.params.id } }).catch(() => null);
   res.json({ ok: true });
 });
@@ -1065,18 +1067,23 @@ adminRouter.delete("/comments/:id", requireRole(...CAN_MODERATE), async (req, re
  * How many reader submissions are waiting — drives the badge in the admin nav.
  * Kept as one call so the sidebar does not fan out three requests per page.
  */
-adminRouter.get("/pending-counts", async (_req, res) => {
-  const [lawyers, donors, hospitals, comments] = await Promise.all([
+adminRouter.get("/pending-counts", async (req, res) => {
+  const sup = isSuper(req.user);
+  const [lawyers, donors, hospitals, comments, articles, revisions] = await Promise.all([
     prisma.lawyer.count({ where: { status: "PENDING" } }),
     prisma.bloodDonor.count({ where: { status: "PENDING" } }),
     prisma.hospital.count({ where: { status: "PENDING" } }),
     prisma.comment.count({ where: { status: "PENDING" } }),
+    // The approval queue is the Super Admin's alone.
+    sup ? prisma.article.count({ where: { status: "PENDING" } }) : 0,
+    sup ? prisma.articleRevision.count({ where: { status: "PENDING" } }) : 0,
   ]);
   res.json({
     lawyers,
     donors,
     hospitals,
     comments,
+    approvals: articles + revisions,
     total: lawyers + donors + hospitals,
   });
 });
@@ -1089,7 +1096,6 @@ const reviewSchema = z.object({
 /** Approve or reject one listing. `service` picks which table to touch. */
 adminRouter.put(
   "/listings/:service/:id/review",
-  requireRole(...CAN_DIRECTORY),
   async (req, res) => {
     const parsed = reviewSchema.safeParse(req.body);
     if (!parsed.success) return res.status(400).json({ error: "Invalid input" });
@@ -1143,7 +1149,7 @@ const hospitalAdminSchema = z.object({
   emergency24: z.boolean().default(false),
 });
 
-adminRouter.post("/hospitals", requireRole(...CAN_DIRECTORY), async (req, res) => {
+adminRouter.post("/hospitals", async (req, res) => {
   const parsed = hospitalAdminSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: "Invalid input" });
   // Staff-entered rows skip the queue — the person adding it is the reviewer.
@@ -1153,7 +1159,7 @@ adminRouter.post("/hospitals", requireRole(...CAN_DIRECTORY), async (req, res) =
   res.status(201).json({ hospital });
 });
 
-adminRouter.put("/hospitals/:id", requireRole(...CAN_DIRECTORY), async (req, res) => {
+adminRouter.put("/hospitals/:id", async (req, res) => {
   const parsed = hospitalAdminSchema.partial().safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: "Invalid input" });
   const hospital = await prisma.hospital
@@ -1165,7 +1171,6 @@ adminRouter.put("/hospitals/:id", requireRole(...CAN_DIRECTORY), async (req, res
 
 adminRouter.delete(
   "/hospitals/:id",
-  requireRole(...CAN_DIRECTORY),
   async (req, res) => {
     await prisma.hospital.delete({ where: { id: req.params.id } }).catch(() => null);
     res.json({ ok: true });
@@ -1353,7 +1358,7 @@ adminRouter.get("/ads", async (_req, res) => {
 
 // Approve / reject an advertiser-booked ad. Approving = payment confirmed →
 // the ad goes live for `days` from now.
-adminRouter.patch("/ads/:id/status", requireRole(...CAN_MANAGE), async (req, res) => {
+adminRouter.patch("/ads/:id/status", async (req, res) => {
   const status = String(req.body?.status);
   if (!["PENDING", "ACTIVE", "REJECTED", "EXPIRED"].includes(status))
     return res.status(400).json({ error: "Invalid status" });
@@ -1379,7 +1384,7 @@ adminRouter.patch("/ads/:id/status", requireRole(...CAN_MANAGE), async (req, res
   res.json({ ad: updated });
 });
 
-adminRouter.post("/ads", requireRole(...CAN_MANAGE), async (req, res) => {
+adminRouter.post("/ads", async (req, res) => {
   const parsed = adSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: "সঠিক তথ্য দিন" });
   const d = parsed.data;
@@ -1397,7 +1402,7 @@ adminRouter.post("/ads", requireRole(...CAN_MANAGE), async (req, res) => {
   res.status(201).json({ ad });
 });
 
-adminRouter.put("/ads/:id", requireRole(...CAN_MANAGE), async (req, res) => {
+adminRouter.put("/ads/:id", async (req, res) => {
   const parsed = adSchema.partial().safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: "সঠিক তথ্য দিন" });
   const d = parsed.data;
@@ -1417,7 +1422,7 @@ adminRouter.put("/ads/:id", requireRole(...CAN_MANAGE), async (req, res) => {
   res.json({ ad });
 });
 
-adminRouter.delete("/ads/:id", requireRole(...CAN_MANAGE), async (req, res) => {
+adminRouter.delete("/ads/:id", async (req, res) => {
   await prisma.ad.delete({ where: { id: req.params.id } }).catch(() => null);
   res.json({ ok: true });
 });
@@ -1437,7 +1442,7 @@ adminRouter.get("/epaper", async (_req, res) => {
   res.json({ editions });
 });
 
-adminRouter.post("/epaper", requireRole(...CAN_PUBLISH), async (req, res) => {
+adminRouter.post("/epaper", async (req, res) => {
   const parsed = epaperSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: "সঠিক তথ্য দিন" });
   const edition = await prisma.epaperEdition.create({
@@ -1451,7 +1456,7 @@ adminRouter.post("/epaper", requireRole(...CAN_PUBLISH), async (req, res) => {
   res.status(201).json({ edition });
 });
 
-adminRouter.patch("/epaper/:id", requireRole(...CAN_PUBLISH), async (req, res) => {
+adminRouter.patch("/epaper/:id", async (req, res) => {
   const body = req.body ?? {};
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const data: any = {};
@@ -1466,7 +1471,7 @@ adminRouter.patch("/epaper/:id", requireRole(...CAN_PUBLISH), async (req, res) =
   res.json({ edition });
 });
 
-adminRouter.delete("/epaper/:id", requireRole(...CAN_PUBLISH), async (req, res) => {
+adminRouter.delete("/epaper/:id", async (req, res) => {
   const item = await prisma.epaperEdition
     .delete({ where: { id: req.params.id } })
     .catch(() => null);

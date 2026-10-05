@@ -38,6 +38,14 @@ Next.js 15 (App Router) + React 19 + TypeScript (strict) + Tailwind CSS v4. Impo
 
 **No fallback content.** An empty API response must render an empty state, never sample data — this is an explicit instruction from the owner, not a style preference.
 
+### Admin permissions & approval workflow
+
+- **Permissions are data, not code.** The Super Admin sets View / Edit / Delete per module, per role (Roles page) and per user as exceptions (Users page). Modules and role defaults live in `apps/api/src/lib/permissions.ts`; rows in `RolePermission` / `UserPermission` override them. The Super Admin always has everything.
+- **Enforcement is server-side, in one place:** `apps/api/src/middleware/permissions.ts` maps every `/api/admin/*` path to a module (GET = view, DELETE = delete, else edit). An unmapped path is Super Admin only — add new admin routes to that map. `authenticate` re-reads the user from the DB on every request (role/active changes apply instantly; reader `ln24_acc` tokens are refused).
+- **Only the Super Admin publishes.** Anyone else's "publish" becomes `PENDING`; an edit to a `PUBLISHED` story is stored as an `ArticleRevision` and the live version is untouched until approved. Approve / reject / back-to-draft live in `apps/api/src/routes/newsroom.ts`, which also serves users, permissions, the team page and `/my/*`.
+- **Realtime:** staff sockets are identified from the cookie and joined to `user:<id>`, `super`, `staff` rooms (`apps/api/src/realtime.ts`). Events: `permissions:changed`, `session:revoked`, `notification:new`, `approvals:changed`, `presence:update` (the panel reports its page with `presence:page`).
+- Panel side: `useAdminAuth().can(module, action)` / `isSuper` gate the UI; the server is the real gate.
+
 ### Routing
 
 - `src/app/page.tsx` — homepage, composed from the admin's homepage plan (`GET /api/homepage`).

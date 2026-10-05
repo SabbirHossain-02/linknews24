@@ -9,6 +9,7 @@ import { clientIp } from "../lib/analytics";
 import { signToken, verifyToken } from "../lib/jwt";
 import { env } from "../env";
 import { authenticate } from "../middleware/auth";
+import { effectivePermissions } from "../lib/permissions";
 
 export const authRouter = Router();
 
@@ -17,7 +18,11 @@ const loginSchema = z.object({
   password: z.string().min(1),
 });
 
-function publicUser(u: User) {
+/**
+ * The signed-in staff member as the panel needs them: who they are, what they
+ * may open and do, and whether their stories go to the Super Admin first.
+ */
+async function publicUser(u: User) {
   return {
     id: u.id,
     name: u.name,
@@ -25,6 +30,8 @@ function publicUser(u: User) {
     role: u.role,
     avatar: u.avatar,
     bio: u.bio,
+    permissions: await effectivePermissions(u),
+    needsApproval: u.role !== "SUPER_ADMIN",
   };
 }
 
@@ -80,7 +87,7 @@ authRouter.post("/login", async (req, res) => {
     maxAge: 24 * 60 * 60 * 1000,
     path: "/",
   });
-  res.json({ user: publicUser(user) });
+  res.json({ user: await publicUser(user) });
 });
 
 authRouter.post("/logout", async (req, res) => {
@@ -106,5 +113,5 @@ authRouter.get("/me", authenticate, async (req, res) => {
   const user = await prisma.user.findUnique({ where: { id: req.user!.id } });
   if (!user || !user.active)
     return res.status(401).json({ error: "Unauthorized" });
-  res.json({ user: publicUser(user) });
+  res.json({ user: await publicUser(user) });
 });
