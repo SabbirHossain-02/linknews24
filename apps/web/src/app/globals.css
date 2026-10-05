@@ -34,7 +34,9 @@
 
   --font-sans: var(--font-noto-serif-bengali), var(--font-siyam-rupali),
     var(--font-hind-siliguri);
-  --font-ui: var(--font-inter);
+  /* Inter has no Bengali glyphs: without the fallback, Bengali inside a
+     font-ui element would drop to the reader's system font. */
+  --font-ui: var(--font-inter), var(--font-noto-serif-bengali);
 
   --animate-ticker: ticker 28s linear infinite;
 

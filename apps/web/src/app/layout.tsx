@@ -22,7 +22,8 @@ const hindSiliguri = Hind_Siliguri({
 
 // Noto Serif Bengali — the site's main Bengali face. A free (OFL) stand-in for
 // the newspaper-style serif Asia Post uses, whose own font (VarendraAP) is
-// proprietary. Bengali subset only, so Latin text falls through to Inter.
+// proprietary. Bengali subset only, so Latin text falls through to the next
+// face in the stack.
 const notoSerifBengali = Noto_Serif_Bengali({
   variable: "--font-noto-serif-bengali",
   subsets: ["bengali"],
