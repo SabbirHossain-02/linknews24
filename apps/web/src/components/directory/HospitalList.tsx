@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { getSocket } from "@/lib/socket";
 import { Building2, MapPin, Phone, Siren } from "lucide-react";
 import { API_BASE } from "@/lib/admin-api";
 import { districts, formatPhone } from "@/lib/directory-data";
@@ -39,6 +40,15 @@ export function HospitalList() {
   }, [district, type]);
 
   useEffect(load, [load]);
+
+  // A listing approved or added in the admin appears here without a reload.
+  useEffect(() => {
+    const socket = getSocket();
+    socket.on("content:changed", load);
+    return () => {
+      socket.off("content:changed", load);
+    };
+  }, [load]);
 
   return (
     <div className="flex flex-col gap-4">

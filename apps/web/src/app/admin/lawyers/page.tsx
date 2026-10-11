@@ -2,8 +2,12 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
-import { Scale, Search, Trash2 } from "lucide-react";
+import { Plus, Scale, Search, Trash2 } from "lucide-react";
 import { apiFetch } from "@/lib/admin-api";
+import { getSocket } from "@/lib/socket";
+import { useAdminText } from "@/lib/admin-strings";
+import { AddLawyerModal } from "@/components/admin/DirectoryAddForms";
+import { useAdminAuth } from "@/components/admin/AdminAuthProvider";
 import {
   ReviewActions,
   StatusFilter,
@@ -41,6 +45,10 @@ interface Lawyer {
  */
 export default function LawyersAdminPage() {
   const t = useAdminT();
+  const ax = useAdminText();
+  const { can } = useAdminAuth();
+  const [adding, setAdding] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
   const [rows, setRows] = useState<Lawyer[]>([]);
   const [status, setStatus] = useState<ListingStatus | "">("PENDING");
   const [q, setQ] = useState("");
@@ -62,9 +70,37 @@ export default function LawyersAdminPage() {
     return () => clearTimeout(timer);
   }, [load]);
 
+  // A reader's submission, or another admin's addition, appears here without
+  // a reload.
+  useEffect(() => {
+    const socket = getSocket();
+    socket.on("content:changed", load);
+    return () => {
+      socket.off("content:changed", load);
+    };
+  }, [load]);
+
+  useEffect(() => {
+    if (!toast) return;
+    const id = setTimeout(() => setToast(null), 3000);
+    return () => clearTimeout(id);
+  }, [toast]);
+
   return (
     <div className="max-w-4xl">
-      <h1 className="text-2xl font-bold text-heading">{t("lawyers")}</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-2xl font-bold text-heading">{t("lawyers")}</h1>
+        {can("lawyers", "edit") && (
+          <button
+            type="button"
+            onClick={() => setAdding(true)}
+            className="flex items-center gap-1.5 rounded-lg bg-brand-crimson px-4 py-2.5 font-ui text-sm font-semibold text-white hover:bg-brand-crimson-dark"
+          >
+            <Plus className="h-4 w-4" />
+            {ax("নতুন আইনজীবী")}
+          </button>
+        )}
+      </div>
       <p className="mt-1 font-ui text-sm text-foreground-muted">
         {t("svcLegalDesk")}
       </p>
@@ -184,6 +220,24 @@ export default function LawyersAdminPage() {
           ))
         )}
       </div>
+
+      {adding && (
+        <AddLawyerModal
+          onClose={() => setAdding(false)}
+          onSaved={() => {
+            // It is live at once, so show it where live listings are.
+            setStatus("APPROVED");
+            setToast(ax("যোগ হয়েছে — সাইটে প্রকাশিত"));
+            load();
+          }}
+        />
+      )}
+
+      {toast && (
+        <div className="fixed bottom-6 left-1/2 z-[130] -translate-x-1/2 rounded-xl bg-brand-navy px-4 py-2.5 font-ui text-sm font-semibold text-white shadow-xl">
+          {toast}
+        </div>
+      )}
     </div>
   );
 }

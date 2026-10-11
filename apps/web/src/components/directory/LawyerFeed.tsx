@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { getSocket } from "@/lib/socket";
 import Image from "next/image";
 import { BadgeCheck, MapPin, Phone, Scale, User } from "lucide-react";
 import { API_BASE } from "@/lib/admin-api";
@@ -38,6 +39,15 @@ export function LawyerFeed() {
   }, [district]);
 
   useEffect(load, [load]);
+
+  // A listing approved or added in the admin appears here without a reload.
+  useEffect(() => {
+    const socket = getSocket();
+    socket.on("content:changed", load);
+    return () => {
+      socket.off("content:changed", load);
+    };
+  }, [load]);
 
   const term = q.trim().toLowerCase();
   const shown = term

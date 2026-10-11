@@ -27,6 +27,7 @@ import {
 } from "../lib/articles";
 import { logWork, notifyStaff } from "../lib/staffNotify";
 import { breakingEnabled } from "../lib/siteSettings";
+import { BLOOD_GROUPS } from "../lib/blood";
 import { PLACEMENTS, type Placement } from "../lib/adSlots";
 import { findClash, validateTarget } from "../lib/adTargeting";
 import { adReport } from "../lib/adTracking";
@@ -980,39 +981,81 @@ adminRouter.put("/settings", async (req, res) => {
 });
 
 // ===================== LAWYERS DIRECTORY =====================
+const LISTING_STATUSES = ["PENDING", "APPROVED", "REJECTED"];
 adminRouter.get("/lawyers", async (req, res) => {
-  const { district, q } = req.query as Record<string, string>;
+  const { district, q, status } = req.query as Record<string, string>;
   const lawyers = await prisma.lawyer.findMany({
     where: {
       districtId: district || undefined,
       name: q ? { contains: q, mode: "insensitive" } : undefined,
+      // The page's Pending / Published / Returned tabs — ignored until now,
+      // so every tab showed every lawyer.
+      status: LISTING_STATUSES.includes(status) ? (status as never) : undefined,
     },
-    include: { district: { select: { name: true } } },
-    orderBy: { createdAt: "desc" },
+    include: {
+      district: { select: { name: true } },
+      account: { select: { name: true, email: true, avatar: true } },
+    },
+    orderBy: [{ status: "asc" }, { createdAt: "desc" }],
     take: 500,
   });
   res.json({ lawyers });
 });
 
+// The same details a reader gives when listing themselves, so a listing the
+// newsroom adds looks exactly like one that came through review.
+const optionalText = (max: number) =>
+  z.string().trim().max(max).nullable().optional().transform((v) => v || null);
+const optionalDate = z
+  .string()
+  .nullable()
+  .optional()
+  .refine((v) => !v || /^\d{4}-\d{2}-\d{2}$/.test(v), "তারিখ ঠিক নয়")
+  .transform((v) => (v ? new Date(`${v}T00:00:00+06:00`) : null));
+
 const lawyerSchema = z.object({
-  name: z.string().min(1),
-  spec: z.string().default(""),
-  specEn: z.string().default(""),
-  phone: z.string().min(1),
-  chamber: z.string().optional(),
-  districtId: z.string().min(1),
+  name: z.string().trim().min(2, "নাম দিন").max(120),
+  spec: z.string().trim().min(1, "বিশেষজ্ঞতা দিন").max(120),
+  specEn: z.string().trim().max(120).optional(),
+  phone: z.string().trim().min(6, "ফোন নম্বর দিন").max(30),
+  chamber: optionalText(300),
+  districtId: z.string().min(1, "জেলা বেছে নিন"),
+  barEnrollNo: optionalText(60),
+  enrolledOn: optionalDate,
+  barAssociation: optionalText(160),
+  barMemberId: optionalText(60),
+  sanadUrl: optionalText(500),
+  photo: optionalText(500),
 });
+
+/** The first message a form can show, in Bengali when there is one. */
+const formError = (e: z.ZodError) =>
+  e.issues.find((i) => /[\u0980-\u09FF]/.test(i.message))?.message ?? "তথ্য ঠিকভাবে দিন";
+
+async function districtExists(id: string | undefined) {
+  if (!id) return true;
+  return !!(await prisma.district.findUnique({ where: { id }, select: { id: true } }));
+}
 
 adminRouter.post("/lawyers", async (req, res) => {
   const parsed = lawyerSchema.safeParse(req.body);
-  if (!parsed.success) return res.status(400).json({ error: "Invalid input" });
-  const lawyer = await prisma.lawyer.create({ data: parsed.data });
+  if (!parsed.success) return res.status(400).json({ error: formError(parsed.error) });
+  if (!(await districtExists(parsed.data.districtId)))
+    return res.status(400).json({ error: "জেলা পাওয়া যায়নি" });
+  const { specEn, ...d } = parsed.data;
+  // Staff-entered rows skip the queue — the person adding it is the reviewer.
+  const lawyer = await prisma.lawyer.create({
+    data: { ...d, specEn: specEn || d.spec, status: "APPROVED" },
+    include: { district: { select: { name: true } } },
+  });
   res.status(201).json({ lawyer });
 });
 
 adminRouter.put("/lawyers/:id", async (req, res) => {
   const parsed = lawyerSchema.partial().safeParse(req.body);
-  if (!parsed.success) return res.status(400).json({ error: "Invalid input" });
+  if (!parsed.success) return res.status(400).json({ error: formError(parsed.error) });
+  if (!(await districtExists(parsed.data.districtId)))
+    return res.status(400).json({ error: "জেলা পাওয়া যায়নি" });
   const lawyer = await prisma.lawyer
     .update({ where: { id: req.params.id }, data: parsed.data })
     .catch(() => null);
@@ -1032,7 +1075,7 @@ adminRouter.get("/donors", async (req, res) => {
     where: {
       group: group || undefined,
       name: q ? { contains: q, mode: "insensitive" } : undefined,
-      status: status ? (status as never) : undefined,
+      status: LISTING_STATUSES.includes(status) ? (status as never) : undefined,
     },
     include: {
       district: { select: { name: true } },
@@ -1050,22 +1093,37 @@ adminRouter.get("/donors", async (req, res) => {
 });
 
 const donorSchema = z.object({
-  name: z.string().min(1),
-  group: z.string().min(1),
-  phone: z.string().min(1),
-  districtId: z.string().min(1),
+  name: z.string().trim().min(2, "নাম দিন").max(120),
+  group: z
+    .string()
+    .refine((g) => BLOOD_GROUPS.some((b) => b.label === g), "রক্তের গ্রুপ বেছে নিন"),
+  phone: z.string().trim().min(6, "ফোন নম্বর দিন").max(30),
+  districtId: z.string().min(1, "জেলা বেছে নিন"),
+  donorNo: optionalText(60),
+  gender: z.enum(["male", "female", "other"]).nullable().optional(),
+  dob: optionalDate,
+  address: optionalText(300),
+  lastDonation: optionalDate,
+  photo: optionalText(500),
 });
 
 adminRouter.post("/donors", async (req, res) => {
   const parsed = donorSchema.safeParse(req.body);
-  if (!parsed.success) return res.status(400).json({ error: "Invalid input" });
-  const donor = await prisma.bloodDonor.create({ data: parsed.data });
+  if (!parsed.success) return res.status(400).json({ error: formError(parsed.error) });
+  if (!(await districtExists(parsed.data.districtId)))
+    return res.status(400).json({ error: "জেলা পাওয়া যায়নি" });
+  const donor = await prisma.bloodDonor.create({
+    data: { ...parsed.data, status: "APPROVED" },
+    include: { district: { select: { name: true } } },
+  });
   res.status(201).json({ donor });
 });
 
 adminRouter.put("/donors/:id", async (req, res) => {
   const parsed = donorSchema.partial().safeParse(req.body);
-  if (!parsed.success) return res.status(400).json({ error: "Invalid input" });
+  if (!parsed.success) return res.status(400).json({ error: formError(parsed.error) });
+  if (!(await districtExists(parsed.data.districtId)))
+    return res.status(400).json({ error: "জেলা পাওয়া যায়নি" });
   const donor = await prisma.bloodDonor
     .update({ where: { id: req.params.id }, data: parsed.data })
     .catch(() => null);
@@ -1172,7 +1230,7 @@ adminRouter.get("/hospitals", async (req, res) => {
   const { status, q } = req.query as Record<string, string>;
   const hospitals = await prisma.hospital.findMany({
     where: {
-      ...(status ? { status: status as never } : {}),
+      ...(LISTING_STATUSES.includes(status) ? { status: status as never } : {}),
       ...(q ? { name: { contains: q, mode: "insensitive" } } : {}),
     },
     include: {
@@ -1185,18 +1243,22 @@ adminRouter.get("/hospitals", async (req, res) => {
 });
 
 const hospitalAdminSchema = z.object({
-  name: z.string().min(2).max(160),
+  name: z.string().trim().min(2, "হাসপাতালের নাম দিন").max(160),
   type: z.enum(["GOVERNMENT", "PRIVATE", "SPECIALIZED", "NGO"]),
-  address: z.string().min(3).max(300),
-  districtId: z.string().min(1),
+  address: z.string().trim().min(3, "ঠিকানা দিন").max(300),
+  districtId: z.string().min(1, "জেলা বেছে নিন"),
   thana: z.string().max(120).nullable().optional(),
-  hotline: z.string().min(4).max(60),
+  // 999 and 333 are real Bangladeshi hotlines.
+  hotline: z.string().trim().min(3, "হটলাইন নম্বর দিন").max(60),
   emergency24: z.boolean().default(false),
+  photo: optionalText(500),
 });
 
 adminRouter.post("/hospitals", async (req, res) => {
   const parsed = hospitalAdminSchema.safeParse(req.body);
-  if (!parsed.success) return res.status(400).json({ error: "Invalid input" });
+  if (!parsed.success) return res.status(400).json({ error: formError(parsed.error) });
+  if (!(await districtExists(parsed.data.districtId)))
+    return res.status(400).json({ error: "জেলা পাওয়া যায়নি" });
   // Staff-entered rows skip the queue — the person adding it is the reviewer.
   const hospital = await prisma.hospital.create({
     data: { ...parsed.data, status: "APPROVED" },
@@ -1206,7 +1268,9 @@ adminRouter.post("/hospitals", async (req, res) => {
 
 adminRouter.put("/hospitals/:id", async (req, res) => {
   const parsed = hospitalAdminSchema.partial().safeParse(req.body);
-  if (!parsed.success) return res.status(400).json({ error: "Invalid input" });
+  if (!parsed.success) return res.status(400).json({ error: formError(parsed.error) });
+  if (!(await districtExists(parsed.data.districtId)))
+    return res.status(400).json({ error: "জেলা পাওয়া যায়নি" });
   const hospital = await prisma.hospital
     .update({ where: { id: req.params.id }, data: parsed.data })
     .catch(() => null);
