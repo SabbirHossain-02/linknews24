@@ -25,11 +25,13 @@ export const MODULES = [
 ] as const;
 
 export type Module = (typeof MODULES)[number];
-export type PermAction = "view" | "edit" | "delete";
+export type PermAction = "view" | "edit" | "delete" | "publish";
 export interface Perm {
   view: boolean;
   edit: boolean;
   delete: boolean;
+  /** Articles only: stories go live without the Super Admin's approval. */
+  publish: boolean;
 }
 export type PermSet = Record<Module, Perm>;
 

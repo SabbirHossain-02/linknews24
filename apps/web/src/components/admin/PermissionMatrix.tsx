@@ -1,6 +1,8 @@
 "use client";
 
-import { Check, Eye, Pencil, RotateCcw, Trash2 } from "lucide-react";
+import { Fragment } from "react";
+import { Check, Eye, Pencil, RotateCcw, Send, Trash2 } from "lucide-react";
+import { Toggle } from "./Toggle";
 import type { Module, Perm, PermAction, PermSet } from "./AdminAuthProvider";
 import { MODULE_GROUP_LABEL, MODULE_META } from "@/lib/admin-modules";
 import { useAdminT } from "@/lib/admin-i18n";
@@ -11,7 +13,7 @@ export interface ModuleInfo {
   group: "content" | "directory" | "site";
 }
 
-const ACTIONS: { key: PermAction; icon: typeof Eye; label: string }[] = [
+const ACTIONS: { key: Exclude<PermAction, "publish">; icon: typeof Eye; label: string }[] = [
   { key: "view", icon: Eye, label: "দেখা" },
   { key: "edit", icon: Pencil, label: "এডিট" },
   { key: "delete", icon: Trash2, label: "ডিলিট" },
@@ -57,10 +59,14 @@ export function PermissionMatrix({
     const cur = value[m];
     const next = { ...cur, [a]: !cur[a] };
     // Edit or delete needs view; switching view off takes the others with it.
+    // Publishing without approval is a kind of editing, so it needs edit too.
     if (a === "view" && !next.view) {
       next.edit = false;
       next.delete = false;
+      next.publish = false;
     }
+    if (a === "edit" && !next.edit) next.publish = false;
+    if (next.publish) next.edit = true;
     if (next.edit || next.delete) next.view = true;
     onChange(m, next, a);
   };
@@ -109,8 +115,8 @@ export function PermissionMatrix({
                 const custom = overridden?.has(key);
                 const none = !p.view && !p.edit && !p.delete;
                 return (
+                  <Fragment key={key}>
                   <li
-                    key={key}
                     className={`grid grid-cols-[minmax(0,1fr)_repeat(3,64px)] items-center gap-2 px-4 py-3 transition-colors sm:grid-cols-[minmax(0,1fr)_repeat(3,88px)] sm:px-5 ${
                       custom ? "bg-amber-50/70" : "hover:bg-surface/40"
                     }`}
@@ -176,6 +182,38 @@ export function PermissionMatrix({
                       );
                     })}
                   </li>
+                  {key === "articles" && (
+                    <li
+                      className={`flex items-center gap-3 border-t border-dashed border-border py-3 pl-[4.25rem] pr-4 sm:pr-5 ${
+                        base && base.articles.publish !== p.publish ? "bg-amber-50/70" : "bg-green-50/40"
+                      }`}
+                    >
+                      <span
+                        className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${
+                          p.publish ? "bg-green-600 text-white" : "bg-surface text-foreground-muted"
+                        }`}
+                      >
+                        <Send className="h-3.5 w-3.5" />
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-ui text-sm font-semibold text-heading">
+                          {ax("অনুমোদন ছাড়াই সরাসরি প্রকাশ")}
+                        </p>
+                        <p className="font-ui text-xs text-foreground-muted">
+                          {p.publish
+                            ? ax("চালু: এর খবর ও লাইভ খবরের সংশোধন সাথে সাথে সাইটে যাবে। সুপার অ্যাডমিন নোটিফিকেশন পাবেন।")
+                            : ax("বন্ধ: খবর প্রকাশের আগে সুপার অ্যাডমিনের অনুমোদনে যাবে।")}
+                        </p>
+                      </div>
+                      <Toggle
+                        size="md"
+                        checked={p.publish}
+                        onChange={() => flip("articles", "publish")}
+                        title={ax("অনুমোদন ছাড়াই সরাসরি প্রকাশ")}
+                      />
+                    </li>
+                  )}
+                  </Fragment>
                 );
               })}
             </ul>

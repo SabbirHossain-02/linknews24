@@ -25,7 +25,8 @@ import {
   tagConnectOrCreate,
   uniqueSlug,
 } from "../lib/articles";
-import { logWork, notifyStaff } from "../lib/staffNotify";
+import { logWork, notifyStaff, notifySupers } from "../lib/staffNotify";
+import { publishesDirectly } from "../lib/permissions";
 import { breakingEnabled } from "../lib/siteSettings";
 import { BLOOD_GROUPS } from "../lib/blood";
 import { PLACEMENTS, type Placement } from "../lib/adSlots";
@@ -203,8 +204,11 @@ adminRouter.post("/articles", async (req, res) => {
   if (!(await categoryExists(data.categoryId)))
     return res.status(400).json({ error: "ক্যাটাগরি পাওয়া যায়নি" });
 
-  const sup = isSuper(req.user);
-  const status = resolveStatus(data.status, sup);
+  // The Super Admin, and anyone trusted to publish without approval, goes
+  // straight to the site; everyone else's "publish" is a request.
+  const direct = await publishesDirectly(req.user!);
+  const trusted = direct && !isSuper(req.user);
+  const status = resolveStatus(data.status, direct);
   const slug = await uniqueSlug(data.slug || data.titleEn || data.title);
 
   const article = await prisma.article.create({
@@ -237,12 +241,24 @@ adminRouter.post("/articles", async (req, res) => {
 
   await logWork({
     userId: req.user!.id,
-    action: status === "PENDING" ? "article_submitted" : "article_created",
+    action:
+      status === "PENDING"
+        ? "article_submitted"
+        : trusted && status === "PUBLISHED"
+          ? "article_published_direct"
+          : "article_created",
     entity: "article",
     entityId: article.id,
     detail: article.title,
   });
   if (status === "PENDING") emitToSupers("approvals:changed");
+  // Published without asking: the Super Admin still hears about it.
+  if (trusted && status === "PUBLISHED")
+    await notifySupers({
+      kind: "direct_published",
+      title: `${req.user!.name}: ${article.title}`,
+      href: `/admin/articles/${article.id}/edit`,
+    });
   res.status(201).json({ article, pendingReview: status === "PENDING" });
 });
 
@@ -252,7 +268,8 @@ adminRouter.put("/articles/:id", async (req, res) => {
   if (!existing) return res.status(404).json({ error: "Not found" });
 
   const me = req.user!;
-  const sup = isSuper(me);
+  const direct = await publishesDirectly(me);
+  const trusted = direct && !isSuper(me);
   // Reporters may only edit their own stories.
   if (me.role === "REPORTER" && existing.authorId !== me.id)
     return res.status(403).json({ error: OWN_ONLY });
@@ -267,7 +284,7 @@ adminRouter.put("/articles/:id", async (req, res) => {
   // A live story is not changed by anyone but the Super Admin: the edit is
   // kept aside as a revision, and readers go on seeing the approved version
   // until it is accepted.
-  if (!sup && existing.status === "PUBLISHED") {
+  if (!direct && existing.status === "PUBLISHED") {
     const open = await prisma.articleRevision.findFirst({
       where: { articleId: existing.id, status: "PENDING" },
       select: { id: true },
@@ -292,8 +309,14 @@ adminRouter.put("/articles/:id", async (req, res) => {
     return res.json({ article: existing, revision, pendingReview: true });
   }
 
-  const status = resolveStatus(data.status, sup);
-  const approving = sup && existing.status === "PENDING" && status === "PUBLISHED";
+  const status = resolveStatus(data.status, direct);
+  const approving = direct && existing.status === "PENDING" && status === "PUBLISHED";
+  const directAction =
+    trusted && status === "PUBLISHED"
+      ? existing.status === "PUBLISHED"
+        ? "article_edited_direct"
+        : "article_published_direct"
+      : null;
 
   const article = await prisma.article.update({
     where: { id: existing.id },
@@ -324,13 +347,17 @@ adminRouter.put("/articles/:id", async (req, res) => {
     action:
       status === "PENDING" && existing.status !== "PENDING"
         ? "article_submitted"
-        : approving
-          ? "article_approved"
-          : "article_updated",
+        : directAction ?? (approving ? "article_approved" : "article_updated"),
     entity: "article",
     entityId: article.id,
     detail: article.title,
   });
+  if (directAction)
+    await notifySupers({
+      kind: directAction === "article_edited_direct" ? "direct_edited" : "direct_published",
+      title: `${me.name}: ${article.title}`,
+      href: `/admin/articles/${article.id}/edit`,
+    });
   if (approving && existing.authorId !== me.id)
     await notifyStaff(existing.authorId, {
       kind: "article_approved",
@@ -360,16 +387,17 @@ adminRouter.patch("/articles/:id/flags", async (req, res) => {
   const { isBreaking, featured } = parsed.data;
 
   const me = req.user!;
-  const sup = isSuper(me);
-  if (!sup && existing.status === "PUBLISHED")
+  const direct = await publishesDirectly(me);
+  const trusted = direct && !isSuper(me);
+  if (!direct && existing.status === "PUBLISHED")
     return res.status(403).json({ error: NEEDS_APPROVAL_LIVE });
   if (me.role === "REPORTER" && existing.authorId !== me.id)
     return res.status(403).json({ error: OWN_ONLY });
 
   const status = parsed.data.status
-    ? resolveStatus(parsed.data.status, sup)
+    ? resolveStatus(parsed.data.status, direct)
     : existing.status;
-  const approving = sup && existing.status === "PENDING" && status === "PUBLISHED";
+  const approving = direct && existing.status === "PENDING" && status === "PUBLISHED";
 
   const article = await prisma.article.update({
     where: { id: existing.id },
@@ -402,12 +430,20 @@ adminRouter.patch("/articles/:id/flags", async (req, res) => {
           : approving
             ? "article_approved"
             : status === "PUBLISHED"
-              ? "article_published"
+              ? trusted
+                ? "article_published_direct"
+                : "article_published"
               : "article_unpublished",
       entity: "article",
       entityId: article.id,
       detail: article.title,
     });
+    if (trusted && status === "PUBLISHED")
+      await notifySupers({
+        kind: "direct_published",
+        title: `${me.name}: ${article.title}`,
+        href: `/admin/articles/${article.id}/edit`,
+      });
     if (approving && existing.authorId !== me.id)
       await notifyStaff(existing.authorId, {
         kind: "article_approved",

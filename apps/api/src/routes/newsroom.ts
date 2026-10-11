@@ -195,8 +195,10 @@ const permChange = z.object({
   view: z.boolean(),
   edit: z.boolean(),
   delete: z.boolean(),
+  /** Articles: publish without approval. Left out means "as it is now". */
+  publish: z.boolean().optional(),
   /** Which switch was flipped, so turning view off can take the others with it. */
-  changed: z.enum(["view", "edit", "delete"]).optional(),
+  changed: z.enum(["view", "edit", "delete", "publish"]).optional(),
 });
 const permChanges = z.object({ changes: z.array(permChange).min(1).max(MODULES.length) });
 
@@ -233,9 +235,11 @@ newsroomRouter.put("/permissions/roles/:role", superOnly, async (req, res) => {
   const parsed = permChanges.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: "Invalid input" });
 
+  const current = await permissionsForRole(role);
   for (const c of parsed.data.changes) {
     if (!isModule(c.module)) continue;
-    await setRolePermission(role as Role, c.module, normalize(c, c.changed));
+    const publish = c.publish ?? current[c.module].publish;
+    await setRolePermission(role as Role, c.module, normalize({ ...c, publish }, c.changed, c.module));
   }
   await logWork({
     userId: req.user!.id,
@@ -274,7 +278,12 @@ async function userPermissionView(userId: string) {
   const overrides: Partial<PermSet> = {};
   for (const r of rows)
     if (isModule(r.module))
-      overrides[r.module] = { view: r.canView, edit: r.canEdit, delete: r.canDelete };
+      overrides[r.module] = {
+        view: r.canView,
+        edit: r.canEdit,
+        delete: r.canDelete,
+        publish: r.canPublish,
+      };
   return {
     user,
     modules: MODULES.map((m) => ({ key: m, group: MODULE_GROUPS[m] })),
@@ -291,7 +300,7 @@ newsroomRouter.get("/users/:id/permissions", superOnly, async (req, res) => {
 });
 
 const same = (a: Perm, b: Perm) =>
-  a.view === b.view && a.edit === b.edit && a.delete === b.delete;
+  a.view === b.view && a.edit === b.edit && a.delete === b.delete && a.publish === b.publish;
 
 newsroomRouter.put("/users/:id/permissions", superOnly, async (req, res) => {
   const user = await prisma.user.findUnique({
@@ -305,9 +314,11 @@ newsroomRouter.put("/users/:id/permissions", superOnly, async (req, res) => {
   if (!parsed.success) return res.status(400).json({ error: "Invalid input" });
 
   const rolePerms = await permissionsForRole(user.role);
+  const theirs = await effectivePermissions(user);
   for (const c of parsed.data.changes) {
     if (!isModule(c.module)) continue;
-    const p = normalize(c, c.changed);
+    const publish = c.publish ?? theirs[c.module].publish;
+    const p = normalize({ ...c, publish }, c.changed, c.module);
     // Matching the role again is not an exception any more — drop it, so the
     // person goes back to following their role.
     if (same(p, rolePerms[c.module])) await clearUserPermission(user.id, c.module);

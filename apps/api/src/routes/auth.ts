@@ -9,7 +9,7 @@ import { clientIp } from "../lib/analytics";
 import { signToken, verifyToken } from "../lib/jwt";
 import { env } from "../env";
 import { authenticate } from "../middleware/auth";
-import { effectivePermissions } from "../lib/permissions";
+import { effectivePermissions, publishesDirectly } from "../lib/permissions";
 
 export const authRouter = Router();
 
@@ -31,7 +31,8 @@ async function publicUser(u: User) {
     avatar: u.avatar,
     bio: u.bio,
     permissions: await effectivePermissions(u),
-    needsApproval: u.role !== "SUPER_ADMIN",
+    // The Super Admin, and anyone trusted with "publish without approval".
+    needsApproval: !(await publishesDirectly(u)),
   };
 }
 

@@ -12,7 +12,10 @@ export type StaffNotificationKind =
   | "article_drafted"
   | "revision_approved"
   | "revision_rejected"
-  | "permissions_changed";
+  | "permissions_changed"
+  /** For the Super Admin: someone trusted published without approval. */
+  | "direct_published"
+  | "direct_edited";
 
 export async function notifyStaff(
   userId: string,
@@ -30,6 +33,15 @@ export async function notifyStaff(
     })
     .catch(() => null);
   if (row) emitToUser(userId, "notification:new", row);
+}
+
+/** The same message to every active Super Admin. */
+export async function notifySupers(n: Parameters<typeof notifyStaff>[1]) {
+  const supers = await prisma.user.findMany({
+    where: { role: "SUPER_ADMIN", active: true },
+    select: { id: true },
+  });
+  for (const u of supers) await notifyStaff(u.id, n);
 }
 
 /**

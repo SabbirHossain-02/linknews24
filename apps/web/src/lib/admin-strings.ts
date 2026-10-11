@@ -640,6 +640,15 @@ const EN: Record<string, string> = {
   "হটলাইন / ফোন": "Hotline / phone",
   "থানা / উপজেলা": "Thana / upazila",
   "২৪ ঘণ্টা জরুরি সেবা আছে": "24-hour emergency service",
+  // --- publish without approval ---
+  "অনুমোদন ছাড়াই সরাসরি প্রকাশ": "Publish without approval",
+  "চালু: এর খবর ও লাইভ খবরের সংশোধন সাথে সাথে সাইটে যাবে। সুপার অ্যাডমিন নোটিফিকেশন পাবেন।": "On: their stories and edits to live stories go on the site at once. The Super Admin is notified.",
+  "বন্ধ: খবর প্রকাশের আগে সুপার অ্যাডমিনের অনুমোদনে যাবে।": "Off: stories go to the Super Admin for approval before publishing.",
+  "অনুমোদন ছাড়াই খবর প্রকাশিত হয়েছে": "Story published without approval",
+  "অনুমোদন ছাড়াই লাইভ খবর সংশোধিত হয়েছে": "Live story edited without approval",
+  "অনুমোদন ছাড়াই খবর প্রকাশ করেছেন": "published a story without approval",
+  "অনুমোদন ছাড়াই লাইভ খবর সংশোধন করেছেন": "edited a live story without approval",
+  "খবর লেখা, সম্পাদনা ও মোছা — প্রকাশ নিচের সুইচ অনুযায়ী": "Write, edit and delete stories — publishing follows the switch below",
 };
 
 /** Fills {name} placeholders after translating. */

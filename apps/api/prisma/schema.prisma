@@ -172,27 +172,33 @@ model ArticleRevision {
 /// What a role may do in one admin module. A module with no row falls back to
 /// the defaults in lib/permissions.ts.
 model RolePermission {
-  id        String   @id @default(cuid())
-  role      Role
-  module    String
-  canView   Boolean  @default(false)
-  canEdit   Boolean  @default(false)
-  canDelete Boolean  @default(false)
-  updatedAt DateTime @updatedAt
+  id         String   @id @default(cuid())
+  role       Role
+  module     String
+  canView    Boolean  @default(false)
+  canEdit    Boolean  @default(false)
+  canDelete  Boolean  @default(false)
+  /// Articles only: publish and edit live stories without the Super Admin's
+  /// approval.
+  canPublish Boolean  @default(false)
+  updatedAt  DateTime @updatedAt
 
   @@unique([role, module])
 }
 
 /// One person's exception to their role's permissions for one module.
 model UserPermission {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  module    String
-  canView   Boolean  @default(false)
-  canEdit   Boolean  @default(false)
-  canDelete Boolean  @default(false)
-  updatedAt DateTime @updatedAt
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  module     String
+  canView    Boolean  @default(false)
+  canEdit    Boolean  @default(false)
+  canDelete  Boolean  @default(false)
+  /// Articles only: publish and edit live stories without the Super Admin's
+  /// approval.
+  canPublish Boolean  @default(false)
+  updatedAt  DateTime @updatedAt
 
   @@unique([userId, module])
 }

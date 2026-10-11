@@ -78,7 +78,8 @@ export default function RolesAdminPage() {
     // Shown at once; put back if the server refuses.
     const before = data;
     const next = { ...data.matrix[role] };
-    for (const c of changes) next[c.module] = { view: c.view, edit: c.edit, delete: c.delete };
+    for (const c of changes)
+      next[c.module] = { view: c.view, edit: c.edit, delete: c.delete, publish: c.publish };
     setData({ ...data, matrix: { ...data.matrix, [role]: next } });
     setBusy(changes.length === 1 ? changes[0].module : "*");
     try {
@@ -105,7 +106,9 @@ export default function RolesAdminPage() {
         if (action === "view" && !on) {
           p.edit = false;
           p.delete = false;
+          p.publish = false;
         }
+        if (action === "edit" && !on) p.publish = false;
         if (p.edit || p.delete) p.view = true;
         return { module: key, ...p, changed: action };
       }),

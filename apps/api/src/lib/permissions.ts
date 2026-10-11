@@ -11,6 +11,10 @@ import { prisma } from "../prisma";
  *  - edit:   create and change things
  *  - delete: remove things
  *
+ * Articles have a fourth: publish — the person's stories and edits to live
+ * stories go on the site at once, without waiting in the Super Admin's
+ * approval queue. Off for every role until the Super Admin turns it on.
+ *
  * The Super Admin always has everything and cannot be restricted, so the panel
  * can never lock out the one account able to undo a mistake. Users & Roles,
  * approvals and the team page are Super Admin only and are not modules here.
@@ -45,6 +49,8 @@ export interface Perm {
   view: boolean;
   edit: boolean;
   delete: boolean;
+  /** Articles only: publish without approval. Always false elsewhere. */
+  publish: boolean;
 }
 export type PermSet = Record<Module, Perm>;
 
@@ -74,9 +80,10 @@ export function isModule(m: string): m is Module {
   return (MODULES as readonly string[]).includes(m);
 }
 
-const NONE: Perm = { view: false, edit: false, delete: false };
-const ALL: Perm = { view: true, edit: true, delete: true };
-const VIEW_EDIT: Perm = { view: true, edit: true, delete: false };
+const NONE: Perm = { view: false, edit: false, delete: false, publish: false };
+// Approval-free publishing is never a default — the Super Admin grants it.
+const ALL: Perm = { view: true, edit: true, delete: true, publish: false };
+const VIEW_EDIT: Perm = { view: true, edit: true, delete: false, publish: false };
 
 /**
  * What each role starts with before the Super Admin changes anything — the
@@ -86,7 +93,7 @@ const VIEW_EDIT: Perm = { view: true, edit: true, delete: false };
 const DEFAULTS: Record<(typeof EDITABLE_ROLES)[number], Partial<PermSet>> = {
   ADMIN: Object.fromEntries(MODULES.map((m) => [m, ALL])) as PermSet,
   EDITOR: {
-    dashboard: { view: true, edit: false, delete: false },
+    dashboard: { view: true, edit: false, delete: false, publish: false },
     articles: ALL,
     categories: VIEW_EDIT,
     breaking: ALL,
@@ -107,7 +114,7 @@ const DEFAULTS: Record<(typeof EDITABLE_ROLES)[number], Partial<PermSet>> = {
 };
 
 export function defaultPerm(role: string, module: Module): Perm {
-  if (role === "SUPER_ADMIN") return ALL;
+  if (role === "SUPER_ADMIN") return superPerm(module);
   const d = DEFAULTS[role as keyof typeof DEFAULTS];
   return { ...(d?.[module] ?? NONE) };
 }
@@ -117,13 +124,23 @@ export function defaultPerm(role: string, module: Module): Perm {
  * not allowed to see, so either of those turns view on, and turning view off
  * turns them off.
  */
-export function normalize(p: Perm, changed?: Action): Perm {
-  const out = { ...p };
+export function normalize(
+  p: Omit<Perm, "publish"> & { publish?: boolean },
+  changed?: Action | "publish",
+  module?: string,
+): Perm {
+  const out: Perm = { ...p, publish: !!p.publish };
   if (changed === "view" && !out.view) {
     out.edit = false;
     out.delete = false;
+    out.publish = false;
   }
+  // Publishing a story is writing one: it needs edit, and taking edit away
+  // takes publishing with it.
+  if (changed === "edit" && !out.edit) out.publish = false;
+  if (out.publish) out.edit = true;
   if (out.edit || out.delete) out.view = true;
+  if (module !== undefined && module !== "articles") out.publish = false;
   return out;
 }
 
@@ -155,7 +172,12 @@ async function rolePerms(): Promise<Map<string, PermSet>> {
     if (!isModule(r.module)) continue;
     const set = map.get(r.role);
     if (set)
-      set[r.module] = { view: r.canView, edit: r.canEdit, delete: r.canDelete };
+      set[r.module] = {
+        view: r.canView,
+        edit: r.canEdit,
+        delete: r.canDelete,
+        publish: r.canPublish,
+      };
   }
   roleCache = map;
   return map;
@@ -168,7 +190,12 @@ async function userOverrides(userId: string): Promise<Partial<PermSet>> {
   const out: Partial<PermSet> = {};
   for (const r of rows)
     if (isModule(r.module))
-      out[r.module] = { view: r.canView, edit: r.canEdit, delete: r.canDelete };
+      out[r.module] = {
+        view: r.canView,
+        edit: r.canEdit,
+        delete: r.canDelete,
+        publish: r.canPublish,
+      };
   userCache.set(userId, out);
   return out;
 }
@@ -205,11 +232,21 @@ export async function can(
   return (await effectivePermissions(user))[module][action];
 }
 
+/**
+ * Whether this person's stories go straight to the site: the Super Admin's
+ * always do, and so do those of anyone the Super Admin has trusted with it.
+ */
+export async function publishesDirectly(user: { id: string; role: string }): Promise<boolean> {
+  if (user.role === "SUPER_ADMIN") return true;
+  const a = (await effectivePermissions(user)).articles;
+  return a.edit && a.publish;
+}
+
 export async function setRolePermission(role: Role, module: Module, p: Perm) {
   await prisma.rolePermission.upsert({
     where: { role_module: { role, module } },
-    create: { role, module, canView: p.view, canEdit: p.edit, canDelete: p.delete },
-    update: { canView: p.view, canEdit: p.edit, canDelete: p.delete },
+    create: { role, module, ...columns(p) },
+    update: columns(p),
   });
   clearPermissionCache();
 }
@@ -223,8 +260,8 @@ export async function resetRole(role: Role) {
 export async function setUserPermission(userId: string, module: Module, p: Perm) {
   await prisma.userPermission.upsert({
     where: { userId_module: { userId, module } },
-    create: { userId, module, canView: p.view, canEdit: p.edit, canDelete: p.delete },
-    update: { canView: p.view, canEdit: p.edit, canDelete: p.delete },
+    create: { userId, module, ...columns(p) },
+    update: columns(p),
   });
   clearPermissionCache(userId);
 }
@@ -237,8 +274,17 @@ export async function clearUserPermission(userId: string, module?: Module) {
   clearPermissionCache(userId);
 }
 
+function columns(p: Perm) {
+  return { canView: p.view, canEdit: p.edit, canDelete: p.delete, canPublish: p.publish };
+}
+
+/** The Super Admin has everything, publishing without approval included. */
+function superPerm(module: Module): Perm {
+  return { ...ALL, publish: module === "articles" };
+}
+
 function allPerms(): PermSet {
-  return Object.fromEntries(MODULES.map((m) => [m, { ...ALL }])) as PermSet;
+  return Object.fromEntries(MODULES.map((m) => [m, superPerm(m)])) as PermSet;
 }
 function noPerms(): PermSet {
   return Object.fromEntries(MODULES.map((m) => [m, { ...NONE }])) as PermSet;

@@ -63,6 +63,8 @@ const PERSONAL: Record<string, { label: string; icon: typeof Bell; cls: string }
   article_rejected: { label: "আপনার খবর বাতিল করা হয়েছে", icon: XCircle, cls: "bg-brand-crimson/10 text-brand-crimson" },
   revision_rejected: { label: "আপনার সংশোধন বাতিল করা হয়েছে", icon: XCircle, cls: "bg-brand-crimson/10 text-brand-crimson" },
   article_drafted: { label: "আপনার খবর খসড়ায় ফেরত পাঠানো হয়েছে", icon: Archive, cls: "bg-surface text-foreground-muted" },
+  direct_published: { label: "অনুমোদন ছাড়াই খবর প্রকাশিত হয়েছে", icon: CheckCircle2, cls: "bg-brand-navy/10 text-brand-navy" },
+  direct_edited: { label: "অনুমোদন ছাড়াই লাইভ খবর সংশোধিত হয়েছে", icon: CheckCircle2, cls: "bg-brand-navy/10 text-brand-navy" },
 };
 
 /** When the bell was last opened — anything newer than this is "new". */

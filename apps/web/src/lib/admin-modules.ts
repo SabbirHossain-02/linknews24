@@ -36,7 +36,7 @@ export const MODULE_META: Record<
   articles: {
     label: "articles",
     icon: Newspaper,
-    about: "খবর লেখা, সম্পাদনা ও মোছা — প্রকাশের আগে অনুমোদন লাগবে",
+    about: "খবর লেখা, সম্পাদনা ও মোছা — প্রকাশ নিচের সুইচ অনুযায়ী",
   },
   categories: {
     label: "categoriesTags",

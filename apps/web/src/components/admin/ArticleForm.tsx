@@ -80,7 +80,9 @@ export function ArticleForm({ articleId }: { articleId?: string }) {
   const t = useAdminT();
   const ax = useAdminText();
   const { user, isSuper } = useAdminAuth();
-  const needsApproval = !isSuper;
+  // The Super Admin, and anyone trusted to publish without approval, publish
+  // straight away; everyone else sends their story for approval.
+  const needsApproval = user?.needsApproval ?? !isSuper;
   const [review, setReview] = useState<ReviewState | null>(null);
   const [form, setForm] = useState<FormState>(EMPTY);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -151,7 +153,7 @@ export function ArticleForm({ articleId }: { articleId?: string }) {
         });
         // Someone reopening their own edit that is still waiting picks up
         // where they left off, not from the live version.
-        const a = mine && !isSuper
+        const a = mine && needsApproval
           ? {
               ...d.article,
               ...rev!.data,

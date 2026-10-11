@@ -48,7 +48,9 @@ const inputCls =
 export default function AdminArticlesPage() {
   const t = useAdminT();
   const ax = useAdminText();
-  const { isSuper, can } = useAdminAuth();
+  const { isSuper, can, user } = useAdminAuth();
+  // Publishes with a click: the Super Admin, or anyone trusted without approval.
+  const direct = isSuper || user?.needsApproval === false;
   const sent = useSearchParams().get("notice") === "sent";
   const [mine, setMine] = useState(false);
   const [articles, setArticles] = useState<AdminArticle[]>([]);
@@ -274,7 +276,7 @@ export default function AdminArticlesPage() {
                     {(() => {
                       const cls = `inline-flex items-center gap-1 rounded-full px-2.5 py-1 font-ui text-xs font-semibold ${STATUS_CLS[a.status]}`;
                       const label = t(`status${a.status}` as AdminKey);
-                      if (isSuper)
+                      if (direct)
                         return (
                           <button
                             onClick={() =>
@@ -319,7 +321,7 @@ export default function AdminArticlesPage() {
                   <td className="px-4 py-3">
                     <Toggle
                       checked={a.isBreaking}
-                      disabled={!can("articles", "edit") || (!isSuper && a.status === "PUBLISHED")}
+                      disabled={!can("articles", "edit") || (!direct && a.status === "PUBLISHED")}
                       onChange={(next) => patchFlags(a.id, { isBreaking: next })}
                       title={t("breakingNews")}
                     />
