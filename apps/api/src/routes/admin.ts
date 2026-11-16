@@ -21,6 +21,7 @@ import {
   categoryExists,
   clearOtherHeroes,
   contentFields,
+  requestedSchedule,
   resolveStatus,
   tagConnectOrCreate,
   uniqueSlug,
@@ -209,6 +210,8 @@ adminRouter.post("/articles", async (req, res) => {
   const direct = await publishesDirectly(req.user!);
   const trusted = direct && !isSuper(req.user);
   const status = resolveStatus(data.status, direct);
+  const schedule = requestedSchedule(data.status, data.scheduledAt);
+  if (!schedule.ok) return res.status(400).json({ error: schedule.error });
   const slug = await uniqueSlug(data.slug || data.titleEn || data.title);
 
   const article = await prisma.article.create({
@@ -232,6 +235,7 @@ adminRouter.post("/articles", async (req, res) => {
       authorId: req.user!.id,
       authorName: data.authorName?.trim() || null,
       publishedAt: status === "PUBLISHED" ? new Date() : null,
+      scheduledAt: schedule.at,
       submittedAt: status === "PENDING" ? new Date() : null,
       tags: { connectOrCreate: tagConnectOrCreate(data.tags) },
     },
@@ -244,9 +248,11 @@ adminRouter.post("/articles", async (req, res) => {
     action:
       status === "PENDING"
         ? "article_submitted"
-        : trusted && status === "PUBLISHED"
-          ? "article_published_direct"
-          : "article_created",
+        : status === "SCHEDULED"
+          ? "article_scheduled"
+          : trusted && status === "PUBLISHED"
+            ? "article_published_direct"
+            : "article_created",
     entity: "article",
     entityId: article.id,
     detail: article.title,
@@ -310,7 +316,13 @@ adminRouter.put("/articles/:id", async (req, res) => {
   }
 
   const status = resolveStatus(data.status, direct);
-  const approving = direct && existing.status === "PENDING" && status === "PUBLISHED";
+  const schedule = requestedSchedule(data.status, data.scheduledAt);
+  if (!schedule.ok) return res.status(400).json({ error: schedule.error });
+  // Scheduling someone's waiting story is approving it, just for later.
+  const approving =
+    direct &&
+    existing.status === "PENDING" &&
+    (status === "PUBLISHED" || status === "SCHEDULED");
   const directAction =
     trusted && status === "PUBLISHED"
       ? existing.status === "PUBLISHED"
@@ -329,6 +341,7 @@ adminRouter.put("/articles/:id", async (req, res) => {
           : status === "DRAFT" || status === "PENDING"
             ? null
             : existing.publishedAt,
+      scheduledAt: schedule.at,
       submittedAt: status === "PENDING" ? new Date() : existing.submittedAt,
       // Resubmitting clears the old reason; approving records who decided.
       reviewNote: status === "PENDING" || approving ? null : existing.reviewNote,
@@ -347,7 +360,12 @@ adminRouter.put("/articles/:id", async (req, res) => {
     action:
       status === "PENDING" && existing.status !== "PENDING"
         ? "article_submitted"
-        : directAction ?? (approving ? "article_approved" : "article_updated"),
+        : directAction ??
+          (approving
+            ? "article_approved"
+            : status === "SCHEDULED" && existing.status !== "SCHEDULED"
+              ? "article_scheduled"
+              : "article_updated"),
     entity: "article",
     entityId: article.id,
     detail: article.title,
@@ -360,7 +378,7 @@ adminRouter.put("/articles/:id", async (req, res) => {
     });
   if (approving && existing.authorId !== me.id)
     await notifyStaff(existing.authorId, {
-      kind: "article_approved",
+      kind: status === "SCHEDULED" ? "article_scheduled" : "article_approved",
       title: article.title,
       href: `/admin/articles/${article.id}/edit`,
     });
@@ -397,7 +415,17 @@ adminRouter.patch("/articles/:id/flags", async (req, res) => {
   const status = parsed.data.status
     ? resolveStatus(parsed.data.status, direct)
     : existing.status;
-  const approving = direct && existing.status === "PENDING" && status === "PUBLISHED";
+  // A quick toggle carries no time: it can only keep a schedule already set.
+  if (
+    status === "SCHEDULED" &&
+    existing.status !== "SCHEDULED" &&
+    !(existing.scheduledAt && existing.scheduledAt.getTime() > Date.now())
+  )
+    return res.status(400).json({ error: "শিডিউলের সময় এডিটরে ঠিক করুন" });
+  const approving =
+    direct &&
+    existing.status === "PENDING" &&
+    (status === "PUBLISHED" || status === "SCHEDULED");
 
   const article = await prisma.article.update({
     where: { id: existing.id },
@@ -411,6 +439,8 @@ adminRouter.patch("/articles/:id/flags", async (req, res) => {
           : status === "DRAFT" || status === "PENDING"
             ? null
             : existing.publishedAt,
+      // Publishing by hand overrides a schedule; nothing is left to fire.
+      scheduledAt: status === "PUBLISHED" ? null : existing.scheduledAt,
       submittedAt:
         status === "PENDING" && existing.status !== "PENDING"
           ? new Date()
@@ -433,7 +463,9 @@ adminRouter.patch("/articles/:id/flags", async (req, res) => {
               ? trusted
                 ? "article_published_direct"
                 : "article_published"
-              : "article_unpublished",
+              : status === "SCHEDULED"
+                ? "article_scheduled"
+                : "article_unpublished",
       entity: "article",
       entityId: article.id,
       detail: article.title,
@@ -446,7 +478,7 @@ adminRouter.patch("/articles/:id/flags", async (req, res) => {
       });
     if (approving && existing.authorId !== me.id)
       await notifyStaff(existing.authorId, {
-        kind: "article_approved",
+        kind: status === "SCHEDULED" ? "article_scheduled" : "article_approved",
         title: article.title,
         href: `/admin/articles/${article.id}/edit`,
       });

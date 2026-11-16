@@ -6,6 +6,7 @@ import {
   Archive,
   Bell,
   Building2,
+  CalendarClock,
   CheckCircle2,
   ClipboardCheck,
   Droplet,
@@ -59,6 +60,8 @@ interface Personal {
 
 const PERSONAL: Record<string, { label: string; icon: typeof Bell; cls: string }> = {
   article_approved: { label: "আপনার খবর অনুমোদিত ও প্রকাশিত হয়েছে", icon: CheckCircle2, cls: "bg-green-100 text-green-700" },
+  article_scheduled: { label: "আপনার খবর অনুমোদিত — নির্ধারিত সময়ে প্রকাশ হবে", icon: CalendarClock, cls: "bg-brand-navy/10 text-brand-navy" },
+  scheduled_published: { label: "আপনার শিডিউল করা খবর প্রকাশিত হয়েছে", icon: CheckCircle2, cls: "bg-green-100 text-green-700" },
   revision_approved: { label: "আপনার সংশোধন অনুমোদিত হয়েছে", icon: CheckCircle2, cls: "bg-green-100 text-green-700" },
   article_rejected: { label: "আপনার খবর বাতিল করা হয়েছে", icon: XCircle, cls: "bg-brand-crimson/10 text-brand-crimson" },
   revision_rejected: { label: "আপনার সংশোধন বাতিল করা হয়েছে", icon: XCircle, cls: "bg-brand-crimson/10 text-brand-crimson" },

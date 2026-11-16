@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Clock, Eye, Info, Send, Upload, XCircle } from "lucide-react";
+import { ArrowLeft, CalendarClock, Clock, Eye, Info, Send, Upload, XCircle } from "lucide-react";
 import { apiFetch, uploadFile } from "@/lib/admin-api";
 import { RichTextEditor } from "./RichTextEditor";
 import { LanguageBar, type Lang } from "./LanguageBar";
@@ -12,6 +12,8 @@ import { useAdminAuth } from "./AdminAuthProvider";
 import { toneGradientClass } from "@/lib/tone";
 import { useAdminT } from "@/lib/admin-i18n";
 import { useAdminText } from "@/lib/admin-strings";
+import { useLocale } from "@/components/providers/LocaleProvider";
+import { fromLocalInput, scheduleLabel, toLocalInput } from "@/lib/schedule";
 
 interface Category {
   id: string;
@@ -40,6 +42,8 @@ interface FormState {
   seoTitle: string;
   seoDescription: string;
   tags: string;
+  /** datetime-local value; empty means "publish when the button is pressed". */
+  scheduledAt: string;
 }
 
 const EMPTY: FormState = {
@@ -60,6 +64,7 @@ const EMPTY: FormState = {
   seoTitle: "",
   seoDescription: "",
   tags: "",
+  scheduledAt: "",
 };
 
 const TONES = ["navy", "crimson", "slate", "amber"];
@@ -71,6 +76,8 @@ const inputCls =
 interface ReviewState {
   status: "DRAFT" | "SCHEDULED" | "PENDING" | "REJECTED" | "PUBLISHED";
   reviewNote: string | null;
+  /** When it goes live (SCHEDULED), or the time its author asked for (PENDING). */
+  scheduledAt: string | null;
   /** An edit to this live story that is still waiting, and whose it is. */
   revision: { mine: boolean; author: string } | null;
 }
@@ -137,6 +144,7 @@ export function ArticleForm({ articleId }: { articleId?: string }) {
         tags?: { name: string }[];
         status: ReviewState["status"];
         reviewNote: string | null;
+        scheduledAt: string | null;
       };
       pendingRevision: {
         data: Partial<Omit<FormState, "tags">> & { tags?: string[] };
@@ -149,6 +157,7 @@ export function ArticleForm({ articleId }: { articleId?: string }) {
         setReview({
           status: d.article.status,
           reviewNote: d.article.reviewNote,
+          scheduledAt: d.article.scheduledAt,
           revision: rev ? { mine, author: rev.author.name } : null,
         });
         // Someone reopening their own edit that is still waiting picks up
@@ -178,6 +187,7 @@ export function ArticleForm({ articleId }: { articleId?: string }) {
           seoTitle: a.seoTitle ?? "",
           seoDescription: a.seoDescription ?? "",
           tags: (a.tags ?? []).map((tg) => tg.name).join(", "),
+          scheduledAt: toLocalInput(d.article.scheduledAt),
         });
       })
       .catch((e) => setError(e.message))
@@ -186,15 +196,22 @@ export function ArticleForm({ articleId }: { articleId?: string }) {
 
   const live = review?.status === "PUBLISHED";
 
-  const submit = async (status: "DRAFT" | "PENDING" | "PUBLISHED") => {
+  const submit = async (status: "DRAFT" | "PENDING" | "PUBLISHED" | "SCHEDULED") => {
     setError(null);
     if (!form.title.trim()) return setError(t("errTitle"));
     if (!form.categoryId) return setError(t("errCategory"));
+    const scheduledAt = fromLocalInput(form.scheduledAt);
+    if (status === "SCHEDULED") {
+      if (!scheduledAt) return setError(ax("প্রকাশের সময় দিন"));
+      if (new Date(scheduledAt).getTime() <= Date.now())
+        return setError(ax("প্রকাশের সময় ভবিষ্যতের হতে হবে"));
+    }
     setBusy(true);
     try {
       const payload = {
         ...form,
         status,
+        scheduledAt: status === "SCHEDULED" ? scheduledAt : null,
         tags: form.tags
           .split(",")
           .map((s) => s.trim())
@@ -357,6 +374,35 @@ export function ArticleForm({ articleId }: { articleId?: string }) {
               <Eye className="h-4 w-4" />
               {t("preview")}
             </button>
+            {/* A live story is already out; scheduling is for one that is not. */}
+            {!live && (
+              <div className="mt-3 border-t border-border pt-3">
+                <label className="flex items-center gap-1.5 font-ui text-xs font-semibold text-foreground-muted">
+                  <CalendarClock className="h-3.5 w-3.5" />
+                  {ax("নির্দিষ্ট সময়ে প্রকাশ")}
+                </label>
+                <input
+                  type="datetime-local"
+                  value={form.scheduledAt}
+                  min={toLocalInput(new Date().toISOString())}
+                  onChange={(e) => set("scheduledAt", e.target.value)}
+                  className={`${inputCls} mt-1`}
+                />
+                <button
+                  onClick={() => submit("SCHEDULED")}
+                  disabled={busy || !form.scheduledAt}
+                  className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg border border-brand-navy py-2.5 font-ui text-sm font-semibold text-brand-navy hover:bg-brand-navy/5 disabled:opacity-50"
+                >
+                  <CalendarClock className="h-4 w-4" />
+                  {needsApproval ? ax("সময়সহ অনুমোদনে পাঠান") : ax("শিডিউল করুন")}
+                </button>
+                <p className="mt-1.5 font-ui text-[11px] leading-snug text-foreground-muted">
+                  {needsApproval
+                    ? ax("অনুমোদন পেলে খবরটি এই সময়ে নিজে থেকেই প্রকাশ হবে।")
+                    : ax("এই সময়ে খবরটি নিজে থেকেই প্রকাশ হবে। এখনই প্রকাশ করতে উপরের বোতাম ব্যবহার করুন।")}
+                </p>
+              </div>
+            )}
           </div>
 
           <div className="flex flex-col gap-3 rounded-xl border border-border bg-background p-4">
@@ -589,6 +635,7 @@ function ReviewBanner({
   isNew: boolean;
 }) {
   const ax = useAdminText();
+  const { locale } = useLocale();
   const box = "mt-4 flex items-start gap-2.5 rounded-xl border px-4 py-3 font-ui text-sm";
 
   if (isNew)
@@ -621,11 +668,30 @@ function ReviewBanner({
       </p>
     );
 
+  if (review.status === "SCHEDULED" && review.scheduledAt)
+    return (
+      <p className={`${box} border-brand-navy/20 bg-brand-navy/5 text-foreground`}>
+        <CalendarClock className="mt-0.5 h-4 w-4 shrink-0 text-brand-navy" />
+        <span>
+          {ax("খবরটি শিডিউল করা আছে — নিজে থেকেই প্রকাশ হবে:")}{" "}
+          <b>{scheduleLabel(review.scheduledAt, locale)}</b>
+        </span>
+      </p>
+    );
+
   if (review.status === "PENDING")
     return (
       <p className={`${box} border-amber-200 bg-amber-50 text-amber-900`}>
         <Clock className="mt-0.5 h-4 w-4 shrink-0" />
-        {ax("খবরটি সুপার অ্যাডমিনের অনুমোদনের অপেক্ষায় আছে।")}
+        <span>
+          {ax("খবরটি সুপার অ্যাডমিনের অনুমোদনের অপেক্ষায় আছে।")}
+          {review.scheduledAt && (
+            <>
+              {" "}
+              {ax("চাওয়া প্রকাশের সময়:")} <b>{scheduleLabel(review.scheduledAt, locale)}</b>
+            </>
+          )}
+        </span>
       </p>
     );
 

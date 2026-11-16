@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { CheckCircle2, ChevronLeft, ChevronRight, Clock, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { CalendarClock, CheckCircle2, ChevronLeft, ChevronRight, Clock, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { apiFetch } from "@/lib/admin-api";
 import { ConfirmModal } from "@/components/admin/Modal";
@@ -11,6 +11,8 @@ import { useAdminT, type AdminKey } from "@/lib/admin-i18n";
 import { useAdminText } from "@/lib/admin-strings";
 import { useAdminAuth } from "@/components/admin/AdminAuthProvider";
 import { getSocket } from "@/lib/socket";
+import { useLocale } from "@/components/providers/LocaleProvider";
+import { scheduleLabel } from "@/lib/schedule";
 
 interface AdminArticle {
   id: string;
@@ -18,6 +20,8 @@ interface AdminArticle {
   slug: string;
   status: "DRAFT" | "SCHEDULED" | "PENDING" | "REJECTED" | "PUBLISHED";
   reviewNote?: string | null;
+  /** When a SCHEDULED story goes live. */
+  scheduledAt?: string | null;
   /** Edits to this live story still waiting for the Super Admin. */
   _count?: { revisions: number };
   isBreaking: boolean;
@@ -48,6 +52,7 @@ const inputCls =
 export default function AdminArticlesPage() {
   const t = useAdminT();
   const ax = useAdminText();
+  const { locale } = useLocale();
   const { isSuper, can, user } = useAdminAuth();
   // Publishes with a click: the Super Admin, or anyone trusted without approval.
   const direct = isSuper || user?.needsApproval === false;
@@ -311,6 +316,12 @@ export default function AdminArticlesPage() {
                         <Clock className="h-3 w-3" />
                         {ax("সংশোধন অপেক্ষায়")}
                       </span>
+                    )}
+                    {a.status === "SCHEDULED" && a.scheduledAt && (
+                      <p className="mt-1 flex items-center gap-1 font-ui text-[11px] text-brand-navy">
+                        <CalendarClock className="h-3 w-3" />
+                        {scheduleLabel(a.scheduledAt, locale)}
+                      </p>
                     )}
                     {a.status === "REJECTED" && a.reviewNote && (
                       <p className="mt-1 max-w-[220px] truncate font-ui text-[11px] text-brand-crimson" title={a.reviewNote}>

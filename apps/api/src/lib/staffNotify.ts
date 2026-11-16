@@ -8,6 +8,10 @@ import { emitToUser } from "../realtime";
  */
 export type StaffNotificationKind =
   | "article_approved"
+  /** Approved, but it waits for the time its author asked for. */
+  | "article_scheduled"
+  /** A scheduled story has just gone live on its own. */
+  | "scheduled_published"
   | "article_rejected"
   | "article_drafted"
   | "revision_approved"

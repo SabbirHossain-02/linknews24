@@ -487,20 +487,29 @@ async function decideArticle(
   if (!a) return { status: 404, body: { error: "Not found" } };
   if (a.status !== "PENDING") return { status: 409, body: { error: ALREADY_DECIDED } };
 
+  // Approving a story its author asked to go live later schedules it for
+  // that time; one whose time has already passed goes live now.
+  const waits =
+    decision === "PUBLISHED" && !!a.scheduledAt && a.scheduledAt.getTime() > Date.now();
+  const status = waits ? "SCHEDULED" : decision;
+
   const article = await prisma.article.update({
     where: { id: a.id },
     data: {
-      status: decision,
-      publishedAt: decision === "PUBLISHED" ? a.publishedAt ?? new Date() : null,
+      status,
+      publishedAt: status === "PUBLISHED" ? a.publishedAt ?? new Date() : null,
+      scheduledAt: waits ? a.scheduledAt : null,
       reviewNote: decision === "PUBLISHED" ? null : reason,
       reviewedById: me,
       reviewedAt: new Date(),
     },
   });
-  if (decision === "PUBLISHED" && article.isHero) await clearOtherHeroes(article.id);
+  if (status === "PUBLISHED" && article.isHero) await clearOtherHeroes(article.id);
 
   const kind =
-    decision === "PUBLISHED"
+    waits
+      ? "article_scheduled"
+      : decision === "PUBLISHED"
       ? "article_approved"
       : decision === "REJECTED"
         ? "article_rejected"

@@ -103,6 +103,8 @@ const ACTIONS: Record<string, { label: string; tone: "green" | "red" | "amber" |
   revision_submitted: { label: "প্রকাশিত খবরে সংশোধন পাঠিয়েছেন", tone: "amber" },
   article_approved: { label: "খবর অনুমোদন দিয়েছেন", tone: "green" },
   article_published: { label: "খবর প্রকাশ করেছেন", tone: "green" },
+  article_scheduled: { label: "খবর শিডিউল করেছেন", tone: "navy" },
+  article_published_scheduled: { label: "শিডিউল অনুযায়ী খবর প্রকাশিত হয়েছে", tone: "green" },
   article_published_direct: { label: "অনুমোদন ছাড়াই খবর প্রকাশ করেছেন", tone: "green" },
   article_edited_direct: { label: "অনুমোদন ছাড়াই লাইভ খবর সংশোধন করেছেন", tone: "navy" },
   article_unpublished: { label: "খবর সরিয়ে নিয়েছেন", tone: "muted" },

@@ -649,6 +649,22 @@ const EN: Record<string, string> = {
   "অনুমোদন ছাড়াই খবর প্রকাশ করেছেন": "published a story without approval",
   "অনুমোদন ছাড়াই লাইভ খবর সংশোধন করেছেন": "edited a live story without approval",
   "খবর লেখা, সম্পাদনা ও মোছা — প্রকাশ নিচের সুইচ অনুযায়ী": "Write, edit and delete stories — publishing follows the switch below",
+
+  // --- scheduled publishing ---
+  "নির্দিষ্ট সময়ে প্রকাশ": "Publish at a set time",
+  "শিডিউল করুন": "Schedule",
+  "সময়সহ অনুমোদনে পাঠান": "Send for approval with time",
+  "অনুমোদন পেলে খবরটি এই সময়ে নিজে থেকেই প্রকাশ হবে।": "Once approved, the story goes live by itself at this time.",
+  "এই সময়ে খবরটি নিজে থেকেই প্রকাশ হবে। এখনই প্রকাশ করতে উপরের বোতাম ব্যবহার করুন।": "The story goes live by itself at this time. To publish now, use the button above.",
+  "প্রকাশের সময় দিন": "Choose a publish time",
+  "প্রকাশের সময় ভবিষ্যতের হতে হবে": "The publish time must be in the future",
+  "খবরটি শিডিউল করা আছে — নিজে থেকেই প্রকাশ হবে:": "This story is scheduled and will go live by itself on",
+  "চাওয়া প্রকাশের সময়:": "Requested publish time:",
+  "প্রকাশ হবে:": "Goes live:",
+  "আপনার খবর অনুমোদিত — নির্ধারিত সময়ে প্রকাশ হবে": "Your story was approved and will go live at its scheduled time",
+  "আপনার শিডিউল করা খবর প্রকাশিত হয়েছে": "Your scheduled story is now live",
+  "খবর শিডিউল করেছেন": "scheduled a story",
+  "শিডিউল অনুযায়ী খবর প্রকাশিত হয়েছে": "story went live on schedule",
 };
 
 /** Fills {name} placeholders after translating. */

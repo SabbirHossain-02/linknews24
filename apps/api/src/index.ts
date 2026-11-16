@@ -13,6 +13,7 @@ import { adminRouter } from "./routes/admin";
 import { authenticate } from "./middleware/auth";
 import { enforcePermissions } from "./middleware/permissions";
 import { setIo } from "./realtime";
+import { startScheduler } from "./lib/scheduler";
 import { notFound, errorHandler } from "./middleware/error";
 
 const app = express();
@@ -80,4 +81,5 @@ setIo(io);
 
 server.listen(env.port, () => {
   console.log(`ln24-api listening on :${env.port} (${env.nodeEnv})`);
+  startScheduler();
 });

@@ -12,6 +12,7 @@ import {
   History,
   Pencil,
   XCircle,
+  CalendarClock,
 } from "lucide-react";
 import { apiFetch } from "@/lib/admin-api";
 import { getSocket } from "@/lib/socket";
@@ -21,6 +22,7 @@ import { useAdminAuth } from "@/components/admin/AdminAuthProvider";
 import { useAdminT, type AdminKey } from "@/lib/admin-i18n";
 import { useAdminText } from "@/lib/admin-strings";
 import { useLocale } from "@/components/providers/LocaleProvider";
+import { scheduleLabel } from "@/lib/schedule";
 
 interface Author {
   id: string;
@@ -40,6 +42,8 @@ interface PendingArticle {
   featured: boolean;
   isHero: boolean;
   submittedAt: string | null;
+  /** The go-live time the author asked for; approving before then schedules it. */
+  scheduledAt: string | null;
   createdAt: string;
   author: Author;
   category: { name: string; nameEn: string };
@@ -294,6 +298,12 @@ export default function ApprovalsPage() {
                       <Clock className="h-3.5 w-3.5" />
                       {ago(a.submittedAt ?? a.createdAt, ax)}
                     </span>
+                    {a.scheduledAt && (
+                      <span className="flex items-center gap-1 font-semibold text-brand-navy">
+                        <CalendarClock className="h-3.5 w-3.5" />
+                        {ax("প্রকাশ হবে:")} {scheduleLabel(a.scheduledAt, locale)}
+                      </span>
+                    )}
                   </div>
                   <Actions
                     busy={busy === a.id}
@@ -372,7 +382,8 @@ export default function ApprovalsPage() {
       ) : (
         <ul className="mt-5 divide-y divide-border overflow-hidden rounded-2xl border border-border bg-background">
           {queue.history.map((h) => {
-            const ok = h.status === "PUBLISHED" || h.status === "APPROVED";
+            // Approved for a later time is still approved.
+            const ok = h.status === "PUBLISHED" || h.status === "SCHEDULED" || h.status === "APPROVED";
             const draft = h.status === "DRAFT";
             return (
               <li key={`${h.type}:${h.id}`} className="flex items-start gap-3 px-4 py-3">

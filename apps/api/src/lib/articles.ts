@@ -21,6 +21,8 @@ export const articleSchema = z.object({
   isHero: z.boolean().default(false),
   // PENDING is what the form sends for "submit for approval".
   status: z.enum(["DRAFT", "SCHEDULED", "PENDING", "PUBLISHED"]).default("DRAFT"),
+  /** ISO time to go live; only read when status is SCHEDULED. */
+  scheduledAt: z.string().datetime({ offset: true }).nullable().optional(),
   seoTitle: z.string().nullable().optional(),
   seoDescription: z.string().nullable().optional(),
   tags: z.array(z.string()).optional(),
@@ -41,6 +43,27 @@ export function resolveStatus(
 ): "DRAFT" | "SCHEDULED" | "PENDING" | "PUBLISHED" {
   if (isSuper) return requested === "PENDING" ? "DRAFT" : requested;
   return requested === "DRAFT" ? "DRAFT" : "PENDING";
+}
+
+/**
+ * The go-live time a save carries.
+ *
+ * Only a request to schedule carries one, and it must be in the future — a
+ * past time would publish the story the moment it was saved, which is what
+ * the publish button is for. For someone who needs approval the request
+ * becomes PENDING but keeps the time, so the Super Admin's approval schedules
+ * it rather than publishing it early.
+ */
+export function requestedSchedule(
+  requested: ArticleInput["status"],
+  scheduledAt: string | null | undefined,
+): { ok: true; at: Date | null } | { ok: false; error: string } {
+  if (requested !== "SCHEDULED") return { ok: true, at: null };
+  if (!scheduledAt) return { ok: false, error: "প্রকাশের সময় দিন" };
+  const at = new Date(scheduledAt);
+  if (at.getTime() <= Date.now())
+    return { ok: false, error: "প্রকাশের সময় ভবিষ্যতের হতে হবে" };
+  return { ok: true, at };
 }
 
 // Turn free-typed tag names into connectOrCreate ops (dedup by slug).

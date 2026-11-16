@@ -125,6 +125,10 @@ model Article {
   seoDescription String?
   seoKeywords    String?
   publishedAt    DateTime?
+  /// When a SCHEDULED story goes live (lib/scheduler.ts publishes it). On a
+  /// PENDING story it is the time the author asked for: approving it before
+  /// then schedules it instead of publishing at once.
+  scheduledAt    DateTime?
   /// When an editor last changed the story after it was published — the
   /// "updated" line readers see. updatedAt cannot serve: Prisma stamps it on
   /// every write, and reading an article increments its view count, so it
@@ -144,6 +148,7 @@ model Article {
   @@index([categoryId])
   @@index([status])
   @@index([authorId])
+  @@index([status, scheduledAt])
 }
 
 /// A proposed change to a story that is already live.
