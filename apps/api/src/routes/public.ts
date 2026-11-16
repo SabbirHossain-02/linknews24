@@ -2,6 +2,7 @@ import type { Prisma } from "@prisma/client";
 import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../prisma";
+import { DHAKA_ALL_SLUG, districtSlugWhere } from "../lib/dhaka";
 import { breakingEnabled } from "../lib/siteSettings";
 import { BLOOD_GROUPS } from "../lib/blood";
 import { emitChange, emitAnalytics } from "../realtime";
@@ -28,7 +29,11 @@ publicRouter.param("slug", (req, _res, next, value: string) => {
 
 // --- Directories ---
 publicRouter.get("/districts", async (_req, res) => {
-  const districts = await prisma.district.findMany({ orderBy: { name: "asc" } });
+  // The single "dhaka" row is retired in favour of Dhaka's four parts.
+  const districts = await prisma.district.findMany({
+    where: { slug: { not: DHAKA_ALL_SLUG } },
+    orderBy: { name: "asc" },
+  });
   res.json({ districts });
 });
 
@@ -43,13 +48,15 @@ publicRouter.get("/lawyers", async (_req, res) => {
 });
 
 publicRouter.get("/lawyers/:district", async (req, res) => {
-  const district = await prisma.district.findUnique({
-    where: { slug: req.params.district },
-  });
+  // "dhaka" is all four parts of Dhaka together.
+  const all = req.params.district === DHAKA_ALL_SLUG;
+  const district = all
+    ? { slug: DHAKA_ALL_SLUG, name: "ঢাকা", nameEn: "Dhaka" }
+    : await prisma.district.findUnique({ where: { slug: req.params.district } });
   if (!district) return res.status(404).json({ error: "Not found" });
   const lawyers = await prisma.lawyer.findMany({
     // Reader submissions only appear once an admin has approved them.
-    where: { districtId: district.id, status: "APPROVED" },
+    where: { district: districtSlugWhere(req.params.district), status: "APPROVED" },
     include: { district: { select: { name: true, nameEn: true, slug: true } } },
     orderBy: { createdAt: "desc" },
   });
@@ -64,7 +71,7 @@ publicRouter.get("/hospitals", async (req, res) => {
   const hospitals = await prisma.hospital.findMany({
     where: {
       status: "APPROVED",
-      ...(district ? { district: { slug: district } } : {}),
+      ...(district ? { district: districtSlugWhere(district) } : {}),
       ...(type ? { type } : {}),
     },
     include: { district: { select: { name: true, nameEn: true, slug: true } } },
@@ -125,7 +132,7 @@ publicRouter.get("/donors/:group", async (req, res) => {
   const donors = await donorFeed(
     {
       group: g.label,
-      ...(district ? { district: { slug: district } } : {}),
+      ...(district ? { district: districtSlugWhere(district) } : {}),
     },
     viewer,
   );
@@ -144,7 +151,7 @@ publicRouter.get("/donors", async (req, res) => {
   const donors = await donorFeed(
     {
       ...(matched ? { group: matched.label } : {}),
-      ...(district ? { district: { slug: district } } : {}),
+      ...(district ? { district: districtSlugWhere(district) } : {}),
     },
     viewer,
   );

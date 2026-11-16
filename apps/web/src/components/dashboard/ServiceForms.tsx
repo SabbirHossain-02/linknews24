@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { CheckCircle2, Clock, Plus, Trash2, Upload, XCircle } from "lucide-react";
-import { districts, bloodGroups } from "@/lib/directory-data";
+import { bloodGroups } from "@/lib/directory-data";
+import { DistrictPicker } from "@/components/directory/DistrictPicker";
 import { uploadFile } from "@/lib/admin-api";
 import {
   HOSPITAL_TYPES,
@@ -22,7 +23,7 @@ import {
 } from "@/lib/services-api";
 import { useLocale } from "@/components/providers/LocaleProvider";
 import { MyListingCard } from "./MyListingCard";
-import { localizedName, type TranslationKey } from "@/lib/i18n";
+import { type TranslationKey } from "@/lib/i18n";
 
 const input =
   "w-full rounded-lg border border-border bg-background px-3.5 py-2.5 text-sm text-foreground placeholder:text-foreground-muted focus:border-brand-crimson focus:outline-none";
@@ -158,7 +159,7 @@ export function LawyerServiceForm({
   listing: LawyerListing | null;
   reload: () => void;
 }) {
-  const { t, locale } = useLocale();
+  const { t } = useLocale();
   const { busy, error, saved, run } = useSubmit(reload);
   const [sanad, setSanad] = useState(listing?.sanadUrl ?? "");
   const [uploading, setUploading] = useState(false);
@@ -248,19 +249,13 @@ export function LawyerServiceForm({
           />
         </Field>
         <Field label={t("fDistrict")}>
-          <select
+          <DistrictPicker
             name="district"
             required
             defaultValue={listing?.district?.slug ?? ""}
+            placeholder={t("fPickDistrict")}
             className={input}
-          >
-            <option value="">{t("fPickDistrict")}</option>
-            {districts.map((d) => (
-              <option key={d.slug} value={d.slug}>
-                {localizedName(d, locale)}
-              </option>
-            ))}
-          </select>
+          />
         </Field>
       </div>
 
@@ -418,19 +413,13 @@ export function DonorServiceForm({
             <input name="phone" required defaultValue={listing?.phone} className={input} />
           </Field>
           <Field label={t("fDistrict")}>
-            <select
-              name="district"
-              required
-              defaultValue={listing?.district?.slug ?? ""}
-              className={input}
-            >
-              <option value="">{t("fPickDistrict")}</option>
-              {districts.map((d) => (
-                <option key={d.slug} value={d.slug}>
-                  {d.name}
-                </option>
-              ))}
-            </select>
+            <DistrictPicker
+            name="district"
+            required
+            defaultValue={listing?.district?.slug ?? ""}
+            placeholder={t("fPickDistrict")}
+            className={input}
+          />
           </Field>
           <Field label={t("fLastDonation")}>
             <input
@@ -567,7 +556,7 @@ export function HospitalServiceForm({
   listing: HospitalListing | null;
   reload: () => void;
 }) {
-  const { t, locale } = useLocale();
+  const { t } = useLocale();
   const { busy, error, saved, run } = useSubmit(reload);
 
   return (
@@ -613,19 +602,13 @@ export function HospitalServiceForm({
           </select>
         </Field>
         <Field label={t("fDistrict")}>
-          <select
+          <DistrictPicker
             name="district"
             required
             defaultValue={listing?.district?.slug ?? ""}
+            placeholder={t("fPickDistrict")}
             className={input}
-          >
-            <option value="">{t("fPickDistrict")}</option>
-            {districts.map((d) => (
-              <option key={d.slug} value={d.slug}>
-                {localizedName(d, locale)}
-              </option>
-            ))}
-          </select>
+          />
         </Field>
         <Field label={t("fThana")}>
           <input name="thana" defaultValue={listing?.thana ?? ""} className={input} />

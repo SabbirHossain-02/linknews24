@@ -15,11 +15,11 @@ export async function generateMetadata({
   const { district: rawDistrict } = await params;
   const district = routeParam(rawDistrict);
   const d = getDistrict(district);
+  // Dhaka's four parts are not districts, so not "… জেলার".
+  const place = d ? (d.name.startsWith("ঢাকা") ? `${d.name}-এর` : `${d.name} জেলার`) : "";
   return {
-    title: d ? `${d.name} জেলার আইনজীবী` : "আইনজীবী",
-    description: d
-      ? `${d.name} জেলার আইনজীবীদের যোগাযোগ নম্বর।`
-      : undefined,
+    title: d ? `${place} আইনজীবী` : "আইনজীবী",
+    description: d ? `${place} আইনজীবীদের যোগাযোগ নম্বর।` : undefined,
   };
 }
 

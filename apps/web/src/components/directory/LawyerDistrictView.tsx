@@ -18,8 +18,15 @@ export function LawyerDistrictView({
 }) {
   const { locale, t } = useLocale();
   const district = locale === "en" ? districtEn : districtBn;
+  // Dhaka's parts are not districts in their own right ("ঢাকা উত্তর জেলা"
+  // is not a place), so they get "-এর" rather than "জেলার".
+  const isDhaka = districtBn.startsWith("ঢাকা");
   const heading =
-    locale === "en" ? `Lawyers in ${district}` : `${district} জেলার আইনজীবী`;
+    locale === "en"
+      ? `Lawyers in ${district}`
+      : isDhaka
+        ? `${district}-এর আইনজীবী`
+        : `${district} জেলার আইনজীবী`;
 
   return (
     <>

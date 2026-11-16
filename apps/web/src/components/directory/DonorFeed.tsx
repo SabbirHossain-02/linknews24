@@ -6,7 +6,8 @@ import Image from "next/image";
 import { CalendarClock, Droplet, Heart, MapPin, Phone, User } from "lucide-react";
 import { API_BASE } from "@/lib/admin-api";
 import { bnDate, toggleDonorLike, type DonorListing } from "@/lib/services-api";
-import { bloodGroups, districts, formatPhone } from "@/lib/directory-data";
+import { bloodGroups, districtFilterOptions, formatPhone } from "@/lib/directory-data";
+import { districtOptionLabel } from "@/lib/dhaka-zones";
 import { useLocale } from "@/components/providers/LocaleProvider";
 import { localizedName } from "@/lib/i18n";
 
@@ -91,9 +92,9 @@ export function DonorFeed() {
           className={select}
         >
           <option value="">{t("svcAllDistricts")}</option>
-          {districts.map((d) => (
+          {districtFilterOptions.map((d) => (
             <option key={d.slug} value={d.slug}>
-              {localizedName(d, locale)}
+              {districtOptionLabel(d, locale)}
             </option>
           ))}
         </select>

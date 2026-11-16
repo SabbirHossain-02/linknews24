@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../prisma";
+import { DHAKA_ALL_SLUG } from "../lib/dhaka";
 import { authAccount } from "../middleware/account";
 import { emitChange } from "../realtime";
 import { donorBadge, nextEligibleDate, isEligibleNow } from "../lib/donorBadge";
@@ -39,9 +40,12 @@ async function accountPhoto(accountId: string): Promise<string | null> {
 
 async function districtIdFor(slugOrId: string): Promise<string | null> {
   const byId = await prisma.district.findUnique({ where: { id: slugOrId } });
-  if (byId) return byId.id;
-  const bySlug = await prisma.district.findUnique({ where: { slug: slugOrId } });
-  return bySlug?.id ?? null;
+  const found =
+    byId ?? (await prisma.district.findUnique({ where: { slug: slugOrId } }));
+  // The single "dhaka" district is retired: a listing goes in one of its four
+  // parts (a form open since before the change still sends it).
+  if (!found || found.slug === DHAKA_ALL_SLUG) return null;
+  return found.id;
 }
 
 /* ------------------------------------------------------------ my listings */

@@ -4,7 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 import { getSocket } from "@/lib/socket";
 import { Building2, MapPin, Phone, Siren } from "lucide-react";
 import { API_BASE } from "@/lib/admin-api";
-import { districts, formatPhone } from "@/lib/directory-data";
+import { districtFilterOptions, formatPhone } from "@/lib/directory-data";
+import { districtOptionLabel } from "@/lib/dhaka-zones";
 import { type HospitalListing } from "@/lib/services-api";
 import { useLocale } from "@/components/providers/LocaleProvider";
 import { localizedName, type TranslationKey } from "@/lib/i18n";
@@ -59,9 +60,9 @@ export function HospitalList() {
           className="rounded-lg border border-border bg-background px-3 py-2 font-ui text-sm text-foreground"
         >
           <option value="">{t("svcAllDistricts")}</option>
-          {districts.map((d) => (
+          {districtFilterOptions.map((d) => (
             <option key={d.slug} value={d.slug}>
-              {localizedName(d, locale)}
+              {districtOptionLabel(d, locale)}
             </option>
           ))}
         </select>

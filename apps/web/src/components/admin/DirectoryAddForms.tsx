@@ -7,6 +7,8 @@ import { bloodGroups } from "@/lib/directory-data";
 import { Modal } from "./Modal";
 import { useAdminText } from "@/lib/admin-strings";
 import { useLocale } from "@/components/providers/LocaleProvider";
+import { districtOptionLabel } from "@/lib/dhaka-zones";
+import { DhakaZoneHint } from "@/components/directory/DistrictPicker";
 
 /**
  * Adding a lawyer, blood donor or hospital from the admin panel.
@@ -21,6 +23,7 @@ interface District {
   id: string;
   name: string;
   nameEn: string;
+  slug: string;
 }
 
 const inputCls =
@@ -65,14 +68,18 @@ function DistrictSelect({ value, onChange }: { value: string; onChange: (v: stri
   const { locale } = useLocale();
   const districts = useDistricts();
   return (
-    <select value={value} onChange={(e) => onChange(e.target.value)} className={inputCls}>
-      <option value="">{ax("জেলা বেছে নিন")}</option>
-      {districts.map((d) => (
-        <option key={d.id} value={d.id}>
-          {locale === "en" ? d.nameEn || d.name : d.name}
-        </option>
-      ))}
-    </select>
+    <>
+      <select value={value} onChange={(e) => onChange(e.target.value)} className={inputCls}>
+        <option value="">{ax("জেলা বেছে নিন")}</option>
+        {districts.map((d) => (
+          <option key={d.id} value={d.id}>
+            {districtOptionLabel(d, locale)}
+          </option>
+        ))}
+      </select>
+      {/* Which areas a part of Dhaka covers, once one is picked. */}
+      <DhakaZoneHint slug={districts.find((d) => d.id === value)?.slug} />
+    </>
   );
 }
 

@@ -1,3 +1,5 @@
+import { DHAKA_ALL, DHAKA_ZONES } from "./dhaka-zones";
+
 // Helpline-style directories (lawyers by district, blood donors by group).
 // All data is deterministic mock data — real listings come later via the CMS.
 
@@ -26,8 +28,8 @@ export const divisions: Division[] = [
 ];
 
 export const districts: District[] = [
-  // Dhaka
-  { slug: "dhaka", name: "ঢাকা", nameEn: "Dhaka", division: "dhaka" },
+  // Dhaka — the city and district as four parts; see dhaka-zones.ts.
+  ...DHAKA_ZONES.map((z) => ({ slug: z.slug, name: z.name, nameEn: z.nameEn, division: "dhaka" })),
   { slug: "faridpur", name: "ফরিদপুর", nameEn: "Faridpur", division: "dhaka" },
   { slug: "gazipur", name: "গাজীপুর", nameEn: "Gazipur", division: "dhaka" },
   { slug: "gopalganj", name: "গোপালগঞ্জ", nameEn: "Gopalganj", division: "dhaka" },
@@ -181,8 +183,18 @@ export interface Donor {
 }
 
 export function getDistrict(slug: string): District | undefined {
+  // Old links to /lawyers/dhaka now show all four parts together.
+  if (slug === DHAKA_ALL.slug) return DHAKA_ALL;
   return districts.find((d) => d.slug === slug);
 }
+
+/**
+ * The district filters on the directory pages: every district, plus
+ * "Dhaka (all parts)" just before the four parts of Dhaka.
+ */
+export const districtFilterOptions: District[] = districts.flatMap((d) =>
+  d.slug === DHAKA_ZONES[0].slug ? [DHAKA_ALL, d] : [d],
+);
 
 export function getBloodGroup(slug: string): BloodGroup | undefined {
   return bloodGroups.find((g) => g.slug === slug);
