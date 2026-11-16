@@ -159,14 +159,47 @@ export function dhakaZone(slug: string | null | undefined): DhakaZone | undefine
   return slug ? DHAKA_ZONES.find((z) => z.slug === slug) : undefined;
 }
 
-/** "ঢাকা উত্তর — উত্তরা, গুলশান, বনানী…" for a zone; the plain name otherwise. */
-export function districtOptionLabel(
-  d: { slug: string; name: string; nameEn?: string | null },
+/** One row of a district <select>: a district, or an area under a Dhaka part. */
+export interface DistrictOption {
+  value: string;
+  label: string;
+}
+
+/** Indents area rows: a <select> collapses ordinary spaces. */
+const NBSP = String.fromCharCode(160);
+
+/** Separates the district from the area in an area row's value. */
+const AREA_SEP = "~";
+
+/**
+ * The rows of a district picker: each district, and under each part of Dhaka
+ * its areas, one per row and indented — so people find their own area rather
+ * than having to know which part it falls in. Picking an area picks its part;
+ * `pickedDistrict` reads the district back out of a row's value.
+ *
+ * `key` is what a district row submits — its slug, or its id in the admin.
+ */
+export function districtOptions<T extends { slug: string; name: string; nameEn?: string | null }>(
+  list: T[],
   locale: "bn" | "en",
-): string {
-  const name = locale === "en" ? d.nameEn || d.name : d.name;
-  const z = dhakaZone(d.slug);
-  if (!z) return name;
-  const marks = z.landmarks.map((m) => (locale === "en" ? m.en : m.bn)).join(", ");
-  return `${name} — ${marks}…`;
+  key: (d: T) => string,
+): DistrictOption[] {
+  const en = locale === "en";
+  return list.flatMap((d) => {
+    const row = { value: key(d), label: en ? d.nameEn || d.name : d.name };
+    const zone = dhakaZone(d.slug);
+    if (!zone) return [row];
+    return [
+      row,
+      ...zone.areas.map((x) => ({
+        value: `${key(d)}${AREA_SEP}${x.en}`,
+        label: `${NBSP.repeat(4)}↳ ${en ? x.en : x.bn}`,
+      })),
+    ];
+  });
+}
+
+/** The district a picker row stands for (an area row stands for its part of Dhaka). */
+export function pickedDistrict(value: string): string {
+  return value.split(AREA_SEP)[0];
 }

@@ -7,8 +7,7 @@ import { bloodGroups } from "@/lib/directory-data";
 import { Modal } from "./Modal";
 import { useAdminText } from "@/lib/admin-strings";
 import { useLocale } from "@/components/providers/LocaleProvider";
-import { districtOptionLabel } from "@/lib/dhaka-zones";
-import { DhakaZoneHint } from "@/components/directory/DistrictPicker";
+import { districtOptions, pickedDistrict } from "@/lib/dhaka-zones";
 
 /**
  * Adding a lawyer, blood donor or hospital from the admin panel.
@@ -67,19 +66,26 @@ function DistrictSelect({ value, onChange }: { value: string; onChange: (v: stri
   const ax = useAdminText();
   const { locale } = useLocale();
   const districts = useDistricts();
+  // The row on show may be an area under a part of Dhaka; the form only keeps
+  // the district id. Fall back to the district row when the form is reset.
+  const [shown, setShown] = useState(value);
+  const display = pickedDistrict(shown) === value ? shown : value;
   return (
-    <>
-      <select value={value} onChange={(e) => onChange(e.target.value)} className={inputCls}>
-        <option value="">{ax("জেলা বেছে নিন")}</option>
-        {districts.map((d) => (
-          <option key={d.id} value={d.id}>
-            {districtOptionLabel(d, locale)}
-          </option>
-        ))}
-      </select>
-      {/* Which areas a part of Dhaka covers, once one is picked. */}
-      <DhakaZoneHint slug={districts.find((d) => d.id === value)?.slug} />
-    </>
+    <select
+      value={display}
+      onChange={(e) => {
+        setShown(e.target.value);
+        onChange(pickedDistrict(e.target.value));
+      }}
+      className={inputCls}
+    >
+      <option value="">{ax("জেলা বেছে নিন")}</option>
+      {districtOptions(districts, locale, (d) => d.id).map((o) => (
+        <option key={o.value} value={o.value}>
+          {o.label}
+        </option>
+      ))}
+    </select>
   );
 }
 

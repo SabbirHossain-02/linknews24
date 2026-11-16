@@ -7,7 +7,7 @@ import { CalendarClock, Droplet, Heart, MapPin, Phone, User } from "lucide-react
 import { API_BASE } from "@/lib/admin-api";
 import { bnDate, toggleDonorLike, type DonorListing } from "@/lib/services-api";
 import { bloodGroups, districtFilterOptions, formatPhone } from "@/lib/directory-data";
-import { districtOptionLabel } from "@/lib/dhaka-zones";
+import { districtOptions, pickedDistrict } from "@/lib/dhaka-zones";
 import { useLocale } from "@/components/providers/LocaleProvider";
 import { localizedName } from "@/lib/i18n";
 
@@ -25,6 +25,7 @@ export function DonorFeed() {
   const [donors, setDonors] = useState<DonorListing[]>([]);
   const [group, setGroup] = useState("");
   const [district, setDistrict] = useState("");
+  const [districtRow, setDistrictRow] = useState("");
   const [loading, setLoading] = useState(true);
   const [needLogin, setNeedLogin] = useState(false);
 
@@ -87,14 +88,18 @@ export function DonorFeed() {
           ))}
         </select>
         <select
-          value={district}
-          onChange={(e) => setDistrict(e.target.value)}
+          value={districtRow}
+          onChange={(e) => {
+            // An area row filters by the part of Dhaka it is in.
+            setDistrictRow(e.target.value);
+            setDistrict(pickedDistrict(e.target.value));
+          }}
           className={select}
         >
           <option value="">{t("svcAllDistricts")}</option>
-          {districtFilterOptions.map((d) => (
-            <option key={d.slug} value={d.slug}>
-              {districtOptionLabel(d, locale)}
+          {districtOptions(districtFilterOptions, locale, (d) => d.slug).map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
             </option>
           ))}
         </select>
