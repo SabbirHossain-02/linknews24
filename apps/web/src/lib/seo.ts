@@ -1,4 +1,5 @@
 import { apiGet } from "./api";
+import { SITE_URL } from "./site";
 
 /**
  * The SEO settings the admin panel saves. Read here by the root layout, the
@@ -49,8 +50,15 @@ export const SEO_FALLBACK: SeoSettings = {
  */
 export async function getSeo(): Promise<SeoSettings> {
   const data = await apiGet<{ seo: SeoSettings }>("/api/seo");
-  return { ...SEO_FALLBACK, ...(data?.seo ?? {}) };
+  const seo = { ...SEO_FALLBACK, ...(data?.seo ?? {}) };
+  // A share needs a picture: with none set on the SEO page, pages went out
+  // with no og:image at all. The bundled 1200x630 card fills in until one is.
+  if (!seo.defaultOgImage) seo.defaultOgImage = DEFAULT_SHARE_IMAGE;
+  return seo;
 }
+
+/** public/og-image.png: logo, tagline and domain, 1200x630. */
+export const DEFAULT_SHARE_IMAGE = `${SITE_URL}/og-image.png`;
 
 /** The Disallow list, one path per line, cleaned of blanks and comments. */
 export function disallowList(raw: string): string[] {

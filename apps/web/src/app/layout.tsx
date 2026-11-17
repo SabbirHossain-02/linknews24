@@ -12,6 +12,7 @@ import { SiteFooterSection } from "@/components/layout/SiteFooterSection";
 import { HideOnAdmin } from "@/components/layout/HideOnAdmin";
 import { RealtimeRefresh } from "@/components/providers/RealtimeRefresh";
 import { TrackView } from "@/components/providers/TrackView";
+import { SiteSchema } from "@/components/seo/SiteSchema";
 import "./globals.css";
 
 const hindSiliguri = Hind_Siliguri({
@@ -114,6 +115,8 @@ export default function RootLayout({
       className={`${notoSerifBengali.variable} ${siyamRupali.variable} ${hindSiliguri.variable} ${inter.variable}`}
     >
       <body className="antialiased">
+        {/* Organization + WebSite JSON-LD: ties the brand name to this site. */}
+        <SiteSchema />
         <LocaleProvider>
           <AuthProvider>
             <div className="flex min-h-screen flex-col">
